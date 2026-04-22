@@ -1,0 +1,57 @@
+site_name: PalaceToolkit
+site_description: Electromagnetic simulation with Palace and Gmsh.
+site_url: https://www.epsilonforge.com/palace-toolkit/
+
+theme:
+  name: material
+  logo: PalaceToolkit.png
+  favicon: PalaceToolkit.png
+  features:
+    - content.code.copy
+    - navigation.instant
+    - navigation.tabs
+    - navigation.top  palette:
+    - scheme: default
+      primary: indigo
+      accent: deep orange
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.arithmatex:
+      generic: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+# Prevent MkDocs from warning about .htm viewer files not in nav
+not_in_nav: |
+  examples/img/**
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/interactive.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/index.md
+      - Geometry & Meshing: getting-started/geometry-and-meshing.md
+      - Simulation Setup: getting-started/simulation-setup.md
+      - Post-processing: getting-started/post-processing.md
+  - Examples:
+      - Overview: examples/index.md
+      - Waveguides & Horn Antenna: examples/waveguides-and-horn-antenna.md
+      - Dipole Antenna: examples/dipole-antenna.md
+      - Coplanar Waveguide: examples/coplanar-waveguide.md
+  - Full Course: full-course.md

@@ -1,0 +1,35 @@
+[project]
+name = "PalaceToolkit"
+version = "0.1.0"
+description = "PALACE electromagnetic simulation course materials"
+requires-python = ">=3.8"
+dependencies = [
+    "gmsh",
+    "numpy",
+    "meshio",
+    "pyvista",
+    "femwell",
+    "enlighten",
+    "pint",
+]
+
+[project.optional-dependencies]
+plot = ["pandas", "matplotlib"]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "pyvista[jupyter]",
+    "nbconvert",
+    "ipykernel",
+    "papermill",
+    "nb-clean",
+    "pre-commit",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["palace", "palace.*"]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
