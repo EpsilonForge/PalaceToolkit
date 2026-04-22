@@ -10,7 +10,7 @@ results.
 Extract antenna input impedance from Palace port output files:
 
 ```python
-from palace.simulation import extract_impedance
+from palacetoolkit.simulation import extract_impedance
 
 freq_ghz, z_ant = extract_impedance("postpro/my_antenna")
 ```
@@ -25,7 +25,7 @@ $$
 ## S-parameter plots
 
 ```python
-from palace.s_plot import plot_s_params
+from palacetoolkit.s_plot import plot_s_params
 
 plot_s_params("postpro/my_antenna/port-S.csv")
 ```
@@ -38,7 +38,7 @@ versus frequency.
 Compare simulation results against closed-form expressions:
 
 ```python
-from palace.analytic import cpw_impedance, cpw_effective_index
+from palacetoolkit.analytic import cpw_impedance, cpw_effective_index
 
 Z0 = cpw_impedance(w=44e-6, s=25e-6, h=500e-6, eps_r=11.7)
 n_eff = cpw_effective_index(w=44e-6, s=25e-6, h=500e-6, eps_r=11.7)
@@ -51,7 +51,7 @@ These use conformal-mapping formulas for coplanar waveguide (CPW) lines.
 ### Interactive viewer (notebooks)
 
 ```python
-from palace.view_mesh import view_mesh
+from palacetoolkit.view_mesh import view_mesh
 
 view_mesh("model.msh", transparent_groups=["air"])
 ```
@@ -59,7 +59,7 @@ view_mesh("model.msh", transparent_groups=["air"])
 ### Static HTML export (docs)
 
 ```python
-from palace.viz import render_mesh, render_multi_mesh
+from palacetoolkit.viz import render_mesh, render_multi_mesh
 
 render_mesh(mesh_path, output_html, title="My Model")
 ```

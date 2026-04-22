@@ -8,7 +8,7 @@ provides helpers to generate these configs and launch Palace from Python.
 ## Running Palace
 
 ```python
-from palace.simulation import run_palace
+from palacetoolkit.simulation import run_palace
 
 run_palace("config.json", num_procs=4)
 ```
@@ -22,7 +22,7 @@ After meshing with the `Entity` pipeline, you can auto-generate a Palace
 JSON config:
 
 ```python
-from palace.simulation import generate_palace_config_from_entities
+from palacetoolkit.simulation import generate_palace_config_from_entities
 
 config = generate_palace_config_from_entities(
     entity_defs=[

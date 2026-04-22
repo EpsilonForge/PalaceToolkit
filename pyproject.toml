@@ -8,7 +8,6 @@ dependencies = [
     "numpy",
     "meshio",
     "pyvista",
-    "femwell",
     "enlighten",
     "pint",
 ]
@@ -18,6 +17,7 @@ plot = ["pandas", "matplotlib"]
 docs = [
     "mkdocs",
     "mkdocs-material",
+    "mkdocs-jupyter",
     "pyvista[jupyter]",
     "nbconvert",
     "ipykernel",
@@ -26,9 +26,12 @@ docs = [
     "pre-commit",
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["palace", "palace.*"]
+where = ["src"]
+include = ["palacetoolkit", "palacetoolkit.*"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]

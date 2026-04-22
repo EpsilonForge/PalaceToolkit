@@ -11,7 +11,7 @@ Every geometric region — conductors, dielectrics, air boxes, ports — is
 represented as an `Entity`:
 
 ```python
-from palace.mesh import Entity, run_boolean_pipeline
+from palacetoolkit.mesh import Entity, run_boolean_pipeline
 
 conductor = Entity(name="conductor", dim=3, mesh_order=0, tags=[1])
 dielectric = Entity(name="dielectric", dim=3, mesh_order=1, tags=[2])
@@ -66,7 +66,7 @@ gmsh.finalize()
 Before running Palace, verify the mesh is valid:
 
 ```python
-from palace.verify_topology import analyse_mesh
+from palacetoolkit.verify_topology import analyse_mesh
 
 analyse_mesh("my_model.msh")
 ```
@@ -79,7 +79,7 @@ This checks that:
 ## Mesh visualisation
 
 ```python
-from palace.view_mesh import view_mesh
+from palacetoolkit.view_mesh import view_mesh
 
 view_mesh("my_model.msh")
 ```
@@ -87,7 +87,7 @@ view_mesh("my_model.msh")
 For static HTML exports (used in the docs site):
 
 ```python
-from palace.viz import render_mesh
+from palacetoolkit.viz import render_mesh
 
 render_mesh(mesh_path, output_path, title="My Model")
 ```

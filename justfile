@@ -1,30 +1,22 @@
 venv    := ".venv/bin/"
 python  := venv + "python"
-gallery := "docs/gallery"
-nbsdir  := gallery + "/nbs"
+examples := "docs/examples"
 
 # Register ipykernel (one-time setup)
 ipykernel:
-    {{python}} -m ipykernel install --user --name palace-course --display-name "PalaceToolkit"
+    {{python}} -m ipykernel install --user --name palacetoolkit --display-name "PalaceToolkit"
 
-# Step 1: Execute notebooks in-place with papermill
+# Step 1: Execute docs examples notebooks in-place with papermill
 nbrun: ipykernel
-    mkdir -p {{gallery}}/img
-    export DOCS_BUILD=1 && find {{gallery}} -maxdepth 1 -name "*.ipynb" \
+    export DOCS_BUILD=1 && find {{examples}} -maxdepth 1 -name "*.ipynb" \
         -not -path "*/.ipynb_checkpoints/*" | sort | while read nb; do \
         echo "Running: $nb"; \
-        {{python}} -m papermill "$nb" "$nb" -k palace-course --cwd {{gallery}}; \
+        {{python}} -m papermill "$nb" "$nb" -k palacetoolkit --cwd {{examples}}; \
     done
 
-# Step 2: Convert executed notebooks → Markdown (strip remove_cell tags)
+# Step 2: Build MkDocs site (renders notebooks directly via mkdocs-jupyter)
 nbdocs:
-    mkdir -p {{nbsdir}}
-    find {{gallery}} -maxdepth 1 -name "*.ipynb" \
-        -not -path "*/.ipynb_checkpoints/*" \
-        -exec {{python}} -m jupyter nbconvert --to markdown --embed-images \
-            {} --output-dir {{nbsdir}} \
-            --TagRemovePreprocessor.enabled=True \
-            --TagRemovePreprocessor.remove_cell_tags='["remove_cell"]' \;
+    @echo "Notebook conversion is not required; MkDocs renders .ipynb directly."
 
 # Step 3: Build MkDocs site
 docs:
@@ -33,13 +25,13 @@ docs:
 # All three steps in sequence
 docs-full: nbrun nbdocs docs
 
-# Dev server (assumes nbdocs already ran)
+# Dev server
 serve:
     {{python}} -m mkdocs serve -a localhost:8080
 
 # Strip outputs from notebooks before committing
 nbclean:
-    find {{gallery}} -maxdepth 1 -name "*.ipynb" \
+    find {{examples}} -maxdepth 1 -name "*.ipynb" \
         -not -path "*/.ipynb_checkpoints/*" \
         -exec {{venv}}nb-clean clean --remove-empty-cells \
             --preserve-cell-metadata tags -- {} \;

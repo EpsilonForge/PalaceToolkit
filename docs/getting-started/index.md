@@ -19,6 +19,6 @@ pip install -e ".[docs]"
 ### Verify your setup
 
 ```bash
-python -c "from palace.mesh import Entity; print('Ready!')"
+python -c "from palacetoolkit.mesh import Entity; print('Ready!')"
 ```
 

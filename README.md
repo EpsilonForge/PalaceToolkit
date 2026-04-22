@@ -30,8 +30,8 @@ licence required.
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-org>/palace-course.git
-cd palace-course
+git clone https://github.com/EpsilonForge/PalaceToolkit.git
+cd PalaceToolkit
 
 # Create a virtual environment and install in editable mode
 python -m venv .venv
@@ -39,7 +39,7 @@ source .venv/bin/activate
 pip install -e ".[plot,docs]"
 ```
 
-The core install pulls `gmsh`, `numpy`, `meshio`, `pyvista`, `femwell`,
+The core install pulls `gmsh`, `numpy`, `meshio`, `pyvista`,
 `enlighten`, and `pint`. The optional dependency groups are:
 
 | Group | Extra packages |
@@ -53,9 +53,9 @@ Below is a minimal example that creates a coaxial geometry, meshes it, runs
 Palace, and plots the S-parameters:
 
 ```python
-from palace.mesh import Entity, run_boolean_pipeline
-from palace.simulation import run_palace
-from palace.s_plot import plot_s_params
+from palacetoolkit.mesh import Entity, run_boolean_pipeline
+from palacetoolkit.simulation import run_palace
+from palacetoolkit.s_plot import plot_s_params
 
 # 1. Define entities with names, priorities and materials
 inner  = Entity(name="inner_conductor", ...)
@@ -72,9 +72,8 @@ run_palace("coax.json", np=4)
 plot_s_params("postpro/coax")
 ```
 
-See the `lecture_*` directories and `docs/gallery/` notebooks for complete
-worked examples covering waveguides, dipole antennas, horn antennas, and
-planar microwave circuits.
+See `docs/examples/` notebooks for worked examples covering waveguides,
+dipole antennas, horn antennas, and planar microwave circuits.
 
 ## Building the docs
 
@@ -89,12 +88,12 @@ pip install -e ".[docs]"
 # Register the virtualenv as a Jupyter kernel
 just ipykernel
 
-# Full build: execute notebooks → convert to Markdown → build site
+# Full build: execute notebooks → build site
 just docs-full
 
 # Or run each step individually:
-just nbrun      # execute all gallery notebooks with papermill
-just nbdocs     # convert notebooks to Markdown with embedded images
+just nbrun      # execute docs example notebooks with papermill
+just nbdocs     # no-op (MkDocs renders .ipynb directly)
 just docs       # build the MkDocs static site
 
 # Serve locally for development
@@ -105,4 +104,4 @@ just serve      # starts a dev server on http://localhost:8080
 
 | Recipe | Description |
 |--------|-------------|
-| `just nbclean` | Strip cell outputs from notebooks for clean commits. |
+| `just nbclean` | Strip cell outputs from docs example notebooks for clean commits. |

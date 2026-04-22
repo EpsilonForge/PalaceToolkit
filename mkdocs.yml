@@ -10,7 +10,8 @@ theme:
     - content.code.copy
     - navigation.instant
     - navigation.tabs
-    - navigation.top  palette:
+    - navigation.top
+  palette:
     - scheme: default
       primary: indigo
       accent: deep orange
@@ -30,6 +31,10 @@ markdown_extensions:
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      execute: false
+      include_source: true
+      ignore_h1_titles: true
 
 # Prevent MkDocs from warning about .htm viewer files not in nav
 not_in_nav: |
@@ -51,7 +56,7 @@ nav:
       - Post-processing: getting-started/post-processing.md
   - Examples:
       - Overview: examples/index.md
-      - Waveguides & Horn Antenna: examples/waveguides-and-horn-antenna.md
-      - Dipole Antenna: examples/dipole-antenna.md
-      - Coplanar Waveguide: examples/coplanar-waveguide.md
+      - Waveguides & Horn Antenna: examples/waveguides-and-horn-antenna.ipynb
+      - Dipole Antenna: examples/dipole-antenna.ipynb
+      - Coplanar Waveguide: examples/coplanar-waveguide.ipynb
   - Full Course: full-course.md
