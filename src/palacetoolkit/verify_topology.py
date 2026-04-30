@@ -18,6 +18,11 @@ Violation of (2) causes::
 
     A non-periodic face cannot have multiple boundary elements!
 
+Violation of manifoldness in the volume-face adjacency causes::
+
+    Invalid mesh topology.  Interior triangular face found connecting
+    elements A, B and C.
+
 This script checks both invariants from a single pass over the mesh and
 produces a unified report.  When problems are found, offending faces are
 optionally visualised in red using PyVista (via ``view_mesh``).
@@ -40,7 +45,7 @@ from collections import Counter, defaultdict
 from itertools import combinations
 from pathlib import Path
 
-import meshio
+import meshio  # type: ignore[import-not-found]
 import numpy as np
 
 
@@ -137,6 +142,7 @@ def build_face_boundary_map(
         n_volume_faces    — number of unique volume faces
         n_internal_faces  — faces shared by exactly 2 tets
         n_skin_faces      — faces belonging to exactly 1 tet
+        nonmanifold_faces — faces shared by 3+ tets (invalid)
     """
     vm = vert_map or {}
 
@@ -152,6 +158,17 @@ def build_face_boundary_map(
 
     n_internal = sum(1 for t in face_to_tets.values() if len(t) == 2)
     n_skin = sum(1 for t in face_to_tets.values() if len(t) == 1)
+    nonmanifold_faces: list[dict] = []
+    for face, tet_idxs in face_to_tets.items():
+        if len(tet_idxs) <= 2:
+            continue
+        vol_attrs = [tet_attrs[t] for t in tet_idxs if t < len(tet_attrs)]
+        nonmanifold_faces.append({
+            "face_nodes": face,
+            "n_adjacent_tets": len(tet_idxs),
+            "tet_indices": tet_idxs,
+            "tet_volume_attrs": vol_attrs,
+        })
 
     # ── Map boundary elements onto volume faces ──────────────────────────
     face_to_bdr: dict[tuple[int, ...], list[dict]] = defaultdict(list)
@@ -196,6 +213,7 @@ def build_face_boundary_map(
         "n_volume_faces": len(face_to_tets),
         "n_internal_faces": n_internal,
         "n_skin_faces": n_skin,
+        "nonmanifold_faces": nonmanifold_faces,
     }
 
 
@@ -313,7 +331,7 @@ def verify(
         )
 
     # ── Compute centroids for problematic faces ──────────────────────────
-    for face_list_key in ("orphans", "duplicates"):
+    for face_list_key in ("orphans", "duplicates", "nonmanifold_faces"):
         for entry in raw[face_list_key]:
             face = entry.get("face_nodes") or entry.get("original_nodes")
             if face:
@@ -322,7 +340,7 @@ def verify(
                 except (IndexError, KeyError):
                     entry["centroid"] = [0.0, 0.0, 0.0]
     if periodic:
-        for face_list_key in ("orphans", "duplicates"):
+        for face_list_key in ("orphans", "duplicates", "nonmanifold_faces"):
             for entry in periodic[face_list_key]:
                 face = entry.get("face_nodes") or entry.get("original_nodes")
                 if face:
@@ -343,10 +361,12 @@ def verify(
         "raw_n_skin_faces": raw["n_skin_faces"],
         "raw_orphans": raw["orphans"],
         "raw_duplicates": raw["duplicates"],
+        "raw_nonmanifold_faces": raw["nonmanifold_faces"],
         # Pass 2 (may be None)
         "n_periodic_vertices": len(vert_map),
         "periodic_orphans": periodic["orphans"] if periodic else [],
         "periodic_duplicates": periodic["duplicates"] if periodic else [],
+        "periodic_nonmanifold_faces": periodic["nonmanifold_faces"] if periodic else [],
     }
 
 
@@ -461,6 +481,34 @@ def print_report(
 
     print()
 
+    # ══════════════════════════════════════════════════════════════════════
+    # CHECK 3 — Volume manifoldness: each volume face has <= 2 adjacent tets
+    # ══════════════════════════════════════════════════════════════════════
+    print(sep)
+    print("  CHECK 3  —  Volume manifoldness: each volume face has <= 2 tets")
+    print("              (violation → MFEM: \"Interior triangular face found …\")")
+    print(sep)
+
+    nm = result["raw_nonmanifold_faces"]
+    if not nm:
+        print("  ✅  Pass 1 (raw): no non-manifold volume faces.")
+    else:
+        ok = False
+        print(f"  ❌  Pass 1 (raw): {len(nm)} NON-MANIFOLD volume face(s)!")
+        _print_nonmanifold_details(nm)
+
+    p_nm = result["periodic_nonmanifold_faces"]
+    if n_pv == 0:
+        print("  ⓘ   Pass 2 (periodic): skipped — no periodic BC.")
+    elif not p_nm:
+        print("  ✅  Pass 2 (periodic): no non-manifold faces after vertex identification.")
+    else:
+        ok = False
+        print(f"  ❌  Pass 2 (periodic): {len(p_nm)} NON-MANIFOLD face(s) after vertex merge!")
+        _print_nonmanifold_details(p_nm)
+
+    print()
+
     # ── Final verdict ──
     verdict = "─" * 70
     print(verdict)
@@ -528,6 +576,30 @@ def _print_duplicate_details(dups: list[dict], pg: dict[int, str]):
     print()
 
 
+def _print_nonmanifold_details(nonmanifold: list[dict]):
+    """Print detail about faces shared by more than two volume elements."""
+    by_degree = Counter(nm["n_adjacent_tets"] for nm in nonmanifold)
+
+    print()
+    print("    By adjacency count:")
+    for degree, count in sorted(by_degree.items()):
+        print(f"      faces with {degree} adjacent tets: {count}")
+
+    n_show = min(15, len(nonmanifold))
+    print(f"\n    First {n_show}:")
+    for i, nm in enumerate(nonmanifold[:n_show]):
+        cx, cy, cz = nm.get("centroid", (0, 0, 0))
+        tet_ids = ", ".join(str(t) for t in nm.get("tet_indices", []))
+        vol_attrs = ", ".join(str(a) for a in nm.get("tet_volume_attrs", []))
+        print(f"      [{i+1:3d}] face={nm['face_nodes']}  "
+              f"centroid=({cx:.1f}, {cy:.1f}, {cz:.1f})")
+        print(f"            adjacent tets ({nm['n_adjacent_tets']}): {tet_ids}")
+        print(f"            tet volume attrs: {vol_attrs}")
+    if len(nonmanifold) > n_show:
+        print(f"      … and {len(nonmanifold) - n_show} more.")
+    print()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # 8. VISUALISATION
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -538,13 +610,29 @@ def visualise_problems(
     *,
     transparent_groups: list[str] | None = None,
     exclude_expected_periodic: bool = True,
+    only_nonmanifold: bool = False,
 ):
     """Open the mesh in PyVista with all problematic faces highlighted in red.
 
-    Collects both orphan and duplicate faces from both raw and periodic passes
-    and passes them to ``view_mesh.view_mesh(highlight_faces=...)``.
+    Collects orphan, duplicate, and non-manifold faces from both raw and
+    periodic passes and passes them to
+    ``view_mesh.view_mesh(highlight_faces=...)``.
     """
-    from palacetoolkit.viz import view_mesh
+    try:
+        from palacetoolkit.viz import view_mesh  # type: ignore[import-not-found]
+    except ImportError:
+        # Allow running from the Palace repo without an installed package by
+        # falling back to ../PalaceToolkit/src when available.
+        this_dir = Path(__file__).resolve().parent
+        toolkit_src = (this_dir / ".." / "PalaceToolkit" / "src").resolve()
+        if toolkit_src.exists():
+            sys.path.insert(0, str(toolkit_src))
+            from palacetoolkit.viz import view_mesh  # type: ignore[import-not-found]
+        else:
+            raise RuntimeError(
+                "Could not import palacetoolkit.viz. Install PalaceToolkit or "
+                "place it at ../PalaceToolkit relative to this script."
+            )
 
     pg = result.get("physical_groups", {})
     periodic_pg_names = {name for name in pg.values()
@@ -565,23 +653,32 @@ def visualise_problems(
             faces.append(face)
 
     # Orphans (both passes)
-    for o in result.get("raw_orphans", []):
-        _add(o.get("original_nodes") or o.get("mapped_face", ()))
-    for o in result.get("periodic_orphans", []):
-        _add(o.get("original_nodes", ()))
+    if not only_nonmanifold:
+        for o in result.get("raw_orphans", []):
+            _add(o.get("original_nodes") or o.get("mapped_face", ()))
+        for o in result.get("periodic_orphans", []):
+            _add(o.get("original_nodes", ()))
 
     # Duplicates (both passes)
-    for dup_list_key in ("raw_duplicates", "periodic_duplicates"):
-        for dup in result.get(dup_list_key, []):
-            if exclude_expected_periodic and _is_expected_periodic(dup):
-                continue
-            # For periodic dups, highlight each boundary element's original face
-            for entry in dup.get("boundary_elements", []):
-                orig = entry.get("original_nodes")
-                if orig:
-                    _add(orig)
-            # Also add the (possibly merged) canonical face
-            fn = dup.get("face_nodes")
+    if not only_nonmanifold:
+        for dup_list_key in ("raw_duplicates", "periodic_duplicates"):
+            for dup in result.get(dup_list_key, []):
+                if exclude_expected_periodic and _is_expected_periodic(dup):
+                    continue
+                # For periodic dups, highlight each boundary element's original face
+                for entry in dup.get("boundary_elements", []):
+                    orig = entry.get("original_nodes")
+                    if orig:
+                        _add(orig)
+                # Also add the (possibly merged) canonical face
+                fn = dup.get("face_nodes")
+                if fn:
+                    _add(fn)
+
+    # Non-manifold volume faces (both passes)
+    for nm_list_key in ("raw_nonmanifold_faces", "periodic_nonmanifold_faces"):
+        for nm in result.get(nm_list_key, []):
+            fn = nm.get("face_nodes")
             if fn:
                 _add(fn)
 
@@ -591,8 +688,13 @@ def visualise_problems(
 
     n_orphan = len(result.get("raw_orphans", [])) + len(result.get("periodic_orphans", []))
     n_dup = len(result.get("raw_duplicates", [])) + len(result.get("periodic_duplicates", []))
-    print(f"\nVisualising {len(faces)} face(s) in red "
-          f"({n_orphan} orphan + {n_dup} duplicate) …")
+    n_nm = len(result.get("raw_nonmanifold_faces", [])) + len(result.get("periodic_nonmanifold_faces", []))
+    if only_nonmanifold:
+        print(f"\nVisualising {len(faces)} non-manifold face(s) in red "
+              f"({n_nm} total non-manifold entries across raw + periodic passes) …")
+    else:
+        print(f"\nVisualising {len(faces)} face(s) in red "
+              f"({n_orphan} orphan + {n_dup} duplicate + {n_nm} non-manifold) …")
 
     view_mesh(
         str(mesh_path),
@@ -607,17 +709,24 @@ def visualise_problems(
 
 def main():
     do_view = True
+    only_nonmanifold_view = False
     positional: list[str] = []
     for arg in sys.argv[1:]:
         if arg == "--no-view":
             do_view = False
         elif arg == "--view":
             do_view = True
+        elif arg == "--view-nonmanifold":
+            do_view = True
+            only_nonmanifold_view = True
         else:
             positional.append(arg)
 
     if not positional:
-        print(f"Usage: {sys.argv[0]} <mesh.msh> [palace_config.json] [--no-view]")
+        print(
+            f"Usage: {sys.argv[0]} <mesh.msh> [palace_config.json] "
+            "[--no-view] [--view] [--view-nonmanifold]"
+        )
         sys.exit(1)
 
     mesh_path = Path(positional[0])
@@ -638,11 +747,17 @@ def main():
     has_problems = (
         result["raw_orphans"]
         or result["raw_duplicates"]
+        or result["raw_nonmanifold_faces"]
         or result["periodic_orphans"]
         or result["periodic_duplicates"]
+        or result["periodic_nonmanifold_faces"]
     )
     if do_view and has_problems:
-        visualise_problems(mesh_path, result)
+        visualise_problems(
+            mesh_path,
+            result,
+            only_nonmanifold=only_nonmanifold_view,
+        )
 
     sys.exit(0 if ok else 1)
 
