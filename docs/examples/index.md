@@ -17,3 +17,10 @@ Palace configuration, simulation, and post-processing.
 | Example | Description |
 |:--------|:------------|
 | [Coplanar Waveguide](coplanar-waveguide.ipynb) | CPW line — driven simulation with wave ports and eigenmode analysis with periodic BCs |
+
+## Waveguide Mode Solver
+
+| Example | Description |
+|:--------|:------------|
+| [Hollow Rectangular Waveguide Modes](hollow_waveguide_modes.ipynb) | PEC waveguide eigenmodes compared with analytic TE/TM propagation constants. |
+| [Dielectric Waveguide Modes](dielectric_waveguide_modes.ipynb) | Rectangular dielectric core in cladding with guided-mode classification and field plots. |

@@ -53,9 +53,10 @@ Below is a minimal example that creates a coaxial geometry, meshes it, runs
 Palace, and plots the S-parameters:
 
 ```python
-from palacetoolkit.mesh import Entity, run_boolean_pipeline
-from palacetoolkit.simulation import run_palace
-from palacetoolkit.s_plot import plot_s_params
+import palacetoolkit as ptk
+from ptk.mesh import Entity, run_boolean_pipeline
+from ptk.simulation import run_palace
+from ptk.s_plot import plot_s_params
 
 # 1. Define entities with names, priorities and materials
 inner  = Entity(name="inner_conductor", ...)
