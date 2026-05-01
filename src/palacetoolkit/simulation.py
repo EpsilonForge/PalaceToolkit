@@ -4,6 +4,124 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
+import gmsh
+
+from palacetoolkit.mesh import refine_near_surfaces as _refine_near_surfaces
+
+
+class Simulation:
+    """Minimal Palace simulation helper.
+
+    Provides a tiny stateful wrapper to:
+
+    - set an output directory,
+    - apply default gmsh mesh options,
+    - wrap near-surface mesh refinement,
+    - and assemble/write a Palace config file.
+    """
+
+    def __init__(self, output_dir: str | Path = "."):
+        self.output_dir = Path(output_dir)
+        self.config: dict = {
+            "Problem": {
+                "Type": "Driven",
+                "Verbose": 2,
+                "Output": "/work/results/",
+            },
+            "Model": {
+                "Mesh": "/work/model.msh",
+                "L0": 1.0,
+                "Refinement": {},
+            },
+            "Domains": {
+                "Materials": [],
+            },
+            "Boundaries": {},
+            "Solver": {
+                "Order": 2,
+                "Device": "CPU",
+                "Driven": {
+                    "MinFreq": 1.0,
+                    "MaxFreq": 2.0,
+                    "FreqStep": 0.1,
+                    "AdaptiveTol": 1.0e-3,
+                },
+                "Linear": {
+                    "Type": "Default",
+                    "KSPType": "GMRES",
+                    "Tol": 1.0e-8,
+                    "MaxIts": 200,
+                    "ComplexCoarseSolve": True,
+                },
+            },
+        }
+
+        self.set_output_dir(output_dir)
+        self.apply_default_mesh_options()
+
+    def set_output_dir(self, output_dir: str | Path) -> Path:
+        """Set and create the simulation output directory."""
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        self.output_dir = out
+        return self.output_dir
+
+    def apply_default_mesh_options(self) -> None:
+        """Apply minimal gmsh defaults for deterministic ASCII Palace meshes."""
+        gmsh.option.setNumber("Mesh.Algorithm", 6)    # Frontal-Delaunay for 2D
+        gmsh.option.setNumber("Mesh.Algorithm3D", 2)  # Frontal-Delaunay for 3D
+        gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
+        gmsh.option.setNumber("Mesh.Binary", 0)
+
+    def refine_near_surfaces(
+        self,
+        surface_dimtags: list[tuple[int, int]],
+        wavelength: float,
+        ppw_near: int = 20,
+        ppw_far: int = 5,
+        transition_distance: float | None = None,
+        set_as_background: bool = True,
+    ) -> int:
+        """Wrapper around :func:`palacetoolkit.mesh.refine_near_surfaces`."""
+        return _refine_near_surfaces(
+            surface_dimtags=surface_dimtags,
+            wavelength=wavelength,
+            ppw_near=ppw_near,
+            ppw_far=ppw_far,
+            transition_distance=transition_distance,
+            set_as_background=set_as_background,
+        )
+
+    def set_mesh_file(self, mesh_file: str) -> None:
+        """Set the mesh path used in the Palace model section."""
+        self.config.setdefault("Model", {})["Mesh"] = mesh_file
+
+    def set_config_option(self, dotted_key: str, value) -> None:
+        """Set a nested config value using dotted keys.
+
+        Example:
+            sim.set_config_option("Solver.Driven.MinFreq", 3.0)
+        """
+        keys = dotted_key.split(".")
+        if not keys:
+            raise ValueError("dotted_key must not be empty")
+
+        node = self.config
+        for key in keys[:-1]:
+            child = node.get(key)
+            if not isinstance(child, dict):
+                child = {}
+                node[key] = child
+            node = child
+        node[keys[-1]] = value
+
+    def write_config(self, filename: str = "palace.conf") -> Path:
+        """Write the Palace config into the output directory."""
+        cfg_path = self.output_dir / filename
+        with open(cfg_path, "w") as f:
+            json.dump(self.config, f, indent=2)
+        print(f"Palace config written to {cfg_path}")
+        return cfg_path
 
 
 def run_palace(
