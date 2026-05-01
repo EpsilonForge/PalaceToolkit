@@ -281,9 +281,22 @@ def load_config_bc_attrs(config_path: str | Path) -> dict[str, list[int]]:
         cfg = json.load(f)
     bcs: dict[str, list[int]] = {}
     boundaries = cfg.get("Boundaries", {})
+
+    def _collect_attrs(section) -> list[int]:
+        """Return merged Attributes from either a dict or list of dicts."""
+        if isinstance(section, dict):
+            return [int(a) for a in section.get("Attributes", [])]
+        if isinstance(section, list):
+            out: list[int] = []
+            for item in section:
+                if isinstance(item, dict):
+                    out.extend(int(a) for a in item.get("Attributes", []))
+            return out
+        return []
+
     for bc_name in ("PEC", "Absorbing", "Impedance", "Conductivity"):
         section = boundaries.get(bc_name, {})
-        attrs = section.get("Attributes", [])
+        attrs = _collect_attrs(section)
         if attrs:
             bcs[bc_name] = attrs
     periodic = boundaries.get("Periodic", {})
@@ -296,7 +309,21 @@ def load_config_bc_attrs(config_path: str | Path) -> dict[str, list[int]]:
         )
     for wp_key in ("WavePort", "WavePortBC"):
         for wp in boundaries.get(wp_key, []):
-            bcs.setdefault("WavePort", []).extend(wp.get("Attributes", []))
+            if isinstance(wp, dict):
+                bcs.setdefault("WavePort", []).extend(wp.get("Attributes", []))
+
+    # LumpedPort stores boundary attributes inside each port's Elements list.
+    for lp in boundaries.get("LumpedPort", []):
+        if not isinstance(lp, dict):
+            continue
+        for elem in lp.get("Elements", []):
+            if isinstance(elem, dict):
+                bcs.setdefault("LumpedPort", []).extend(elem.get("Attributes", []))
+
+    # Keep deterministic output and avoid repeated entries.
+    for key, attrs in list(bcs.items()):
+        bcs[key] = sorted({int(a) for a in attrs})
+
     return bcs
 
 
