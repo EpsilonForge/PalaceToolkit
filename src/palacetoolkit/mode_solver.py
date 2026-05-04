@@ -539,7 +539,8 @@ class WaveguideModeSolver:
         self.mesh = mesh
         self.order = order
         self.dim = mesh.Dimension()
-        assert self.dim == 2, "Solver requires a 2D mesh"
+        if self.dim != 2:
+            raise ValueError("Solver requires a 2D mesh")
 
         # Material properties — mu_inv is always scalar
         if isinstance(mu_inv, (int, float)):
