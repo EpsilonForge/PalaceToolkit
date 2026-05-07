@@ -9,14 +9,14 @@ Palace configuration, simulation, and post-processing.
 
 | Example | Description |
 |:--------|:------------|
-| [Waveguides & Horn Antenna](waveguides-and-horn-antenna.ipynb) | WR-90 rectangular waveguide, waveport BCs, horn antenna |
-| [Dipole Antenna](dipole-antenna.ipynb) | Half-wave dipole, voltage-gap feed, impedance extraction |
+| [Horn Antenna](horn_antenna.ipynb) | WR-90 rectangular waveguide transition to a horn antenna with waveport boundaries. |
+| [Dipole Antenna Mesh](dipole_antenna_mesh.ipynb) | Half-wave dipole geometry and mesh generation workflow. |
 
 ## Planar Microwave Circuits
 
 | Example | Description |
 |:--------|:------------|
-| [Coplanar Waveguide](coplanar-waveguide.ipynb) | CPW line — driven simulation with wave ports and eigenmode analysis with periodic BCs |
+| [Coax to Waveguide Transition](coax_to_waveguide.ipynb) | Driven coax-to-waveguide transition example including geometry, mesh, and setup. |
 
 ## Waveguide Mode Solver
 

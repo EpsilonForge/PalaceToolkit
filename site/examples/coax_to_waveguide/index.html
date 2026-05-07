@@ -13,6 +13,10 @@
         <link rel="canonical" href="https://www.epsilonforge.com/palace-toolkit/examples/coax_to_waveguide/">
       
       
+        <link rel="prev" href="../dipole_antenna_mesh/">
+      
+      
+        <link rel="next" href="../hollow_waveguide_modes/">
       
       
         
@@ -23,7 +27,7 @@
     
     
       
-        <title>Coax to waveguide - PalaceToolkit</title>
+        <title>Coax to Waveguide Transition - PalaceToolkit</title>
       
     
     
@@ -109,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Coax to waveguide
+              Coax to Waveguide Transition
             
           </span>
         </div>
@@ -231,10 +235,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../" class="md-tabs__link">
           
   
@@ -498,24 +504,29 @@
       
   
   
+    
   
   
+  
     
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -533,7 +544,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -579,14 +590,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../waveguides-and-horn-antenna.ipynb" class="md-nav__link">
+      <a href="../horn_antenna/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Waveguides & Horn Antenna
+    Horn Antenna
   
 
     
@@ -607,14 +618,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dipole-antenna.ipynb" class="md-nav__link">
+      <a href="../dipole_antenna_mesh/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Dipole Antenna
+    Dipole Antenna Mesh
   
 
     
@@ -632,17 +643,42 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../coplanar-waveguide.ipynb" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coax to Waveguide Transition
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Coplanar Waveguide
+    Coax to Waveguide Transition
   
 
     
@@ -651,10 +687,194 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#coax-to-waveguide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coax to waveguide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Coax to waveguide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#design-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initializing-the-modeling-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initializing the Modeling Environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design-parameter-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Parameter Calculation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geometry-construction-and-boolean-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Geometry Construction and Boolean Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geometric-entity-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Geometric Entity Classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#physical-group-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Physical Group Assignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mesh-generation-refinement-and-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mesh Generation, Refinement, and Export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-the-palace-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generating the Palace Configuration File
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
               
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2D Mode solver
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    2D Mode solver
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -707,6 +927,98 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../slotline_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slotline Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differential_microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differential Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -903,7 +1215,7 @@
 
 
 
-  <h1>Coax to waveguide</h1>
+  <h1>Coax to Waveguide Transition</h1>
 
 <script>
 (function (global, factory) {
@@ -1065,6 +1377,34 @@
           notice.hidden = true
         }, 1000)
       })
+</script>
+<script>
+(function() {
+  function addWidgetsRenderer() {
+    var mimeElement = document.querySelector('script[type="application/vnd.jupyter.widget-view+json"]');
+    var scriptElement = document.createElement('script');
+    
+    var widgetRendererSrc = 'https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js';
+    
+    var widgetState;
+
+    // Fallback for older version:
+    try {
+      widgetState = mimeElement && JSON.parse(mimeElement.innerHTML);
+
+      if (widgetState && (widgetState.version_major < 2 || !widgetState.version_major)) {
+        
+        var widgetRendererSrc = 'https://unpkg.com/@jupyter-js-widgets@*/dist/embed.js';
+        
+      }
+    } catch(e) {}
+
+    scriptElement.src = widgetRendererSrc;
+    document.body.appendChild(scriptElement);
+  }
+
+  document.addEventListener('DOMContentLoaded', addWidgetsRenderer);
+}());
 </script>
 <style type="text/css">
     pre { line-height: 125%; }
@@ -1626,24 +1966,13 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=005c45d1">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_papermill-error-cell-tag" data-mime-type="text/markdown">
-<p><span style="color:red; font-family:Helvetica Neue, Helvetica, Arial, sans-serif; font-size:2em;">An Exception was encountered at '<a href="#papermill-error-cell">In [9]</a>'.</span></p>
-</div>
-</div>
-</div>
-</div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=50ad7e94">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="coax-to-waveguide">Coax to waveguide<a class="anchor-link" href="#coax-to-waveguide">¶</a></h2><p>This notebook outlines the design and simulation workflow for a horn antenna fed by a standard WR-90 waveguide operating at a target frequency of 10 GHz (λ≈30mm).</p>
+<h2 id="coax-to-waveguide">Coax to waveguide<a class="anchor-link" href="#coax-to-waveguide">¶</a></h2><p>This notebook outlines the design and simulation workflow for a horn antenna fed by a standard WR-90 waveguide operating at a target frequency of 10 GHz (λ≈30mm)</p>
 <h3 id="design-parameters">Design Parameters<a class="anchor-link" href="#design-parameters">¶</a></h3><p>The antenna geometry and probe feed are defined based on the following physical constraints:</p>
 <p>Waveguide (WR-90):</p>
 <ul>
@@ -1752,6 +2081,9 @@ from palacetoolkit.mesh import refine_near_surfaces</div>
 <span class="n">freq_ghz</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span>
 <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"coax_to_waveguide.msh"</span>
+<span class="n">mesh_order</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">gui</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">order</span> <span class="o">=</span> <span class="mi">1</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">inner_diameter_mm: float = 1.28
 outer_diameter_mm: float = 3.6  
@@ -1762,7 +2094,10 @@ wg_length: float = 40
 wg_width: float = 22.86
 freq_ghz: float = 10.0
 verbose: int = 2
-filename: str = "coax_to_waveguide.msh"</div>
+filename: str = "coax_to_waveguide.msh"
+mesh_order = 1
+gui = False
+order = 1</div>
 </div>
 </div>
 </div>
@@ -2234,13 +2569,13 @@ pg_map = {
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">refine_near_surfaces</span><span class="p">([(</span><span class="mi">2</span><span class="p">,</span> <span class="n">extract_tag</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inner_cond_surfs</span> <span class="o">+</span> <span class="n">outer_cond_surfs</span> <span class="o">+</span> <span class="n">waveport_surfs</span> <span class="o">+</span> <span class="n">coax_port_surfs</span><span class="p">],</span> 
                      <span class="n">wavelength</span><span class="o">=</span> <span class="n">lamda</span><span class="p">,</span>
-                     <span class="n">ppw_near</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
-                     <span class="n">ppw_far</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>
+                     <span class="n">ppw_near</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+                     <span class="n">ppw_far</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
                      <span class="n">transition_distance</span><span class="o">=</span> <span class="n">lamda</span> <span class="o">/</span> <span class="mi">8</span><span class="p">,</span>
                     <span class="p">)</span>
 
 <span class="n">gmsh</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">gmsh</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">setOrder</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">gmsh</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">setOrder</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
 <span class="n">gmsh</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="s2">"Netgen"</span><span class="p">)</span>
 
 <span class="n">gmsh</span><span class="o">.</span><span class="n">option</span><span class="o">.</span><span class="n">setNumber</span><span class="p">(</span><span class="s2">"Mesh.MshFileVersion"</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">)</span>
@@ -2250,18 +2585,20 @@ pg_map = {
 <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">script_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 <span class="n">gmsh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
 
-<span class="n">gmsh</span><span class="o">.</span><span class="n">fltk</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">gui</span><span class="p">:</span>
+    <span class="n">gmsh</span><span class="o">.</span><span class="n">fltk</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
 <span class="n">gmsh</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-8">refine_near_surfaces([(2, extract_tag(x)) for x in inner_cond_surfs + outer_cond_surfs + waveport_surfs + coax_port_surfs], 
                      wavelength= lamda,
-                     ppw_near = 30,
-                     ppw_far = 15,
+                     ppw_near = 50,
+                     ppw_far = 20,
                      transition_distance= lamda / 8,
                     )
 
 gmsh.model.mesh.generate(3)
-gmsh.model.mesh.setOrder(1)
+gmsh.model.mesh.setOrder(order)
 gmsh.model.mesh.optimize("Netgen")
 
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
@@ -2271,7 +2608,9 @@ script_dir = os.getcwd()
 output_path = os.path.join(script_dir, filename)
 gmsh.write(output_path)
 
-gmsh.fltk.run()
+if gui:
+    gmsh.fltk.run()
+
 gmsh.finalize()</div>
 </div>
 </div>
@@ -2285,9 +2624,9 @@ gmsh.finalize()</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>  12 conductor boundary curves
-  ppw_near=30  ppw_far=15
-  SizeMin=1.0000 (30 pts/λ)
-  SizeMax=2.0000 (15 pts/λ)
+  ppw_near=50  ppw_far=20
+  SizeMin=0.6000 (50 pts/λ)
+  SizeMax=1.5000 (20 pts/λ)
   Transition distance: 0 → 3.7500
 Info    : Meshing 1D...
 Info    : [  0%] Meshing curve 1 (Line)
@@ -2310,7 +2649,7 @@ Info    : [ 90%] Meshing curve 17 (Circle)
 Info    : [ 90%] Meshing curve 18 (Line)
 Info    : [100%] Meshing curve 19 (Circle)
 Info    : [100%] Meshing curve 20 (Line)
-Info    : Done meshing 1D (Wall 0.0403626s, CPU 0.040399s)
+Info    : Done meshing 1D (Wall 0.0438515s, CPU 0.043284s)
 Info    : Meshing 2D...
 Info    : [  0%] Meshing surface 1 (Plane, MeshAdapt)
 Info    : [ 10%] Meshing surface 2 (Plane, MeshAdapt)
@@ -2324,131 +2663,154 @@ Info    : [ 70%] Meshing surface 9 (Plane, MeshAdapt)
 Info    : [ 80%] Meshing surface 10 (Cylinder, MeshAdapt)
 Info    : [ 90%] Meshing surface 11 (Plane, MeshAdapt)
 Info    : [100%] Meshing surface 12 (Cylinder, MeshAdapt)
-Info    : Done meshing 2D (Wall 0.0468674s, CPU 0.046096s)
+Info    : Done meshing 2D (Wall 0.0858975s, CPU 0.084705s)
 Info    : Meshing 3D...
 Info    : 3D Meshing 2 volumes with 1 connected component
-Info    : Tetrahedrizing 1328 nodes...
-Info    : Done tetrahedrizing 1336 nodes (Wall 0.00801489s, CPU 0.00706s)
+Info    : Tetrahedrizing 2478 nodes...
+Info    : Done tetrahedrizing 2486 nodes (Wall 0.0158119s, CPU 0.015823s)
 Info    : Reconstructing mesh...
 Info    :  - Creating surface mesh
 Info    :  - Identifying boundary edges
 Info    :  - Recovering boundary
-Info    : Done reconstructing mesh (Wall 0.0169913s, CPU 0.01619s)
-Info    : Found volume 1
-Info    : Found volume 2
-Info    : It. 0 - 0 nodes created - worst tet radius 3.94818 (nodes removed 0 0)
-Info    : It. 500 - 500 nodes created - worst tet radius 1.03416 (nodes removed 0 0)
-Info    : 3D refinement terminated (1886 nodes total):
-Info    :  - 0 Delaunay cavities modified for star shapeness
-Info    :  - 0 nodes could not be inserted
-Info    :  - 7467 tetrahedra created in 0.0142035 sec. (525716 tets/s)
-Info    : 0 node relocations
-Info    : Done meshing 3D (Wall 0.043359s, CPU 0.042729s)
-Info    : Optimizing mesh...
-Info    : Optimizing volume 1
-Info    : Optimization starts (volume = 9284.73) with worst = 0.00999969 / average = 0.741757:
-Info    : 0.00 &lt; quality &lt; 0.10 :        23 elements
-Info    : 0.10 &lt; quality &lt; 0.20 :        43 elements
-Info    : 0.20 &lt; quality &lt; 0.30 :        91 elements
-Info    : 0.30 &lt; quality &lt; 0.40 :       174 elements
-Info    : 0.40 &lt; quality &lt; 0.50 :       255 elements
-Info    : 0.50 &lt; quality &lt; 0.60 :       493 elements
-Info    : 0.60 &lt; quality &lt; 0.70 :      1139 elements
-Info    : 0.70 &lt; quality &lt; 0.80 :      1960 elements
-Info    : 0.80 &lt; quality &lt; 0.90 :      2106 elements
-Info    : 0.90 &lt; quality &lt; 1.00 :       892 elements
-Info    : 152 edge swaps, 3 node relocations (volume = 9284.73): worst = 0.269569 / average = 0.754884 (Wall 0.00129578s, CPU 0.001317s)
-Info    : 153 edge swaps, 3 node relocations (volume = 9284.73): worst = 0.269569 / average = 0.754854 (Wall 0.00157847s, CPU 0.001612s)
-Info    : No ill-shaped tets in the mesh :-)
-Info    : 0.00 &lt; quality &lt; 0.10 :         0 elements
-Info    : 0.10 &lt; quality &lt; 0.20 :         0 elements
-Info    : 0.20 &lt; quality &lt; 0.30 :         1 elements
-Info    : 0.30 &lt; quality &lt; 0.40 :       169 elements
-Info    : 0.40 &lt; quality &lt; 0.50 :       247 elements
-Info    : 0.50 &lt; quality &lt; 0.60 :       492 elements
-Info    : 0.60 &lt; quality &lt; 0.70 :      1123 elements
-Info    : 0.70 &lt; quality &lt; 0.80 :      1986 elements
-Info    : 0.80 &lt; quality &lt; 0.90 :      2127 elements
-Info    : 0.90 &lt; quality &lt; 1.00 :       890 elements
-Info    : Optimizing volume 2
-Info    : Optimization starts (volume = 44.0401) with worst = 0.0486802 / average = 0.73365:
-Info    : 0.00 &lt; quality &lt; 0.10 :         1 elements
-Info    : 0.10 &lt; quality &lt; 0.20 :         0 elements
-Info    : 0.20 &lt; quality &lt; 0.30 :         4 elements
-Info    : 0.30 &lt; quality &lt; 0.40 :         8 elements
-Info    : 0.40 &lt; quality &lt; 0.50 :        15 elements
-Info    : 0.50 &lt; quality &lt; 0.60 :        25 elements
-Info    : 0.60 &lt; quality &lt; 0.70 :        48 elements
-Info    : 0.70 &lt; quality &lt; 0.80 :        70 elements
-Info    : 0.80 &lt; quality &lt; 0.90 :        88 elements
-Info    : 0.90 &lt; quality &lt; 1.00 :        32 elements
-Info    : 4 edge swaps, 0 node relocations (volume = 44.0401): worst = 0.290454 / average = 0.737554 (Wall 5.646e-05s, CPU 7.9e-05s)
-Info    : No ill-shaped tets in the mesh :-)
-Info    : 0.00 &lt; quality &lt; 0.10 :         0 elements
-Info    : 0.10 &lt; quality &lt; 0.20 :         0 elements
-Info    : 0.20 &lt; quality &lt; 0.30 :         1 elements
-Info    : 0.30 &lt; quality &lt; 0.40 :        12 elements
-Info    : 0.40 &lt; quality &lt; 0.50 :        13 elements
-Info    : 0.50 &lt; quality &lt; 0.60 :        25 elements
-Info    : 0.60 &lt; quality &lt; 0.70 :        47 elements
-Info    : 0.70 &lt; quality &lt; 0.80 :        70 elements
-Info    : 0.80 &lt; quality &lt; 0.90 :        89 elements
-Info    : 0.90 &lt; quality &lt; 1.00 :        32 elements
-Info    : Done optimizing mesh (Wall 0.00456267s, CPU 0.00468s)
-Info    : 1886 nodes 10258 elements
-Info    : Optimizing mesh (Netgen)...
-Info    : Optimizing volume 1
-Info    : CalcLocalH: 1803 Points 7036 Elements 2486 Surface Elements 
-Info    : Remove Illegal Elements 
-Info    : 578 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 19.3311 
-Info    : 86 splits performed 
-Info    : SwapImprove  
-Info    : 101 swaps performed 
-Info    : SwapImprove2  
-Info    : 5 swaps performed 
-Info    : 380 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 170.571 
-Info    : 87 splits performed 
-Info    : SwapImprove  
-Info    : 33 swaps performed 
-Info    : SwapImprove2  
-Info    : 5 swaps performed 
-Info    : 164 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 170.571 
-Info    : 42 splits performed 
-Info    : SwapImprove  
-Info    : 10 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : 54 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 170.571 
-Info    : 15 splits performed 
-Info    : SwapImprove  
-Info    : 2 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : 12 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 170.571 
-Info    : 3 splits performed 
-Info    : SwapImprove  
-Info    : 0 swaps performed 
-Info    : SwapImprove2  
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Info    : 0 swaps performed 
-Info    : 3 illegal tets 
+<pre>Info    : Done reconstructing mesh (Wall 0.0341738s, CPU 0.03279s)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Info    : Found volume 1
+Info    : Found volume 2
+Info    : It. 0 - 0 nodes created - worst tet radius 5.10984 (nodes removed 0 0)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Info    : It. 500 - 500 nodes created - worst tet radius 1.38331 (nodes removed 0 0)
+Info    : It. 1000 - 1000 nodes created - worst tet radius 1.14555 (nodes removed 0 0)
+Info    : It. 1500 - 1500 nodes created - worst tet radius 1.01555 (nodes removed 0 0)
+Info    : 3D refinement terminated (4074 nodes total):
+Info    :  - 1 Delaunay cavities modified for star shapeness
+Info    :  - 0 nodes could not be inserted
+Info    :  - 17595 tetrahedra created in 0.0385036 sec. (456970 tets/s)
+Info    : 0 node relocations
+Info    : Done meshing 3D (Wall 0.0977877s, CPU 0.097218s)
+Info    : Optimizing mesh...
+Info    : Optimizing volume 1
+Info    : Optimization starts (volume = 9283.88) with worst = 0.0112082 / average = 0.7543:
+Info    : 0.00 &lt; quality &lt; 0.10 :        46 elements
+Info    : 0.10 &lt; quality &lt; 0.20 :       131 elements
+Info    : 0.20 &lt; quality &lt; 0.30 :       227 elements
+Info    : 0.30 &lt; quality &lt; 0.40 :       324 elements
+Info    : 0.40 &lt; quality &lt; 0.50 :       526 elements
+Info    : 0.50 &lt; quality &lt; 0.60 :      1048 elements
+Info    : 0.60 &lt; quality &lt; 0.70 :      2411 elements
+Info    : 0.70 &lt; quality &lt; 0.80 :      4363 elements
+Info    : 0.80 &lt; quality &lt; 0.90 :      5466 elements
+Info    : 0.90 &lt; quality &lt; 1.00 :      2448 elements
+Info    : 398 edge swaps, 2 node relocations (volume = 9283.88): worst = 0.230379 / average = 0.768879 (Wall 0.00321888s, CPU 0.003208s)
+Info    : 399 edge swaps, 2 node relocations (volume = 9283.88): worst = 0.3 / average = 0.768906 (Wall 0.00388976s, CPU 0.003916s)
+Info    : No ill-shaped tets in the mesh :-)
+Info    : 0.00 &lt; quality &lt; 0.10 :         0 elements
+Info    : 0.10 &lt; quality &lt; 0.20 :         0 elements
+Info    : 0.20 &lt; quality &lt; 0.30 :         0 elements
+Info    : 0.30 &lt; quality &lt; 0.40 :       310 elements
+Info    : 0.40 &lt; quality &lt; 0.50 :       510 elements
+Info    : 0.50 &lt; quality &lt; 0.60 :      1039 elements
+Info    : 0.60 &lt; quality &lt; 0.70 :      2404 elements
+Info    : 0.70 &lt; quality &lt; 0.80 :      4404 elements
+Info    : 0.80 &lt; quality &lt; 0.90 :      5508 elements
+Info    : 0.90 &lt; quality &lt; 1.00 :      2448 elements
+Info    : Optimizing volume 2
+Info    : Optimization starts (volume = 44.3679) with worst = 0.0689716 / average = 0.695575:
+Info    : 0.00 &lt; quality &lt; 0.10 :         1 elements
+Info    : 0.10 &lt; quality &lt; 0.20 :         5 elements
+Info    : 0.20 &lt; quality &lt; 0.30 :        10 elements
+Info    : 0.30 &lt; quality &lt; 0.40 :         5 elements
+Info    : 0.40 &lt; quality &lt; 0.50 :        28 elements
+Info    : 0.50 &lt; quality &lt; 0.60 :        57 elements
+Info    : 0.60 &lt; quality &lt; 0.70 :       157 elements
+Info    : 0.70 &lt; quality &lt; 0.80 :       228 elements
+Info    : 0.80 &lt; quality &lt; 0.90 :       103 elements
+Info    : 0.90 &lt; quality &lt; 1.00 :        11 elements
+Info    : 16 edge swaps, 0 node relocations (volume = 44.3679): worst = 0.277905 / average = 0.707631 (Wall 0.000124409s, CPU 0.00015s)
+Info    : 18 edge swaps, 0 node relocations (volume = 44.3679): worst = 0.322615 / average = 0.709237 (Wall 0.000166829s, CPU 0.000201s)
+Info    : No ill-shaped tets in the mesh :-)
+Info    : 0.00 &lt; quality &lt; 0.10 :         0 elements
+Info    : 0.10 &lt; quality &lt; 0.20 :         0 elements
+Info    : 0.20 &lt; quality &lt; 0.30 :         0 elements
+Info    : 0.30 &lt; quality &lt; 0.40 :         4 elements
+Info    : 0.40 &lt; quality &lt; 0.50 :        24 elements
+Info    : 0.50 &lt; quality &lt; 0.60 :        60 elements
+Info    : 0.60 &lt; quality &lt; 0.70 :       160 elements
+Info    : 0.70 &lt; quality &lt; 0.80 :       232 elements
+Info    : 0.80 &lt; quality &lt; 0.90 :       100 elements
+Info    : 0.90 &lt; quality &lt; 1.00 :        11 elements
+Info    : Done optimizing mesh (Wall 0.0130661s, CPU 0.012431s)
+Info    : 4074 nodes 22560 elements
+Info    : Optimizing mesh (Netgen)...
+Info    : Optimizing volume 1
+Info    : CalcLocalH: 3894 Points 16623 Elements 4592 Surface Elements 
+Info    : Remove Illegal Elements 
+Info    : 849 illegal tets 
 Info    : SplitImprove 
-Info    : badmax = 170.571 
+Info    : badmax = 19.2097 
+Info    : 132 splits performed 
+Info    : SwapImprove  
+Info    : 162 swaps performed 
+Info    : SwapImprove2  
+Info    : 6 swaps performed 
+Info    : 533 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 1512.76 
+Info    : 129 splits performed 
+Info    : SwapImprove  
+Info    : 64 swaps performed 
+Info    : SwapImprove2  
+Info    : 8 swaps performed 
+Info    : 184 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 643.824 
+Info    : 53 splits performed 
+Info    : SwapImprove  
+Info    : 6 swaps performed 
+Info    : SwapImprove2  
+Info    : 3 swaps performed 
+Info    : 47 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 4612.07 
+Info    : 15 splits performed 
+Info    : SwapImprove  
+Info    : 1 swaps performed 
+Info    : SwapImprove2  
+Info    : 0 swaps performed 
+Info    : 7 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 643.824 
+Info    : 1 splits performed 
+Info    : SwapImprove  
+Info    : 0 swaps performed 
+Info    : SwapImprove2  
+Info    : 0 swaps performed 
+Info    : 5 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 643.824 
+Info    : 1 splits performed 
+Info    : SwapImprove  
+Info    : 0 swaps performed 
+Info    : SwapImprove2  
+Info    : 0 swaps performed 
+Info    : 2 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 643.824 
 Info    : 1 splits performed 
 Info    : SwapImprove  
 Info    : 0 swaps performed 
@@ -2457,66 +2819,60 @@ Info    : 0 swaps performed
 Info    : 0 illegal tets 
 Info    : Volume Optimization 
 Info    : CombineImprove 
+Info    : 187 elements combined 
+Info    : ImproveMesh 
+Info    : Total badness = 25994.5 
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Info    : 95 elements combined 
-Info    : ImproveMesh 
-Info    : Total badness = 12327.1 
-Info    : Total badness = 11669.8 
+<pre>Info    : Total badness = 24658.1 
 Info    : SplitImprove 
-Info    : badmax = 40.0322 
-Info    : 0 splits performed 
+Info    : badmax = 26.2601 
+Info    : 1 splits performed 
 Info    : ImproveMesh 
-Info    : Total badness = 11669.8 
+Info    : Total badness = 24663.8 
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Info    : Total badness = 11599 
+<pre>Info    : Total badness = 24480.3 
 Info    : SwapImprove  
-Info    : 560 swaps performed 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Info    : 1068 swaps performed 
 Info    : SwapImprove2  
 Info    : 0 swaps performed 
 Info    : ImproveMesh 
-Info    : Total badness = 10656.3 
-Info    : Total badness = 10322.3 
+Info    : Total badness = 22625.6 
+Info    : Total badness = 22076.3 
 Info    : CombineImprove 
-Info    : 10 elements combined 
+Info    : 18 elements combined 
 Info    : ImproveMesh 
-Info    : Total badness = 10227.3 
-Info    : Total badness = 10200.8 
+Info    : Total badness = 21913.7 
+Info    : Total badness = 21864.4 
 Info    : SplitImprove 
-Info    : badmax = 16.6082 
+Info    : badmax = 16.4601 
 Info    : 0 splits performed 
 Info    : ImproveMesh 
-Info    : Total badness = 10200.8 
-Info    : Total badness = 10198.8 
+Info    : Total badness = 21864.4 
+Info    : Total badness = 21858.7 
 Info    : SwapImprove  
-Info    : 148 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : ImproveMesh 
-Info    : Total badness = 10081.5 
-Info    : Total badness = 9987.96 
-Info    : CombineImprove 
-Info    : 5 elements combined 
-Info    : ImproveMesh 
-Info    : Total badness = 9938.86 
-Info    : Total badness = 9929.08 
-Info    : SplitImprove 
-Info    : badmax = 17.7661 
-Info    : 0 splits performed 
-Info    : ImproveMesh 
-Info    : Total badness = 9929.08 
-Info    : Total badness = 9928.31 
-Info    : SwapImprove  
-Info    : 66 swaps performed 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Info    : 239 swaps performed 
 Info    : SwapImprove2  
 </pre>
 </div>
@@ -2526,15 +2882,96 @@ Info    : SwapImprove2
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Info    : 0 swaps performed 
 Info    : ImproveMesh 
-Info    : Total badness = 9895.83 
-Info    : Total badness = 9852.44 
-Info    : Optimizing volume 2
-Info    : CalcLocalH: 110 Points 289 Elements 220 Surface Elements 
-Info    : Remove Illegal Elements 
-Info    : 115 illegal tets 
+Info    : Total badness = 21657.3 
+Info    : Total badness = 21509.1 
+Info    : CombineImprove 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Info    : 13 elements combined 
+Info    : ImproveMesh 
+Info    : Total badness = 21376.5 
+Info    : Total badness = 21357.7 
 Info    : SplitImprove 
-Info    : badmax = 14.1919 
+Info    : badmax = 11.0073 
+Info    : 0 splits performed 
+Info    : ImproveMesh 
+Info    : Total badness = 21357.7 
+Info    : Total badness = 21356.2 
+Info    : SwapImprove  
+Info    : 107 swaps performed 
+Info    : SwapImprove2  
+Info    : 0 swaps performed 
+Info    : ImproveMesh 
+Info    : Total badness = 21304 
+Info    : Total badness = 21240.1 
+Info    : Optimizing volume 2
+Info    : CalcLocalH: 218 Points 591 Elements 436 Surface Elements 
+Info    : Remove Illegal Elements 
+Info    : 170 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 15.5651 
+Info    : 18 splits performed 
+Info    : SwapImprove  
+Info    : 18 swaps performed 
+Info    : SwapImprove2  
+Info    : 0 swaps performed 
+Info    : 128 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 15.5651 
+Info    : 16 splits performed 
+Info    : SwapImprove  
+Info    : 6 swaps performed 
+Info    : SwapImprove2  
+Info    : 0 swaps performed 
+Info    : 90 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 18.1167 
+Info    : 12 splits performed 
+Info    : SwapImprove  
+Info    : 6 swaps performed 
+Info    : SwapImprove2  
+Info    : 2 swaps performed 
+Info    : 62 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 196.553 
 Info    : 11 splits performed 
+Info    : SwapImprove  
+Info    : 6 swaps performed 
+Info    : SwapImprove2  
+Info    : 1 swaps performed 
+Info    : 33 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 196.553 
+Info    : 8 splits performed 
+Info    : SwapImprove  
+Info    : 4 swaps performed 
+Info    : SwapImprove2  
+Info    : 0 swaps performed 
+Info    : 7 illegal tets 
+Info    : SplitImprove 
+Info    : badmax = 196.553 
+Info    : 2 splits performed 
+Info    : SwapImprove  
+Info    : 0 swaps performed 
+Info    : SwapImprove2  
+Info    : 1 swaps performed 
+Info    : 0 illegal tets 
+Info    : Volume Optimization 
+Info    : CombineImprove 
+Info    : 23 elements combined 
+Info    : ImproveMesh 
+Info    : Total badness = 1527.24 
+Info    : Total badness = 1486.36 
+Info    : SplitImprove 
+Info    : badmax = 19.2346 
+Info    : 0 splits performed 
+Info    : ImproveMesh 
+Info    : Total badness = 1486.36 
+Info    : Total badness = 1485.72 
 Info    : SwapImprove  
 </pre>
 </div>
@@ -2542,106 +2979,49 @@ Info    : SwapImprove
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Info    : 21 swaps performed 
+<pre>Info    : 36 swaps performed 
 Info    : SwapImprove2  
 Info    : 0 swaps performed 
-Info    : 75 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 19.7266 
-Info    : 9 splits performed 
-Info    : SwapImprove  
-Info    : 2 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : 53 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 26.4184 
-Info    : 7 splits performed 
-Info    : SwapImprove  
-Info    : 1 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : 38 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 26.4184 
-Info    : 8 splits performed 
-Info    : SwapImprove  
-Info    : 3 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : 19 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 26.4184 
-Info    : 5 splits performed 
-Info    : SwapImprove  
-Info    : 0 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : 8 illegal tets 
-Info    : SplitImprove 
-Info    : badmax = 47.0164 
-Info    : 2 splits performed 
-Info    : SwapImprove  
-Info    : 2 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : 0 illegal tets 
-Info    : Volume Optimization 
+Info    : ImproveMesh 
+Info    : Total badness = 1438.64 
+Info    : Total badness = 1419.21 
 Info    : CombineImprove 
-Info    : 5 elements combined 
+Info    : 2 elements combined 
 Info    : ImproveMesh 
-Info    : Total badness = 954.766 
-Info    : Total badness = 908.004 
+Info    : Total badness = 1400.97 
+Info    : Total badness = 1399.34 
 Info    : SplitImprove 
-Info    : badmax = 37.6953 
-Info    : 4 splits performed 
+Info    : badmax = 19.8755 
+Info    : 1 splits performed 
 Info    : ImproveMesh 
-Info    : Total badness = 928.705 
-Info    : Total badness = 918.317 
+Info    : Total badness = 1403.89 
+Info    : Total badness = 1401.13 
 Info    : SwapImprove  
-Info    : 45 swaps performed 
+Info    : 17 swaps performed 
 Info    : SwapImprove2  
 Info    : 0 swaps performed 
 Info    : ImproveMesh 
-Info    : Total badness = 837.303 
-Info    : Total badness = 797.04 
+Info    : Total badness = 1381.54 
+Info    : Total badness = 1367.13 
 Info    : CombineImprove 
-Info    : 8 elements combined 
+Info    : 4 elements combined 
 Info    : ImproveMesh 
-Info    : Total badness = 707.417 
-Info    : Total badness = 698.885 
+Info    : Total badness = 1323.25 
+Info    : Total badness = 1320.26 
 Info    : SplitImprove 
-Info    : badmax = 8.11813 
+Info    : badmax = 14.5745 
 Info    : 0 splits performed 
 Info    : ImproveMesh 
-Info    : Total badness = 698.885 
-Info    : Total badness = 698.092 
+Info    : Total badness = 1320.26 
+Info    : Total badness = 1320.18 
 Info    : SwapImprove  
-Info    : 13 swaps performed 
+Info    : 7 swaps performed 
 Info    : SwapImprove2  
 Info    : 0 swaps performed 
 Info    : ImproveMesh 
-Info    : Total badness = 682.602 
-Info    : Total badness = 674.479 
-Info    : CombineImprove 
-Info    : 5 elements combined 
-Info    : ImproveMesh 
-Info    : Total badness = 621.867 
-Info    : Total badness = 618.64 
-Info    : SplitImprove 
-Info    : badmax = 4.91086 
-Info    : 0 splits performed 
-Info    : ImproveMesh 
-Info    : Total badness = 618.64 
-Info    : Total badness = 618.568 
-Info    : SwapImprove  
-Info    : 4 swaps performed 
-Info    : SwapImprove2  
-Info    : 0 swaps performed 
-Info    : ImproveMesh 
-Info    : Total badness = 615.182 
-Info    : Total badness = 613.458 
-Info    : Done optimizing mesh (Wall 0.267413s, CPU 0.26952s)
+Info    : Total badness = 1311.37 
+Info    : Total badness = 1308.24 
+Info    : Done optimizing mesh (Wall 0.557778s, CPU 0.561841s)
 Info    : Writing '/home/martin/Desktop/PalaceToolkit/docs/examples/coax_to_waveguide.msh'...
 </pre>
 </div>
@@ -2650,51 +3030,14 @@ Info    : Writing '/home/martin/Desktop/PalaceToolkit/docs/examples/coax_to_wave
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Info    : Done writing '/home/martin/Desktop/PalaceToolkit/docs/examples/coax_to_waveguide.msh'
--------------------------------------------------------
-Version       : 4.15.2
-License       : GNU General Public License
-Build OS      : Linux64-sdk
-Build date    : 20260324
-Build host    : gmsh.info
-Build options : 64Bit ALGLIB[contrib] ANN[contrib] Bamg Blas[petsc] Blossom Cgns DIntegration Dlopen DomHex Eigen[contrib] Fltk Gmm[contrib] Hxt Jpeg Kbipack Lapack[petsc] LinuxJoystick MathEx[contrib] Med Mesh Metis[contrib] Mmg Mpeg Netgen Nii2mesh ONELAB ONELABMetamodel OpenCASCADE OpenCASCADE-CAF OpenGL OpenMP OptHom PETSc Parser Plugins Png Post QuadMeshingTools QuadTri Solver TetGen/BR TinyXML2[contrib] Untangle Voro++[contrib] WinslowUntangler Zlib tinyobjloader
-FLTK version  : 1.3.11
-PETSc version : 3.14.4 (real arithmtic)
-OCC version   : 7.8.1
-MED version   : 4.1.0
-Packaged by   : geuzaine
-Web site      : https://gmsh.info
-Issue tracker : https://gitlab.onelab.info/gmsh/gmsh/issues
--------------------------------------------------------
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dc4fc716">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="generating-the-palace-configuration-file">Generating the Palace Configuration File<a class="anchor-link" href="#generating-the-palace-configuration-file">¶</a></h3><p>Finally, we assemble the simulation parameters into a JSON configuration file. This file serves as the definitive input for Palace.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=711096bb">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_papermill-error-cell-tag" data-mime-type="text/markdown">
-<p><span id="papermill-error-cell" style="color:red; font-family:Helvetica Neue, Helvetica, Arial, sans-serif; font-size:2em;">Execution using papermill encountered an exception here and stopped:</span></p>
-</div>
-</div>
-</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=27e21aa2">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3b16145d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2712,16 +3055,101 @@ Issue tracker : https://gitlab.onelab.info/gmsh/gmsh/issues
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">output_stem</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pyvista</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pv</span>
 
-<span class="n">palace_config</span> <span class="o">=</span> <span class="p">{</span>
+<span class="c1"># trame for interactive visualization in the notebook.</span>
+<span class="c1">#pv.set_jupyter_backend("trame")</span>
+
+<span class="c1"># Visualize the mesh in the notebook.</span>
+<span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">view_mesh</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-9">import pyvista as pv
+
+# trame for interactive visualization in the notebook.
+#pv.set_jupyter_backend("trame")
+
+# Visualize the mesh in the notebook.
+if order == 1:
+    view_mesh(filename)</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Loading mesh file: coax_to_waveguide.msh
+Groups to render transparent: ['air_none', 'air_plastic_enclosure']
+
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Mesh loaded successfully with 2 cell blocks
+Found 4928 triangles total
+Physical group tags in mesh: {1: 'coax_port', 2: 'inner_conductor', 3: 'outer_conductor', 4: 'waveguide_walls', 5: 'waveport'}
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jupyter-widgets jp-OutputArea-output" id="1f6cb8d9-9d93-4ee7-9349-51c50cfdac24" tabindex="0">
+<script type="text/javascript">
+var element = document.getElementById('1f6cb8d9-9d93-4ee7-9349-51c50cfdac24');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "92adc14f0d514524a170e1dd5aaa2682", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dc4fc716">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="generating-the-palace-configuration-file">Generating the Palace Configuration File<a class="anchor-link" href="#generating-the-palace-configuration-file">¶</a></h3><p>Finally, we assemble the simulation parameters into a JSON configuration file. This file serves as the definitive input for Palace.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=27e21aa2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">palace_config</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"Problem"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"Type"</span><span class="p">:</span> <span class="s2">"Driven"</span><span class="p">,</span>
         <span class="s2">"Verbose"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
         <span class="s2">"Output"</span><span class="p">:</span> <span class="s2">"/work/postpro/coax2waveguide"</span>
     <span class="p">},</span>
     <span class="s2">"Model"</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">"Mesh"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"/work/</span><span class="si">{</span><span class="n">output_stem</span><span class="si">}</span><span class="s2">.msh"</span><span class="p">,</span> 
+        <span class="s2">"Mesh"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"/work/coax_to_waveguide.msh"</span><span class="p">,</span> 
         <span class="s2">"L0"</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
         <span class="s2">"Refinement"</span><span class="p">:</span> <span class="p">{}</span>
     <span class="p">},</span>
@@ -2785,16 +3213,14 @@ Issue tracker : https://gitlab.onelab.info/gmsh/gmsh/issues
     
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Palace config successfully generated: coax_to_waveguide.json"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">output_stem = Path(filename).stem
-
-palace_config = {
+<div class="clipboard-copy-txt" id="cell-10">palace_config = {
     "Problem": {
         "Type": "Driven",
         "Verbose": 2,
         "Output": "/work/postpro/coax2waveguide"
     },
     "Model": {
-        "Mesh": f"/work/{output_stem}.msh", 
+        "Mesh": f"/work/coax_to_waveguide.msh", 
         "L0": 1e-3,
         "Refinement": {}
     },
@@ -2867,17 +3293,9 @@ print(f"Palace config successfully generated: coax_to_waveguide.json")</div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[9]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> output_stem = Path(filename).stem
-<span class="ansi-green-fg">      2</span> 
-<span class="ansi-green-fg">      3</span> palace_config = {
-<span class="ansi-green-fg">      4</span>     "Problem": {
-
-<span class="ansi-red-fg">NameError</span>: name 'Path' is not defined</pre>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Palace config successfully generated: coax_to_waveguide.json
+</pre>
 </div>
 </div>
 </div>
@@ -2886,6 +3304,9 @@ print(f"Palace config successfully generated: coax_to_waveguide.json")</div>
 </div>
 </div> <!-- jp-Notebook -->
 </div> <!-- jupyter-wrapper -->
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"658896afb1eb4c168c4e08ffe1809d3d": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "91d29d3aac6f4992a45f55be9e71d491": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "92adc14f0d514524a170e1dd5aaa2682": {"model_module": "@jupyter-widgets\/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets\/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_658896afb1eb4c168c4e08ffe1809d3d", "placeholder": "\u200b", "style": "IPY_MODEL_91d29d3aac6f4992a45f55be9e71d491", "tabbable": null, "tooltip": null, "value": "<iframe src=\"http:\/\/localhost:35351\/index.html?ui=P_0x7c0a166ad040_0&reconnect=auto\" class=\"pyvista\" style=\"width: 100%; height: 600px; border: 1px solid rgb(221,221,221);\" scrolling=\"no\"><\/iframe>"}}}, "version_major": 2, "version_minor": 0}
+</script>
 
         <style>
         ['pre { line-height: 125%; }\ntd.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }\nspan.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }\ntd.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }\nspan.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }\n.highlight-ipynb .hll { background-color: var(--jp-cell-editor-active-background) }\n.highlight-ipynb { background: var(--jp-cell-editor-background); color: var(--jp-mirror-editor-variable-color) }\n.highlight-ipynb .c { color: var(--jp-mirror-editor-comment-color); font-style: italic } /* Comment */\n.highlight-ipynb .err { color: var(--jp-mirror-editor-error-color) } /* Error */\n.highlight-ipynb .k { color: var(--jp-mirror-editor-keyword-color); font-weight: bold } /* Keyword */\n.highlight-ipynb .o { color: var(--jp-mirror-editor-operator-color); font-weight: bold } /* Operator */\n.highlight-ipynb .p { color: var(--jp-mirror-editor-punctuation-color) } /* Punctuation */\n.highlight-ipynb .ch { color: var(--jp-mirror-editor-comment-color); font-style: italic } /* Comment.Hashbang */\n.highlight-ipynb .cm { color: var(--jp-mirror-editor-comment-color); font-style: italic } /* Comment.Multiline */\n.highlight-ipynb .cp { color: var(--jp-mirror-editor-comment-color); font-style: italic } /* Comment.Preproc */\n.highlight-ipynb .cpf { color: var(--jp-mirror-editor-comment-color); font-style: italic } /* Comment.PreprocFile */\n.highlight-ipynb .c1 { color: var(--jp-mirror-editor-comment-color); font-style: italic } /* Comment.Single */\n.highlight-ipynb .cs { color: var(--jp-mirror-editor-comment-color); font-style: italic } /* Comment.Special */\n.highlight-ipynb .kc { color: var(--jp-mirror-editor-keyword-color); font-weight: bold } /* Keyword.Constant */\n.highlight-ipynb .kd { color: var(--jp-mirror-editor-keyword-color); font-weight: bold } /* Keyword.Declaration */\n.highlight-ipynb .kn { color: var(--jp-mirror-editor-keyword-color); font-weight: bold } /* Keyword.Namespace */\n.highlight-ipynb .kp { color: var(--jp-mirror-editor-keyword-color); font-weight: bold } /* Keyword.Pseudo */\n.highlight-ipynb .kr { color: var(--jp-mirror-editor-keyword-color); font-weight: bold } /* Keyword.Reserved */\n.highlight-ipynb .kt { color: var(--jp-mirror-editor-keyword-color); font-weight: bold } /* Keyword.Type */\n.highlight-ipynb .m { color: var(--jp-mirror-editor-number-color) } /* Literal.Number */\n.highlight-ipynb .s { color: var(--jp-mirror-editor-string-color) } /* Literal.String */\n.highlight-ipynb .ow { color: var(--jp-mirror-editor-operator-color); font-weight: bold } /* Operator.Word */\n.highlight-ipynb .pm { color: var(--jp-mirror-editor-punctuation-color) } /* Punctuation.Marker */\n.highlight-ipynb .w { color: var(--jp-mirror-editor-variable-color) } /* Text.Whitespace */\n.highlight-ipynb .mb { color: var(--jp-mirror-editor-number-color) } /* Literal.Number.Bin */\n.highlight-ipynb .mf { color: var(--jp-mirror-editor-number-color) } /* Literal.Number.Float */\n.highlight-ipynb .mh { color: var(--jp-mirror-editor-number-color) } /* Literal.Number.Hex */\n.highlight-ipynb .mi { color: var(--jp-mirror-editor-number-color) } /* Literal.Number.Integer */\n.highlight-ipynb .mo { color: var(--jp-mirror-editor-number-color) } /* Literal.Number.Oct */\n.highlight-ipynb .sa { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Affix */\n.highlight-ipynb .sb { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Backtick */\n.highlight-ipynb .sc { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Char */\n.highlight-ipynb .dl { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Delimiter */\n.highlight-ipynb .sd { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Doc */\n.highlight-ipynb .s2 { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Double */\n.highlight-ipynb .se { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Escape */\n.highlight-ipynb .sh { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Heredoc */\n.highlight-ipynb .si { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Interpol */\n.highlight-ipynb .sx { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Other */\n.highlight-ipynb .sr { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Regex */\n.highlight-ipynb .s1 { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Single */\n.highlight-ipynb .ss { color: var(--jp-mirror-editor-string-color) } /* Literal.String.Symbol */\n.highlight-ipynb .il { color: var(--jp-mirror-editor-number-color) } /* Literal.Number.Integer.Long */']

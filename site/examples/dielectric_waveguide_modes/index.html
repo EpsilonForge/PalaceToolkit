@@ -16,7 +16,7 @@
         <link rel="prev" href="../hollow_waveguide_modes/">
       
       
-        <link rel="next" href="../../full-course/">
+        <link rel="next" href="../microstrip_modes/">
       
       
         
@@ -590,14 +590,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../waveguides-and-horn-antenna.ipynb" class="md-nav__link">
+      <a href="../horn_antenna/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Waveguides & Horn Antenna
+    Horn Antenna
   
 
     
@@ -618,14 +618,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dipole-antenna.ipynb" class="md-nav__link">
+      <a href="../dipole_antenna_mesh/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Dipole Antenna
+    Dipole Antenna Mesh
   
 
     
@@ -646,14 +646,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../coplanar-waveguide.ipynb" class="md-nav__link">
+      <a href="../coax_to_waveguide/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Coplanar Waveguide
+    Coax to Waveguide Transition
   
 
     
@@ -666,6 +666,58 @@
   
 
               
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2D Mode solver
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    2D Mode solver
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -727,6 +779,98 @@
   
 
       </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../slotline_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slotline Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differential_microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differential Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -1553,20 +1697,14 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">palacetoolkit.mode_solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaveguideModeSolver</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">palacetoolkit.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_and_finalize_gmsh</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">gmsh</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from palacetoolkit.mode_solver import WaveguideModeSolver
-
-import os
-import tempfile
-from pathlib import Path
+from palacetoolkit.utils import write_and_finalize_gmsh
 
 import gmsh
 import numpy as np
@@ -1595,18 +1733,7 @@ import matplotlib.pyplot as plt</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_write_and_finalize</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fd</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">".msh"</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"wg_diel_"</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
-    <span class="n">gmsh</span><span class="o">.</span><span class="n">option</span><span class="o">.</span><span class="n">setNumber</span><span class="p">(</span><span class="s2">"Mesh.MshFileVersion"</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">)</span>
-    <span class="n">gmsh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-    <span class="n">gmsh</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">filename</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_set_lc_for_dielectric</span><span class="p">(</span><span class="n">a_core</span><span class="p">,</span> <span class="n">b_core</span><span class="p">,</span> <span class="n">lc_core</span><span class="p">,</span> <span class="n">lc_clad</span><span class="p">):</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_set_lc_for_dielectric</span><span class="p">(</span><span class="n">a_core</span><span class="p">,</span> <span class="n">b_core</span><span class="p">,</span> <span class="n">lc_core</span><span class="p">,</span> <span class="n">lc_clad</span><span class="p">):</span>
     <span class="n">pts</span> <span class="o">=</span> <span class="n">gmsh</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getEntities</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ptag</span> <span class="ow">in</span> <span class="n">pts</span><span class="p">:</span>
         <span class="n">coord</span> <span class="o">=</span> <span class="n">gmsh</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getValue</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ptag</span><span class="p">,</span> <span class="p">[])</span>
@@ -1640,20 +1767,9 @@ import matplotlib.pyplot as plt</div>
     <span class="n">_set_lc_for_dielectric</span><span class="p">(</span><span class="n">a_core</span><span class="p">,</span> <span class="n">b_core</span><span class="p">,</span> <span class="n">lc_core</span><span class="p">,</span> <span class="n">lc_clad</span><span class="p">)</span>
 
     <span class="n">gmsh</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_write_and_finalize</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">write_and_finalize_gmsh</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"wg_diel_"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">def _write_and_finalize(filename=None):
-    if filename is None:
-        fd, filename = tempfile.mkstemp(suffix=".msh", prefix="wg_diel_")
-        os.close(fd)
-    filename = str(Path(filename).resolve())
-    gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
-    gmsh.write(filename)
-    gmsh.finalize()
-    return filename
-
-
-def _set_lc_for_dielectric(a_core, b_core, lc_core, lc_clad):
+<div class="clipboard-copy-txt" id="cell-2">def _set_lc_for_dielectric(a_core, b_core, lc_core, lc_clad):
     pts = gmsh.model.getEntities(0)
     for _, ptag in pts:
         coord = gmsh.model.getValue(0, ptag, [])
@@ -1687,7 +1803,7 @@ def make_dielectric_waveguide_mesh(a_core, b_core, a_clad, b_clad, nx_core=16, n
     _set_lc_for_dielectric(a_core, b_core, lc_core, lc_clad)
 
     gmsh.model.mesh.generate(2)
-    return _write_and_finalize(filename)</div>
+    return write_and_finalize_gmsh(filename, prefix="wg_diel_")</div>
 </div>
 </div>
 </div>

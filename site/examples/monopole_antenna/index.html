@@ -579,14 +579,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../waveguides-and-horn-antenna.ipynb" class="md-nav__link">
+      <a href="../horn_antenna/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Waveguides & Horn Antenna
+    Horn Antenna
   
 
     
@@ -607,14 +607,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dipole-antenna.ipynb" class="md-nav__link">
+      <a href="../dipole_antenna_mesh/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Dipole Antenna
+    Dipole Antenna Mesh
   
 
     
@@ -635,14 +635,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../coplanar-waveguide.ipynb" class="md-nav__link">
+      <a href="../coax_to_waveguide/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Coplanar Waveguide
+    Coax to Waveguide Transition
   
 
     
@@ -655,6 +655,56 @@
   
 
               
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2D Mode solver
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    2D Mode solver
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -707,6 +757,98 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../slotline_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slotline Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../differential_microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differential Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2225,7 +2367,7 @@ Info    : [ 80%] Meshing curve 22 (Line)
 Info    : [ 90%] Meshing curve 23 (Line)
 Info    : [ 90%] Meshing curve 24 (Line)
 Info    : [100%] Meshing curve 25 (Line)
-Info    : Done meshing 1D (Wall 0.000860477s, CPU 0.00112s)
+Info    : Done meshing 1D (Wall 0.000777034s, CPU 0.001215s)
 Info    : Meshing 2D...
 Info    : [  0%] Meshing surface 5 (Plane, Frontal-Delaunay)
 Info    : [ 20%] Meshing surface 6 (Plane, Frontal-Delaunay)
@@ -2234,45 +2376,45 @@ Info    : [ 50%] Meshing surface 8 (Cylinder, Frontal-Delaunay)
 Info    : [ 60%] Meshing surface 9 (Plane, Frontal-Delaunay)
 Info    : [ 80%] Meshing surface 10 (Plane, Frontal-Delaunay)
 Info    : [ 90%] Meshing surface 11 (Plane, Frontal-Delaunay)
-Info    : Done meshing 2D (Wall 0.0230304s, CPU 0.022883s)
+Info    : Done meshing 2D (Wall 0.0225537s, CPU 0.022544s)
 Info    : Meshing 3D...
 Info    : 3D Meshing 2 volumes with 1 connected component
 Info    : Tetrahedrizing 882 nodes...
-Info    : Done tetrahedrizing 890 nodes (Wall 0.00550309s, CPU 0.0056s)
+Info    : Done tetrahedrizing 890 nodes (Wall 0.00553217s, CPU 0.005546s)
 Info    : Reconstructing mesh...
 Info    :  - Creating surface mesh
 Info    :  - Identifying boundary edges
 Info    :  - Recovering boundary
-Info    : Done reconstructing mesh (Wall 0.0131312s, CPU 0.011243s)
+Info    : Done reconstructing mesh (Wall 0.0131274s, CPU 0.01238s)
 Info    : Found volume 3
 Info    : Found volume 2
 Info    : It. 0 - 0 nodes created - worst tet radius 102.454 (nodes removed 0 0)
 Info    : It. 500 - 490 nodes created - worst tet radius 2.16483 (nodes removed 2 8)
 Info    : It. 1000 - 977 nodes created - worst tet radius 1.68527 (nodes removed 13 10)
 Info    : It. 1500 - 1452 nodes created - worst tet radius 1.4593 (nodes removed 38 10)
+Info    : It. 2000 - 1909 nodes created - worst tet radius 1.31794 (nodes removed 80 11)
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Info    : It. 2000 - 1909 nodes created - worst tet radius 1.31794 (nodes removed 80 11)
-Info    : It. 2500 - 2399 nodes created - worst tet radius 1.21224 (nodes removed 90 11)
+<pre>Info    : It. 2500 - 2399 nodes created - worst tet radius 1.21224 (nodes removed 90 11)
+Info    : It. 3000 - 2853 nodes created - worst tet radius 1.13669 (nodes removed 136 11)
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Info    : It. 3000 - 2853 nodes created - worst tet radius 1.13669 (nodes removed 136 11)
-Info    : It. 3500 - 3309 nodes created - worst tet radius 1.08225 (nodes removed 180 11)
+<pre>Info    : It. 3500 - 3309 nodes created - worst tet radius 1.08225 (nodes removed 180 11)
 Info    : It. 4000 - 3782 nodes created - worst tet radius 1.03749 (nodes removed 207 11)
 Info    : 3D refinement terminated (5107 nodes total):
 Info    :  - 1 Delaunay cavities modified for star shapeness
 Info    :  - 257 nodes could not be inserted
-Info    :  - 31103 tetrahedra created in 0.227266 sec. (136857 tets/s)
+Info    :  - 31103 tetrahedra created in 0.205403 sec. (151424 tets/s)
 Info    : 53 node relocations
-Info    : Done meshing 3D (Wall 0.264169s, CPU 0.262124s)
+Info    : Done meshing 3D (Wall 0.241738s, CPU 0.238969s)
 Info    : Optimizing mesh...
 Info    : Optimizing volume 2
 Info    : Optimization starts (volume = 0.007589) with worst = 0.00913407 / average = 0.7139:
@@ -2286,7 +2428,7 @@ Info    : 0.60 &lt; quality &lt; 0.70 :       366 elements
 Info    : 0.70 &lt; quality &lt; 0.80 :       828 elements
 Info    : 0.80 &lt; quality &lt; 0.90 :       281 elements
 Info    : 0.90 &lt; quality &lt; 1.00 :       138 elements
-Info    : 48 edge swaps, 0 node relocations (volume = 0.007589): worst = 0.307579 / average = 0.729749 (Wall 0.000371598s, CPU 0.000317s)
+Info    : 48 edge swaps, 0 node relocations (volume = 0.007589): worst = 0.307579 / average = 0.729749 (Wall 0.000353757s, CPU 0.00034s)
 Info    : No ill-shaped tets in the mesh :-)
 Info    : 0.00 &lt; quality &lt; 0.10 :         0 elements
 Info    : 0.10 &lt; quality &lt; 0.20 :         0 elements
@@ -2310,8 +2452,8 @@ Info    : 0.60 &lt; quality &lt; 0.70 :      3416 elements
 Info    : 0.70 &lt; quality &lt; 0.80 :      7186 elements
 Info    : 0.80 &lt; quality &lt; 0.90 :      9692 elements
 Info    : 0.90 &lt; quality &lt; 1.00 :      4887 elements
-Info    : 611 edge swaps, 44 node relocations (volume = 888.712): worst = 0.0192441 / average = 0.774139 (Wall 0.0117067s, CPU 0.01169s)
-Info    : 624 edge swaps, 51 node relocations (volume = 888.712): worst = 0.0192441 / average = 0.77424 (Wall 0.0147325s, CPU 0.014637s)
+Info    : 611 edge swaps, 44 node relocations (volume = 888.712): worst = 0.0192441 / average = 0.774139 (Wall 0.00715322s, CPU 0.007158s)
+Info    : 624 edge swaps, 51 node relocations (volume = 888.712): worst = 0.0192441 / average = 0.77424 (Wall 0.00931229s, CPU 0.00932s)
 Info    : No ill-shaped tets in the mesh :-)
 Info    : 0.00 &lt; quality &lt; 0.10 :        22 elements
 Info    : 0.10 &lt; quality &lt; 0.20 :        22 elements
@@ -2323,7 +2465,7 @@ Info    : 0.60 &lt; quality &lt; 0.70 :      3448 elements
 Info    : 0.70 &lt; quality &lt; 0.80 :      7292 elements
 Info    : 0.80 &lt; quality &lt; 0.90 :      9707 elements
 Info    : 0.90 &lt; quality &lt; 1.00 :      4864 elements
-Info    : Done optimizing mesh (Wall 0.0527359s, CPU 0.050393s)
+Info    : Done optimizing mesh (Wall 0.0399224s, CPU 0.038068s)
 Info    : 5107 nodes 32388 elements
 Info    : Writing '/home/martin/Desktop/PalaceToolkit/docs/examples/monopole.msh'...
 

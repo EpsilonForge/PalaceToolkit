@@ -16,7 +16,7 @@
         <link rel="prev" href="../getting-started/post-processing/">
       
       
-        <link rel="next" href="hollow_waveguide_modes/">
+        <link rel="next" href="horn_antenna/">
       
       
         
@@ -670,14 +670,14 @@
   
   
     <li class="md-nav__item">
-      <a href="waveguides-and-horn-antenna.ipynb" class="md-nav__link">
+      <a href="horn_antenna/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Waveguides & Horn Antenna
+    Horn Antenna
   
 
     
@@ -698,14 +698,14 @@
   
   
     <li class="md-nav__item">
-      <a href="dipole-antenna.ipynb" class="md-nav__link">
+      <a href="dipole_antenna_mesh/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Dipole Antenna
+    Dipole Antenna Mesh
   
 
     
@@ -726,14 +726,14 @@
   
   
     <li class="md-nav__item">
-      <a href="coplanar-waveguide.ipynb" class="md-nav__link">
+      <a href="coax_to_waveguide/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Coplanar Waveguide
+    Coax to Waveguide Transition
   
 
     
@@ -746,6 +746,56 @@
   
 
               
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2D Mode solver
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    2D Mode solver
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -798,6 +848,98 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="slotline_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slotline Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="differential_microstrip_modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Differential Microstrip Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -927,12 +1069,12 @@ Palace configuration, simulation, and post-processing.</p>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><a href="waveguides-and-horn-antenna.ipynb">Waveguides &amp; Horn Antenna</a></td>
-<td style="text-align: left;">WR-90 rectangular waveguide, waveport BCs, horn antenna</td>
+<td style="text-align: left;"><a href="horn_antenna/">Horn Antenna</a></td>
+<td style="text-align: left;">WR-90 rectangular waveguide transition to a horn antenna with waveport boundaries.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="dipole-antenna.ipynb">Dipole Antenna</a></td>
-<td style="text-align: left;">Half-wave dipole, voltage-gap feed, impedance extraction</td>
+<td style="text-align: left;"><a href="dipole_antenna_mesh/">Dipole Antenna Mesh</a></td>
+<td style="text-align: left;">Half-wave dipole geometry and mesh generation workflow.</td>
 </tr>
 </tbody>
 </table>
@@ -946,8 +1088,8 @@ Palace configuration, simulation, and post-processing.</p>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><a href="coplanar-waveguide.ipynb">Coplanar Waveguide</a></td>
-<td style="text-align: left;">CPW line — driven simulation with wave ports and eigenmode analysis with periodic BCs</td>
+<td style="text-align: left;"><a href="coax_to_waveguide/">Coax to Waveguide Transition</a></td>
+<td style="text-align: left;">Driven coax-to-waveguide transition example including geometry, mesh, and setup.</td>
 </tr>
 </tbody>
 </table>
@@ -967,6 +1109,18 @@ Palace configuration, simulation, and post-processing.</p>
 <tr>
 <td style="text-align: left;"><a href="dielectric_waveguide_modes/">Dielectric Waveguide Modes</a></td>
 <td style="text-align: left;">Rectangular dielectric core in cladding with guided-mode classification and field plots.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="microstrip_modes/">Microstrip Modes</a></td>
+<td style="text-align: left;">Boxed 2D microstrip cross-section with PEC strip and outer conductor boundaries for hybrid mode analysis.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="slotline_modes/">Slotline Modes</a></td>
+<td style="text-align: left;">Boxed 2D slotline cross-section with two PEC slot conductors and open outer boundaries.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="differential_microstrip_modes/">Differential Microstrip Modes</a></td>
+<td style="text-align: left;">Boxed 2D differential microstrip with ground plane and two PEC strips for coupled-mode analysis.</td>
 </tr>
 </tbody>
 </table>
