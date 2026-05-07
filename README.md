@@ -54,7 +54,7 @@ Palace, and plots the S-parameters:
 
 ```python
 import palacetoolkit as ptk
-from ptk.mesh import Entity, run_boolean_pipeline
+from ptk.mesh import Entity, run_meshing_pipeline
 from ptk.simulation import run_palace
 from ptk.s_plot import plot_s_params
 
@@ -64,7 +64,7 @@ dielectric = Entity(name="dielectric", ...)
 outer  = Entity(name="outer_conductor", ...)
 
 # 2. Run the boolean pipeline — cuts, fragments, and meshes
-run_boolean_pipeline([inner, dielectric, outer], output="coax.msh")
+run_meshing_pipeline([inner, dielectric, outer], output="coax.msh")
 
 # 3. Run Palace with a JSON config
 run_palace("coax.json", np=4)

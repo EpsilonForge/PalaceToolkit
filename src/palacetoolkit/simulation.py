@@ -359,7 +359,7 @@ def generate_palace_config(
     """Build and write a Palace-compatible JSON configuration file.
 
     Classifies physical groups from *pg_map* using the naming conventions
-    established by :func:`run_boolean_pipeline`:
+    established by :func:`run_meshing_pipeline`:
 
     - Plain names (no ``__``) that don't start with ``waveport`` → 3D volume
       (material domain).
@@ -371,7 +371,7 @@ def generate_palace_config(
 
     Args:
         pg_map:          name → physical-group tag, as returned by
-                         :func:`run_boolean_pipeline`.
+                         :func:`run_meshing_pipeline`.
         mesh_file:       path to the .msh file (stored in ``Model.Mesh``).
         output_file:     destination JSON path.
         eps_r:           substrate relative permittivity.

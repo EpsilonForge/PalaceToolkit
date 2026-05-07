@@ -20,7 +20,7 @@ class Entity:
         return f"Entity({self.name!r}, dim={self.dim}, order={self.mesh_order}, tags={[t for _, t in self.dimtags]})"
 
 
-def run_boolean_pipeline(entities: list[Entity]):
+def run_meshing_pipeline(entities: list[Entity]):
     """
     Meshwell-style boolean pipeline (minimalistic).
 
