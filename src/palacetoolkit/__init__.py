@@ -24,3 +24,8 @@ try:
     from palacetoolkit.viz import *           # noqa: F401,F403
 except ImportError:
     pass
+
+try:
+    from palacetoolkit.utils import *         # noqa: F401,F403
+except ImportError:
+    pass

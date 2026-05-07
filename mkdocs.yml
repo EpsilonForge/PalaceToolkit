@@ -61,4 +61,7 @@ nav:
       - Coplanar Waveguide: examples/coplanar-waveguide.ipynb
       - Hollow Rectangular Waveguide Modes: examples/hollow_waveguide_modes.ipynb
       - Dielectric Waveguide Modes: examples/dielectric_waveguide_modes.ipynb
+      - Microstrip Modes: examples/microstrip_modes.ipynb
+      - Slotline Modes: examples/slotline_modes.ipynb
+      - Differential Microstrip Modes: examples/differential_microstrip_modes.ipynb
   - Full Course: full-course.md
