@@ -30,18 +30,14 @@ design workflows.
 
 ### Who is this for?
 
-- RF / microwave engineers looking to adopt an open-source simulation stack.
-- Graduate students in electromagnetics or antenna design.
-- Hobbyists who want to design and validate their own antennas.
+- RF / microwave / photonic engineers looking to adopt an open-source simulation stack.
+- Graduate students in similar fields.
+- Hobbyists
 
 ---
 
 <div style="text-align: center; margin: 2em 0;">
-<a href="#" class="md-button md-button--primary" style="font-size: 1.2em; padding: 0.8em 2em;">
+<a href="https://www.epsilonforge.com/#course" class="md-button md-button--primary" style="font-size: 1.2em; padding: 0.8em 2em;">
     Get the Full Course →
 </a>
 </div>
-
-!!! info "Coming soon"
-    Video lectures are currently in production. Join the mailing list to
-    be notified when the course launches.
