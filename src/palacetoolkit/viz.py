@@ -649,16 +649,16 @@ def view_mesh(
     if not found_triangles:
         print("No triangle cells found in the mesh.")
 
-    # ── Synthesise boundary surfaces from tet volumes ─────────────────────
-    if any(cb.type in ("tetra", "tetra10") for cb in m.cells):
-        extra_tri, extra_tags, extra_fd = _boundary_faces_from_tets(m)
-        if len(extra_tri) > 0:
-            triangle_cells_list.append(extra_tri)
-            triangle_tags_list.append(extra_tags)
-            m.field_data.update(extra_fd)
-            found_triangles = True
-            print(f"Added {len(extra_tri)} synthetic boundary triangles "
-                  f"from {len(extra_fd)} volume group(s)")
+        # ── Synthesise boundary surfaces from tet volumes ─────────────────────
+        if any(cb.type in ("tetra", "tetra10") for cb in m.cells):
+            extra_tri, extra_tags, extra_fd = _boundary_faces_from_tets(m)
+            if len(extra_tri) > 0:
+                triangle_cells_list.append(extra_tri)
+                triangle_tags_list.append(extra_tags)
+                m.field_data.update(extra_fd)
+                found_triangles = True
+                print(f"Added {len(extra_tri)} synthetic boundary triangles "
+                    f"from {len(extra_fd)} volume group(s)")
 
     if not found_triangles:
         raise RuntimeError("No triangle or tetrahedron cells found in the mesh.")
