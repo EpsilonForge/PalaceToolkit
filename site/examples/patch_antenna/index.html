@@ -2372,7 +2372,7 @@ Info    : [100%] Meshing curve 82 (Line)
 Info    : [100%] Meshing curve 83 (Line)
 Info    : [100%] Meshing curve 84 (Line)
 Info    : [100%] Meshing curve 85 (Line)
-Info    : Done meshing 1D (Wall 0.00504293s, CPU 0.004711s)
+Info    : Done meshing 1D (Wall 0.00509173s, CPU 0.004574s)
 Info    : Meshing 2D...
 Info    : [  0%] Meshing surface 7 (Plane, Frontal-Delaunay)
 Info    : [ 10%] Meshing surface 8 (Plane, Frontal-Delaunay)
@@ -2389,16 +2389,16 @@ Info    : [ 80%] Meshing surface 18 (Plane, Frontal-Delaunay)
 Info    : [ 90%] Meshing surface 19 (Plane, Frontal-Delaunay)
 Info    : [ 90%] Meshing surface 20 (Plane, Frontal-Delaunay)
 Info    : [100%] Meshing surface 21 (Plane, Frontal-Delaunay)
-Info    : Done meshing 2D (Wall 0.0244744s, CPU 0.023557s)
+Info    : Done meshing 2D (Wall 0.0240156s, CPU 0.024187s)
 Info    : Meshing 3D...
 Info    : 3D Meshing 2 volumes with 1 connected component
 Info    : Tetrahedrizing 1887 nodes...
-Info    : Done tetrahedrizing 1895 nodes (Wall 0.012507s, CPU 0.010759s)
+Info    : Done tetrahedrizing 1895 nodes (Wall 0.0124775s, CPU 0.012487s)
 Info    : Reconstructing mesh...
 Info    :  - Creating surface mesh
 Info    :  - Identifying boundary edges
 Info    :  - Recovering boundary
-Info    : Done reconstructing mesh (Wall 0.0264736s, CPU 0.02375s)
+Info    : Done reconstructing mesh (Wall 0.0260731s, CPU 0.024346s)
 Info    : Found volume 2
 Info    : Found volume 1
 Info    : It. 0 - 0 nodes created - worst tet radius 8.25804 (nodes removed 0 0)
@@ -2406,9 +2406,9 @@ Info    : It. 500 - 500 nodes created - worst tet radius 1.16333 (nodes removed 
 Info    : 3D refinement terminated (2776 nodes total):
 Info    :  - 5 Delaunay cavities modified for star shapeness
 Info    :  - 0 nodes could not be inserted
-Info    :  - 12359 tetrahedra created in 0.0219076 sec. (564141 tets/s)
+Info    :  - 12359 tetrahedra created in 0.021441 sec. (576418 tets/s)
 Info    : 0 node relocations
-Info    : Done meshing 3D (Wall 0.0677129s, CPU 0.065023s)
+Info    : Done meshing 3D (Wall 0.0662726s, CPU 0.064802s)
 Info    : Optimizing mesh...
 Info    : Optimizing volume 1
 Info    : Optimization starts (volume = 4.68e-06) with worst = 0.00948271 / average = 0.597816:
@@ -2422,7 +2422,7 @@ Info    : 0.60 &lt; quality &lt; 0.70 :       332 elements
 Info    : 0.70 &lt; quality &lt; 0.80 :       252 elements
 Info    : 0.80 &lt; quality &lt; 0.90 :       210 elements
 Info    : 0.90 &lt; quality &lt; 1.00 :        89 elements
-Info    : 68 edge swaps, 0 node relocations (volume = 4.68e-06): worst = 0.0598582 / average = 0.612629 (Wall 0.000524036s, CPU 0.000553s)
+Info    : 68 edge swaps, 0 node relocations (volume = 4.68e-06): worst = 0.0598582 / average = 0.612629 (Wall 0.000527031s, CPU 0.000484s)
 Info    : No ill-shaped tets in the mesh :-)
 Info    : 0.00 &lt; quality &lt; 0.10 :         2 elements
 Info    : 0.10 &lt; quality &lt; 0.20 :         1 elements
@@ -2446,8 +2446,8 @@ Info    : 0.60 &lt; quality &lt; 0.70 :      1519 elements
 Info    : 0.70 &lt; quality &lt; 0.80 :      2647 elements
 Info    : 0.80 &lt; quality &lt; 0.90 :      3235 elements
 Info    : 0.90 &lt; quality &lt; 1.00 :      1440 elements
-Info    : 240 edge swaps, 6 node relocations (volume = 0.00031355): worst = 0.18287 / average = 0.758581 (Wall 0.00201849s, CPU 0.002059s)
-Info    : 244 edge swaps, 7 node relocations (volume = 0.00031355): worst = 0.189139 / average = 0.758844 (Wall 0.00255915s, CPU 0.002615s)
+Info    : 240 edge swaps, 6 node relocations (volume = 0.00031355): worst = 0.18287 / average = 0.758581 (Wall 0.00201658s, CPU 0.002041s)
+Info    : 244 edge swaps, 7 node relocations (volume = 0.00031355): worst = 0.189139 / average = 0.758844 (Wall 0.00257076s, CPU 0.00261s)
 Info    : No ill-shaped tets in the mesh :-)
 Info    : 0.00 &lt; quality &lt; 0.10 :         0 elements
 Info    : 0.10 &lt; quality &lt; 0.20 :         1 elements
@@ -2459,17 +2459,11 @@ Info    : 0.60 &lt; quality &lt; 0.70 :      1517 elements
 Info    : 0.70 &lt; quality &lt; 0.80 :      2661 elements
 Info    : 0.80 &lt; quality &lt; 0.90 :      3267 elements
 Info    : 0.90 &lt; quality &lt; 1.00 :      1441 elements
-Info    : Done optimizing mesh (Wall 0.00849238s, CPU 0.008542s)
+Info    : Done optimizing mesh (Wall 0.00851807s, CPU 0.008651s)
 Info    : 2776 nodes 16295 elements
 Info    : Writing 'patch_antenna.msh'...
 Info    : Done writing 'patch_antenna.msh'
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>-------------------------------------------------------
+-------------------------------------------------------
 Version       : 4.15.2
 License       : GNU General Public License
 Build OS      : Linux64-sdk
