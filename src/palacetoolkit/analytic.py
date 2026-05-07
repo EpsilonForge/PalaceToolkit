@@ -2,6 +2,18 @@
 
 import numpy as np
 
+def _K_over_Kp(k: float, kp: float) -> float:
+    """Approximate ratio K(k)/K(k') using the Hilberg formula."""
+    def _s(x: float) -> float:
+        return np.log(
+            2 * (np.sqrt(1 + x) + (4 * x) ** 0.25)
+            / (np.sqrt(1 + x) - (4 * x) ** 0.25)
+        )
+
+    if k >= 1.0 / np.sqrt(2):
+        return _s(k) / (2 * np.pi)
+    else:
+        return 2 * np.pi / _s(kp)
 
 def cpw_impedance(w: float, s: float, h: float, eps_r: float) -> float:
     """Compute the characteristic impedance of a CPW line.
@@ -17,20 +29,6 @@ def cpw_impedance(w: float, s: float, h: float, eps_r: float) -> float:
     Returns:
         Z0: Characteristic impedance in Ohms.
     """
-
-    def _K_over_Kp(k: float, kp: float) -> float:
-        """Approximate ratio K(k)/K(k') using the Hilberg formula."""
-        def _s(x: float) -> float:
-            return np.log(
-                2 * (np.sqrt(1 + x) + (4 * x) ** 0.25)
-                / (np.sqrt(1 + x) - (4 * x) ** 0.25)
-            )
-
-        if k >= 1.0 / np.sqrt(2):
-            return _s(k) / (2 * np.pi)
-        else:
-            return 2 * np.pi / _s(kp)
-
     k  = w / (w + 2 * s)
     k1 = np.sinh(np.pi * w / (4 * h)) / np.sinh(np.pi * (w + 2 * s) / (4 * h))
 
@@ -55,18 +53,6 @@ def cpw_effective_index(w: float, s: float, h: float, eps_r: float) -> float:
 
     kp  = np.sqrt(1 - k ** 2)
     k1p = np.sqrt(1 - k1 ** 2)
-
-    def _K_over_Kp(k_val: float, kp_val: float) -> float:
-        def _s(x: float) -> float:
-            return np.log(
-                2 * (np.sqrt(1 + x) + (4 * x) ** 0.25)
-                / (np.sqrt(1 + x) - (4 * x) ** 0.25)
-            )
-        if k_val >= 1.0 / np.sqrt(2):
-            return _s(k_val) / (2 * np.pi)
-        else:
-            return 2 * np.pi / _s(kp_val)
-
     kok  = _K_over_Kp(k,  kp)
     k1ok = _K_over_Kp(k1, k1p)
 

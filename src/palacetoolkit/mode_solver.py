@@ -539,7 +539,8 @@ class WaveguideModeSolver:
         self.mesh = mesh
         self.order = order
         self.dim = mesh.Dimension()
-        assert self.dim == 2, "Solver requires a 2D mesh"
+        if self.dim != 2:
+            raise ValueError("Solver requires a 2D mesh")
 
         # Material properties — mu_inv is always scalar
         if isinstance(mu_inv, (int, float)):
@@ -664,8 +665,10 @@ class WaveguideModeSolver:
             'En'       : GridFunction (H1) for the selected mode normal E
             'eigenvalues' : raw eigenvalues from the shift-and-invert problem
         """
-        assert mode_idx >= 1, "mode_idx is 1-based"
-        assert num_modes >= mode_idx, "Need num_modes >= mode_idx"
+        if mode_idx < 1:
+            raise ValueError("mode_idx must be >= 1 (1-based indexing)")
+        if num_modes < mode_idx:
+            raise ValueError(f"num_modes ({num_modes}) must be >= mode_idx ({mode_idx})")
 
         # Compute shift: sigma = -omega^2 * max(mu*eps)
         # For anisotropic eps use the max eigenvalue of eps_tt as the
