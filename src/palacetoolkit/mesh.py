@@ -123,6 +123,7 @@ def run_meshing_pipeline(entities: list[Entity]):
             )
             for bdim, btag in boundary:
                 if bdim == 2:
+                    btag = abs(btag) 
                     surf_to_names.setdefault(btag, [])
                     if entity.name not in surf_to_names[btag]:
                         surf_to_names[btag].append(entity.name)
@@ -135,7 +136,7 @@ def run_meshing_pipeline(entities: list[Entity]):
         if tags:
             pg_tag = gmsh.model.addPhysicalGroup(2, tags, name=entity.name)
             print(f"  Physical group '{entity.name}' (dim=2): pg={pg_tag}, tags={tags}")
-            assigned_surfs.update(tags)
+            assigned_surfs.update(abs(t) for t in tags) 
 
     # 4. Group remaining surfaces by their sorted owner name combination
     name_combo_to_surfs: dict[str, list[int]] = {}
@@ -181,6 +182,8 @@ def generate_3d_mesh(
         optimize:    whether to run Netgen optimisation (disable for complex
                      imported CAD to avoid segfaults in thin-volume meshes).
     """
+
+
     def _apply_point_sizes(*, use_entity_tags: bool = True) -> int:
         applied = 0
         for entity in entities:
@@ -215,6 +218,7 @@ def generate_3d_mesh(
 
     _apply_point_sizes(use_entity_tags=True)
 
+
     try:
         gmsh.model.mesh.generate(3)
     except Exception as exc:
@@ -242,7 +246,7 @@ def generate_3d_mesh(
         gmsh.model.mesh.generate(3)
 
     if optimize:
-        gmsh.model.mesh.optimize("Netgen")
+            gmsh.model.mesh.optimize("Netgen") 
     gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
     gmsh.write(output_file)
     print(f"Mesh saved to {output_file}")
