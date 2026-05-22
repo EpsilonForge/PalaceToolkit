@@ -108,3 +108,8 @@ postpro/
 *.tex.bak
 *.synctex.gz
 *.synctex(busy)
+
+
+# Docs/_build/
+docs/examples/img/*
+site/*

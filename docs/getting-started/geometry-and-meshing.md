@@ -79,7 +79,7 @@ This checks that:
 ## Mesh visualisation
 
 ```python
-from palacetoolkit.view_mesh import view_mesh
+from palacetoolkit.viz import view_mesh
 
 view_mesh("my_model.msh")
 ```
@@ -87,7 +87,10 @@ view_mesh("my_model.msh")
 For static HTML exports (used in the docs site):
 
 ```python
+from IPython.display import IFrame
+
 from palacetoolkit.viz import render_mesh
 
-render_mesh(mesh_path, output_path, title="My Model")
+render_mesh(mesh, Path("img") / "my_model.htm", title="My Model")
+IFrame(src="img/my_model.htm", width="100%", height=500)
 ```

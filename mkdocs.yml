@@ -56,9 +56,19 @@ nav:
       - Post-processing: getting-started/post-processing.md
   - Examples:
       - Overview: examples/index.md
-      - Horn Antenna: examples/horn_antenna.ipynb
-      - Dipole Antenna Mesh: examples/dipole_antenna_mesh.ipynb
-      - Coax to Waveguide Transition: examples/coax_to_waveguide.ipynb
+      - Antennas:
+        - Horn Antenna: examples/horn_antenna.ipynb
+        - Dipole Antenna Mesh: examples/dipole_antenna_mesh.ipynb
+        - Monopole Antenna: examples/monopole_antenna.ipynb
+        - L Antenna: examples/l_antenna.ipynb
+        - Patch Antenna: examples/patch_antenna.ipynb
+        - Vivaldi Antenna: examples/vivaldi_antenna.ipynb
+      - Structures and Components:
+        - Coax: examples/coax.ipynb
+        - Coax to Waveguide Transition: examples/coax_to_waveguide.ipynb
+        - Open-ended Stub: examples/open_ended_stub.ipynb
+        - Step in Width: examples/step_in_width.ipynb
+        - Waveguide Box: examples/waveguide_box.ipynb
       - 2D Mode solver:
         - Hollow Rectangular Waveguide Modes: examples/hollow_waveguide_modes.ipynb
         - Dielectric Waveguide Modes: examples/dielectric_waveguide_modes.ipynb

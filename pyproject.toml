@@ -24,8 +24,15 @@ docs = [
     "nbconvert",
     "ipykernel",
     "papermill",
+    "pytest",
     "nb-clean",
     "pre-commit",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "docs: execute documentation notebooks",
 ]
 
 [tool.setuptools]
