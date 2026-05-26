@@ -40,11 +40,20 @@ source .venv/bin/activate
 ./tools/install_local_editable.sh
 
 # Or equivalent manual commands:
-pip install -e packages/palacetoolkit-palace-cpu
+pip install https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-vX.Y.Z/<wheel-file>.whl
 pip install -e ".[plot,docs]"
 ```
 
 Default runtime is binary-first when `palacetoolkit-palace-cpu` is installed.
+
+By default, `./tools/install_local_editable.sh` fetches the latest
+GA-built binary wheel from GitHub Releases.
+
+To force local binary package mode from the checkout:
+
+```bash
+PALACETOOLKIT_BINARY_SOURCE=local ./tools/install_local_editable.sh
+```
 
 ### Compatibility Policy
 
@@ -54,6 +63,12 @@ Default runtime is binary-first when `palacetoolkit-palace-cpu` is installed.
 - If API/runtime behavior differs between stable and nightly Palace, `PalaceToolkit` stable behavior is defined by the stable `palacetoolkit-palace-cpu` line.
 
 See `docs/getting-started/compatibility-policy.md` for the full policy and release cadence.
+
+### Release Tags and CI Publishing
+
+- `palace-cpu-vX.Y.Z` triggers binary build/publish workflow for `palacetoolkit-palace-cpu`.
+- `vX.Y.Z` triggers main package build/publish workflow for `PalaceToolkit`.
+- Both workflows also support manual dispatch from GitHub Actions.
 
 ### Optional: Power-user source build (nightly/custom)
 

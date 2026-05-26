@@ -23,8 +23,18 @@ source .venv/bin/activate
 ./tools/install_local_editable.sh
 
 # equivalent manual commands
-pip install -e packages/palacetoolkit-palace-cpu
+pip install https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-vX.Y.Z/<wheel-file>.whl
 pip install -e .
+```
+
+`./tools/install_local_editable.sh` downloads the latest GA-built
+`palacetoolkit-palace-cpu` wheel from GitHub Releases for your platform, then
+installs `PalaceToolkit` in editable mode.
+
+Use local package mode only if needed:
+
+```bash
+PALACETOOLKIT_BINARY_SOURCE=local ./tools/install_local_editable.sh
 ```
 
 Verify:
