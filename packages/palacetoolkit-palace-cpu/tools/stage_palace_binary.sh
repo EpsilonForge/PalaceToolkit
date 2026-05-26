@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 2 ]]; then
-  echo "Usage: $0 /path/to/palace-binary /path/to/palace-lib-dir"
+if [[ $# -lt 2 ]]; then
+  echo "Usage: $0 /path/to/palace-binary /path/to/palace-lib-dir [/path/to/extra-lib-dir ...]"
   exit 2
 fi
 
 src_bin="$1"
-src_lib_dir="$2"
+shift
 if [[ ! -f "$src_bin" ]]; then
   echo "Binary not found: $src_bin"
-  exit 1
-fi
-if [[ ! -d "$src_lib_dir" ]]; then
-  echo "Library directory not found: $src_lib_dir"
   exit 1
 fi
 
@@ -25,5 +21,18 @@ cp "$src_bin" "$dst_bin"
 chmod +x "$dst_bin"
 rm -rf "$dst_lib_dir"
 mkdir -p "$dst_lib_dir"
-cp -a "$src_lib_dir"/. "$dst_lib_dir"/
+
+copied_any_lib=0
+for src_lib_dir in "$@"; do
+  if [[ -d "$src_lib_dir" ]]; then
+    cp -a "$src_lib_dir"/. "$dst_lib_dir"/
+    copied_any_lib=1
+  fi
+done
+
+if [[ "$copied_any_lib" -eq 0 ]]; then
+  echo "No valid library directory found in arguments: $*"
+  exit 1
+fi
+
 echo "Staged $dst_bin and libraries in $dst_lib_dir"

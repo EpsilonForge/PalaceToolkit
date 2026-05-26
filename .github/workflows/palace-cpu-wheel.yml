@@ -78,9 +78,11 @@ jobs:
       - name: Stage Palace payload into binary package
         run: |
           set -euo pipefail
+          ls -lah /tmp/palace-install/bin
           ./packages/palacetoolkit-palace-cpu/tools/stage_palace_binary.sh \
-            /tmp/palace-build/bin/palace \
-            /tmp/palace-build/lib
+            /tmp/palace-install/bin/palace \
+            /tmp/palace-install/lib \
+            /tmp/palace-install/lib64
 
       - name: Build wheel
         run: |
