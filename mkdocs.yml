@@ -51,6 +51,8 @@ nav:
   - Home: index.md
   - Getting Started:
       - getting-started/index.md
+      - Clone and Build (Ubuntu): getting-started/compile_instructions_ubuntu.md
+      - Compatibility Policy: getting-started/compatibility-policy.md
       - Geometry & Meshing: getting-started/geometry-and-meshing.md
       - Simulation Setup: getting-started/simulation-setup.md
       - Post-processing: getting-started/post-processing.md

@@ -1,88 +1,47 @@
-# Installation
+# Getting Started
 
-## Installing Palace
+This project currently focuses on a local clone workflow.
 
-Details for Linux (Debian/Ubuntu), using an Apptainer container (previously
-known as Singularity).
-
-For Windows, Palace has to be installed through WSL. Additional information
-is included below.
-
-#### 1. Install apptainer
+## 1. Clone and create a Python environment
 
 ```bash
-sudo apt install -y software-properties-common
-sudo add-apt-repository -y ppa:apptainer/ppa
-sudo apt update
-sudo apt install -y apptainer-suid
+git clone https://github.com/EpsilonForge/PalaceToolkit.git
+cd PalaceToolkit
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-#### 2. Build using the singularity.def file from the Palace repo
-
-Download the contents of the [Palace repo](https://github.com/awslabs/palace)
-and from its root directory run:
+## 2. Install locally (binary-first runtime)
 
 ```bash
-sudo apptainer build Palace.sif singularity/singularity.def
+./tools/install_local_editable.sh
 ```
 
-(this will take a while)
+This installs:
 
-#### 3. Run Palace
+- `palacetoolkit-palace-cpu` from `packages/palacetoolkit-palace-cpu`
+- `PalaceToolkit` in editable mode
 
-Once installed, from the Palace root directory:
+Equivalent manual commands:
 
 ```bash
-apptainer run Palace.sif <palace arguments>
+pip install -e packages/palacetoolkit-palace-cpu
+pip install -e ".[plot,docs]"
 ```
 
-## Python Environment Setup
-
-To run Palace Server, set up a virtual environment and install dependencies:
-
-1. Create and activate a virtual environment:
-
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
-
-2. Install dependencies as specified in `pyproject.toml`:
-
-   ```bash
-   pip install -e .[dev]
-   ```
-
-Your Python environment is now ready for Palace simulations.
-
-#### Notes for WSL users
-
-It may be necessary to manually install the following libraries: `libGLU`,
-`libgomp`, and `libXft` (WSL has no GUI stack).
-
-```bash
-sudo apt install libglu1-mesa-dev
-sudo apt install libgomp1
-sudo apt install libxft2
-```
-
-Matplotlib will use a non-interactive backend (`FigureCanvasAgg`). To display
-windows, install an interactive backend (TkAgg or Qt5Agg):
-
-```bash
-sudo apt install python3-tk
-```
-
-Then set the backend. One way is to edit `~/.config/matplotlib/matplotlibrc`
-and add:
-
-```text
-backend: TkAgg
-```
-
-### Verify your setup
+## 3. Verify your setup
 
 ```bash
 python -c "from palacetoolkit.mesh import Entity; print('Ready!')"
 ```
+
+## 4. Optional power-user source builds
+
+Use this only for nightly/custom Palace builds (CUDA/HIP/MAGMA options):
+
+```bash
+PALACETOOLKIT_BUILD_PALACE=1 PALACETOOLKIT_CLONE_NIGHTLY=1 pip install -e .
+```
+
+See the dedicated Ubuntu guide and compatibility policy for details.
 

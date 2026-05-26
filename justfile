@@ -29,6 +29,11 @@ docs-full: nbrun nbdocs docs
 doctest: ipykernel
     {{python}} -m pytest -m docs tests/test_docs_notebooks.py
 
+# Local clone bootstrap: install in-repo CPU binary package and then PalaceToolkit.
+install-local:
+    {{python}} -m pip install -e packages/palacetoolkit-palace-cpu
+    {{python}} -m pip install -e ".[plot,docs]"
+
 # Dev server
 serve:
     {{python}} -m mkdocs serve -a localhost:8080

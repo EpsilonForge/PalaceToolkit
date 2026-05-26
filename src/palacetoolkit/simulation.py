@@ -7,6 +7,7 @@ import numpy as np
 import gmsh
 
 from palacetoolkit.mesh import refine_near_surfaces as _refine_near_surfaces
+from palacetoolkit.palace_runtime import resolve_palace_binary, resolve_palace_library_dir
 
 
 class Simulation:
@@ -129,25 +130,45 @@ def run_palace(
     num_procs: int = 4,
     work_dir: str | Path | None = None,
 ) -> None:
-    """Run Palace using the Apptainer image, mirroring run_palace.sh.
+    """Run Palace using a local prebuilt binary or Apptainer image.
 
     Args:
         config_file: Path to the Palace JSON config.
         num_procs:   Number of MPI processes.
         work_dir:    Working directory (defaults to config file's parent).
     """
-    palace_sif = os.environ.get("PALACE_SIF")
-    if not palace_sif:
-        raise RuntimeError("PALACE_SIF environment variable not set")
-    if not Path(palace_sif).is_file():
-        raise FileNotFoundError(f"Palace.sif not found at {palace_sif}")
-
     config_path = Path(config_file).resolve()
     if work_dir is None:
         work_dir = str(config_path.parent)
     else:
         work_dir = str(Path(work_dir).resolve())
     config_name = config_path.name
+
+    local_palace = resolve_palace_binary()
+    if local_palace is not None:
+        run_env = os.environ.copy()
+        lib_dir = resolve_palace_library_dir()
+        if lib_dir is not None:
+            prior = run_env.get("LD_LIBRARY_PATH", "")
+            run_env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
+
+        if num_procs > 1:
+            cmd = ["mpirun", "-np", str(num_procs), str(local_palace), str(config_path)]
+        else:
+            cmd = [str(local_palace), str(config_path)]
+        print(f"  Running: {' '.join(cmd)}")
+        result = subprocess.run(cmd, cwd=work_dir, capture_output=False, env=run_env)
+        if result.returncode != 0:
+            raise RuntimeError(f"Palace exited with code {result.returncode}")
+        return
+
+    palace_sif = os.environ.get("PALACE_SIF")
+    if not palace_sif:
+        raise RuntimeError(
+            "No local Palace binary found and PALACE_SIF environment variable not set"
+        )
+    if not Path(palace_sif).is_file():
+        raise FileNotFoundError(f"Palace.sif not found at {palace_sif}")
 
     if num_procs > 1:
         cmd = [

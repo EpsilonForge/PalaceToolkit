@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 plot = ["pandas", "matplotlib"]
+palace-cpu = ["palacetoolkit-palace-cpu>=0.1.0"]
 docs = [
     "mkdocs",
     "mkdocs-material",

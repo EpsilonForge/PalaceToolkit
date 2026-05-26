@@ -1,0 +1,119 @@
+name: Build Palace CPU Wheel
+
+on:
+  workflow_dispatch:
+    inputs:
+      palace_ref:
+        description: "Palace git ref (branch/tag/sha)"
+        required: false
+        default: "main"
+      publish:
+        description: "Publish built wheel to PyPI"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+  push:
+    tags:
+      - "palace-cpu-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux-x86_64:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          set -euo pipefail
+          sudo apt update
+          sudo apt install -y \
+            cmake gfortran openmpi-bin libopenmpi-dev libopenblas-dev pkg-config git make
+
+      - name: Build Palace (cpu-default profile)
+        env:
+          PALACE_REF: ${{ inputs.palace_ref || 'main' }}
+        run: |
+          set -euo pipefail
+          git clone https://github.com/awslabs/palace.git /tmp/palace-src
+          git -C /tmp/palace-src fetch --all --tags
+          git -C /tmp/palace-src checkout "$PALACE_REF"
+
+          cmake -S /tmp/palace-src -B /tmp/palace-build \
+            -DCMAKE_INSTALL_PREFIX=/tmp/palace-install \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_CXX_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_C_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DCMAKE_Fortran_COMPILER=gfortran \
+            -DCMAKE_Fortran_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DBUILD_SHARED_LIBS:BOOL=ON \
+            -DPALACE_WITH_64BIT_INT:BOOL=OFF \
+            -DPALACE_WITH_OPENMP:BOOL=ON \
+            -DPALACE_WITH_CUDA:BOOL=OFF \
+            -DPALACE_WITH_HIP:BOOL=OFF \
+            -DPALACE_WITH_SUPERLU:BOOL=ON \
+            -DPALACE_WITH_STRUMPACK:BOOL=ON \
+            -DPALACE_WITH_MUMPS:BOOL=ON \
+            -DPALACE_WITH_SLEPC:BOOL=ON \
+            -DPALACE_WITH_ARPACK:BOOL=ON \
+            -DPALACE_WITH_LIBXSMM:BOOL=ON \
+            -DPALACE_WITH_MAGMA:BOOL=OFF \
+            -DPALACE_WITH_GSLIB:BOOL=ON
+
+          cmake --build /tmp/palace-build --parallel "$(nproc)"
+
+      - name: Stage Palace payload into binary package
+        run: |
+          set -euo pipefail
+          ./packages/palacetoolkit-palace-cpu/tools/stage_palace_binary.sh \
+            /tmp/palace-build/bin/palace \
+            /tmp/palace-build/lib
+
+      - name: Build wheel
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip build wheel
+          python -m build --wheel packages/palacetoolkit-palace-cpu
+          ls -lah packages/palacetoolkit-palace-cpu/dist
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: palacetoolkit-palace-cpu-linux-x86_64
+          path: packages/palacetoolkit-palace-cpu/dist/*.whl
+
+  publish-pypi:
+    needs: [build-linux-x86_64]
+    if: startsWith(github.ref, 'refs/tags/palace-cpu-v') || (github.event_name == 'workflow_dispatch' && inputs.publish == 'true')
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: palacetoolkit-palace-cpu-linux-x86_64
+          path: dist
+
+      - name: List wheel artifacts
+        run: ls -lah dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist

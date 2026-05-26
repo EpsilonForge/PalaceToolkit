@@ -23,7 +23,6 @@ licence required.
 ### Prerequisites
 
 * Python ≥ 3.8
-* [Palace](https://awslabs.github.io/palace/) (installed or available via Apptainer/Docker)
 * [Gmsh](https://gmsh.info/) (the `gmsh` Python package is pulled automatically)
 
 ### Install the package
@@ -36,7 +35,58 @@ cd PalaceToolkit
 # Create a virtual environment and install in editable mode
 python -m venv .venv
 source .venv/bin/activate
+
+# Local clone install (recommended for now)
+./tools/install_local_editable.sh
+
+# Or equivalent manual commands:
+pip install -e packages/palacetoolkit-palace-cpu
 pip install -e ".[plot,docs]"
+```
+
+Default runtime is binary-first when `palacetoolkit-palace-cpu` is installed.
+
+### Compatibility Policy
+
+- Stable releases of `PalaceToolkit` are validated against a matching stable release of `palacetoolkit-palace-cpu`.
+- The default local clone path (`./tools/install_local_editable.sh`) installs both packages from the same repository checkout and is the reference development workflow.
+- Nightly Palace builds are supported for power users through opt-in source builds and are treated as best-effort (no stability guarantee across commits).
+- If API/runtime behavior differs between stable and nightly Palace, `PalaceToolkit` stable behavior is defined by the stable `palacetoolkit-palace-cpu` line.
+
+See `docs/getting-started/compatibility-policy.md` for the full policy and release cadence.
+
+### Optional: Power-user source build (nightly/custom)
+
+Source builds are opt-in and disabled by default.
+Use this only if you need custom flags (CUDA/HIP/MAGMA/etc.) or nightly Palace.
+
+```bash
+PALACETOOLKIT_BUILD_PALACE=1 \
+PALACETOOLKIT_CLONE_NIGHTLY=1 \
+PALACETOOLKIT_PALACE_WITH_CUDA=0 \
+PALACETOOLKIT_PALACE_WITH_HIP=0 \
+PALACETOOLKIT_PALACE_WITH_MAGMA=0 \
+pip install -e .
+```
+
+Source builds are cached at:
+
+`~/.cache/palacetoolkit/palace/<source-key>-<platform>-<options-hash>/build/bin/palace`
+
+On subsequent installs, the cached build is reused automatically. Useful controls:
+
+```bash
+# Force rebuild even when cache exists
+PALACETOOLKIT_FORCE_PALACE_REBUILD=1 pip install -e .
+
+# Use a local Palace source tree instead of cloning nightly
+PALACETOOLKIT_PALACE_SOURCE=/path/to/palace PALACETOOLKIT_BUILD_PALACE=1 pip install -e .
+
+# Override parallel build jobs
+PALACETOOLKIT_PALACE_JOBS=8 pip install -e .
+
+# Extra custom CMake args
+PALACETOOLKIT_PALACE_EXTRA_CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release" pip install -e .
 ```
 
 The core install pulls `gmsh`, `numpy`, `meshio`, `pyvista`,
