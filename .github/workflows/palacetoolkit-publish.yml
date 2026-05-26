@@ -1,4 +1,4 @@
-name: Publish PalaceToolkit
+name: Publish palace-toolkit
 
 on:
   workflow_dispatch:
@@ -41,7 +41,7 @@ jobs:
       - name: Upload package artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: palacetoolkit-dist
+          name: palace-toolkit-dist
           path: dist/*
 
       - name: Attach artifacts to GitHub release
@@ -65,7 +65,7 @@ jobs:
       - name: Download package artifacts
         uses: actions/download-artifact@v4
         with:
-          name: palacetoolkit-dist
+          name: palace-toolkit-dist
           path: dist
 
       - name: List package artifacts

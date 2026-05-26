@@ -1,14 +1,14 @@
 # Compatibility Policy
 
-This document defines the support contract between PalaceToolkit and the
+This document defines the support contract between palace-toolkit and the
 packaged Palace CPU binary.
 
 ## Stable Channel
 
-- Stable `PalaceToolkit` releases target stable `palacetoolkit-palace-cpu` releases.
+- Stable `palace-toolkit` releases target stable `palacetoolkit-palace-cpu` releases.
 - Binary wheels are built in GitHub Actions and attached to release tags
   `palace-cpu-v*`.
-- Main PalaceToolkit package artifacts are built from release tags `v*`.
+- Main `palace-toolkit` package artifacts are built from release tags `v*`.
 - Stable behavior is defined by the matching stable binary line.
 
 ## Local Clone Workflow

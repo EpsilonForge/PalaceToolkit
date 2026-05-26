@@ -57,17 +57,17 @@ PALACETOOLKIT_BINARY_SOURCE=local ./tools/install_local_editable.sh
 
 ### Compatibility Policy
 
-- Stable releases of `PalaceToolkit` are validated against a matching stable release of `palacetoolkit-palace-cpu`.
+- Stable releases of `palace-toolkit` are validated against a matching stable release of `palacetoolkit-palace-cpu`.
 - The default local clone path (`./tools/install_local_editable.sh`) installs both packages from the same repository checkout and is the reference development workflow.
 - Nightly Palace builds are supported for power users through opt-in source builds and are treated as best-effort (no stability guarantee across commits).
-- If API/runtime behavior differs between stable and nightly Palace, `PalaceToolkit` stable behavior is defined by the stable `palacetoolkit-palace-cpu` line.
+- If API/runtime behavior differs between stable and nightly Palace, `palace-toolkit` stable behavior is defined by the stable `palacetoolkit-palace-cpu` line.
 
 See `docs/getting-started/compatibility-policy.md` for the full policy and release cadence.
 
 ### Release Tags and CI Publishing
 
 - `palace-cpu-vX.Y.Z` triggers binary build/publish workflow for `palacetoolkit-palace-cpu`.
-- `vX.Y.Z` triggers main package build/publish workflow for `PalaceToolkit`.
+- `vX.Y.Z` triggers main package build/publish workflow for `palace-toolkit`.
 - Both workflows also support manual dispatch from GitHub Actions.
 
 ### Optional: Power-user source build (nightly/custom)
