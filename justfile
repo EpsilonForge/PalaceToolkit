@@ -25,6 +25,10 @@ docs:
 # All three steps in sequence
 docs-full: nbrun nbdocs docs
 
+# Run documentation doctests (executes notebooks via papermill)
+doctest: ipykernel
+    {{python}} -m pytest -m docs tests/test_docs_notebooks.py
+
 # Dev server
 serve:
     {{python}} -m mkdocs serve -a localhost:8080

@@ -92,6 +92,9 @@ just ipykernel
 # Full build: execute notebooks → build site
 just docs-full
 
+# Run documentation doctests (executes notebooks and fails on errors)
+just doctest
+
 # Or run each step individually:
 just nbrun      # execute docs example notebooks with papermill
 just nbdocs     # no-op (MkDocs renders .ipynb directly)

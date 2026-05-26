@@ -123,6 +123,7 @@ def run_meshing_pipeline(entities: list[Entity]):
             )
             for bdim, btag in boundary:
                 if bdim == 2:
+                    btag = abs(btag) 
                     surf_to_names.setdefault(btag, [])
                     if entity.name not in surf_to_names[btag]:
                         surf_to_names[btag].append(entity.name)
@@ -135,7 +136,7 @@ def run_meshing_pipeline(entities: list[Entity]):
         if tags:
             pg_tag = gmsh.model.addPhysicalGroup(2, tags, name=entity.name)
             print(f"  Physical group '{entity.name}' (dim=2): pg={pg_tag}, tags={tags}")
-            assigned_surfs.update(tags)
+            assigned_surfs.update(abs(t) for t in tags) 
 
     # 4. Group remaining surfaces by their sorted owner name combination
     name_combo_to_surfs: dict[str, list[int]] = {}
@@ -181,6 +182,8 @@ def generate_3d_mesh(
         optimize:    whether to run Netgen optimisation (disable for complex
                      imported CAD to avoid segfaults in thin-volume meshes).
     """
+
+
     def _apply_point_sizes(*, use_entity_tags: bool = True) -> int:
         applied = 0
         for entity in entities:
@@ -215,6 +218,7 @@ def generate_3d_mesh(
 
     _apply_point_sizes(use_entity_tags=True)
 
+
     try:
         gmsh.model.mesh.generate(3)
     except Exception as exc:
@@ -242,7 +246,7 @@ def generate_3d_mesh(
         gmsh.model.mesh.generate(3)
 
     if optimize:
-        gmsh.model.mesh.optimize("Netgen")
+            gmsh.model.mesh.optimize("Netgen") 
     gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
     gmsh.write(output_file)
     print(f"Mesh saved to {output_file}")
@@ -251,20 +255,6 @@ def generate_3d_mesh(
     print(f"  Elements: {sum(len(e) for e in elems[1])}")
 
 
-def refine_surfaces(surf_tags, lc) -> float:
-
-    gmsh.model.mesh.setSize(gmsh.model.getEntities(0), lc)
-
-    if surf_tags:
-        port_boundary = gmsh.model.getBoundary(
-            [(2, t) for t in surf_tags],
-            combined = False, oriented = False, recursive = True
-        )
-        surf_points = [e[1] for e in port_boundary if e[0] == 0]
-        if surf_points:
-            gmsh.model.mesh.setSize([(0, p) for p in surf_points], lc/10)
-    return lc
-
 def refine_near_surfaces(
     surface_dimtags: list[tuple[int, int]],
     wavelength: float,
@@ -272,6 +262,8 @@ def refine_near_surfaces(
     ppw_far: int = 5,
     transition_distance: float | None = None,
     set_as_background: bool = True,
+    local_refinements: dict[tuple[int, int], int] | None = None,
+    # e.g. {(2, port_tag): 40, (2, other_tag): 60}
 ) -> int:
     """Set up mesh refinement that clusters elements near conductor boundary curves.
 
@@ -280,62 +272,103 @@ def refine_near_surfaces(
     given surfaces and grade quickly to the coarse size
     (``wavelength / ppw_far``) over ``transition_distance``.
 
-    When *set_as_background* is True (default), the field is immediately
-    installed as the background mesh and meshing options are configured.
-    Set it to False to compose multiple fields with a ``Min`` field before
-    calling :func:`set_mesh_field_as_background` yourself.
+    Additional per-surface local refinements can be injected via
+    ``local_refinements``. Each entry adds its own Distance+Threshold field
+    pair and all fields (global + local) are merged with a ``Min`` field so
+    the finest size always wins at every point.
+
+    When *set_as_background* is True (default), the final Min field is
+    immediately installed as the background mesh and meshing options are
+    configured. Set it to False to compose multiple fields with a ``Min``
+    field before calling :func:`set_mesh_field_as_background` yourself.
 
     Args:
         surface_dimtags:     List of ``(dim, tag)`` pairs for the surfaces whose
-                             boundary curves drive the refinement (typically PEC
-                             and port surfaces).
+                             boundary curves drive the global refinement (typically
+                             PEC and port surfaces).
         wavelength:          Operating wavelength in model units.
         ppw_near:            Points per wavelength on the conductor boundary curves.
         ppw_far:             Points per wavelength far from conductors.
         transition_distance: Distance over which the mesh size grades from fine
-                             to coarse.  Defaults to ``wavelength / 4``.
-        set_as_background:   If True, install the threshold field as the
-                             background mesh and configure meshing options.
+                             to coarse. Defaults to ``wavelength / 4``.
+        set_as_background:   If True, install the final field as the background
+                             mesh and configure meshing options.
+        local_refinements:   Optional dict mapping ``(dim, tag)`` → ``ppw_local``
+                             for surfaces that need finer resolution than the
+                             global ``ppw_near``. Each gets its own
+                             Distance+Threshold pair with the same
+                             ``transition_distance`` and ``ppw_far``.
 
     Returns:
-        The gmsh field ID of the Threshold field.
+        The gmsh field ID of the final (Min or Threshold) field that was
+        installed as background (or would be, if set_as_background=False).
     """
     if transition_distance is None:
         transition_distance = 0.25 * wavelength
 
     lc_near = wavelength / ppw_near
-    lc_far = wavelength / ppw_far
+    lc_far  = wavelength / ppw_far
 
-    # Collect unique boundary curves from the given surfaces
-    edge_set: set[int] = set()
-    for dt in surface_dimtags:
-        for _, et in gmsh.model.getBoundary([dt], combined=False, oriented=False, recursive=False):
-            edge_set.add(abs(et))
-    edge_list = sorted(edge_set)
-    print(f"  {len(edge_list)} conductor boundary curves")
+    # ── helper: build one Distance+Threshold pair for a set of dimtags ──
+    def _make_threshold(
+        dimtags: list[tuple[int, int]],
+        size_min: float,
+        label: str = "",
+    ) -> int:
+        edge_set: set[int] = set()
+        for dt in dimtags:
+            for _, et in gmsh.model.getBoundary(
+                [dt], combined=False, oriented=False, recursive=False
+            ):
+                edge_set.add(abs(et))
+        edge_list = sorted(edge_set)
+        print(f"  {label}: {len(edge_list)} curves, SizeMin={size_min:.4f}")
 
-    # Distance field from conductor boundary curves
-    dist_field = gmsh.model.mesh.field.add("Distance")
-    gmsh.model.mesh.field.setNumbers(dist_field, "CurvesList", edge_list)
-    gmsh.model.mesh.field.setNumber(dist_field, "Sampling", 200)
+        dist = gmsh.model.mesh.field.add("Distance")
+        gmsh.model.mesh.field.setNumbers(dist, "CurvesList", edge_list)
+        gmsh.model.mesh.field.setNumber(dist, "Sampling", 200)
 
-    # Threshold: transition from lc_near → lc_far
-    thresh_field = gmsh.model.mesh.field.add("Threshold")
-    gmsh.model.mesh.field.setNumber(thresh_field, "InField", dist_field)
-    gmsh.model.mesh.field.setNumber(thresh_field, "SizeMin", lc_near)
-    gmsh.model.mesh.field.setNumber(thresh_field, "SizeMax", lc_far)
-    gmsh.model.mesh.field.setNumber(thresh_field, "DistMin", 0.0)
-    gmsh.model.mesh.field.setNumber(thresh_field, "DistMax", transition_distance)
+        thresh = gmsh.model.mesh.field.add("Threshold")
+        gmsh.model.mesh.field.setNumber(thresh, "InField",  dist)
+        gmsh.model.mesh.field.setNumber(thresh, "SizeMin",  size_min)
+        gmsh.model.mesh.field.setNumber(thresh, "SizeMax",  lc_far)
+        gmsh.model.mesh.field.setNumber(thresh, "DistMin",  0.0)
+        gmsh.model.mesh.field.setNumber(thresh, "DistMax",  transition_distance)
+        return thresh
 
+    # ── 1. Global field ──────────────────────────────────────────────
     print(f"  ppw_near={ppw_near}  ppw_far={ppw_far}")
-    print(f"  SizeMin={lc_near:.4f} ({ppw_near} pts/λ)")
-    print(f"  SizeMax={lc_far:.4f} ({ppw_far} pts/λ)")
-    print(f"  Transition distance: 0 → {transition_distance:.4f}")
+    print(f"  SizeMax={lc_far:.4f}  transition={transition_distance:.4f}")
+
+    field_ids = [
+        _make_threshold(surface_dimtags, lc_near, label="global")
+    ]
+
+    # ── 2. Local override fields ─────────────────────────────────────
+    # Each runs AFTER the global field so a finer ppw_local always wins
+    # once merged by the Min field below.
+    if local_refinements:
+        for dimtag, ppw_local in local_refinements.items():
+            lc_local = wavelength / ppw_local
+            field_ids.append(
+                _make_threshold([dimtag], lc_local, label=f"local {dimtag}")
+            )
+
+    # ── 3. Merge all fields with Min ─────────────────────────────────
+    # Min field takes the smallest lc at every point in space, so local
+    # overrides never conflict — they only ever refine, never coarsen.
+    if len(field_ids) > 1:
+        min_field = gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(min_field, "FieldsList", field_ids)
+        final_field = min_field
+        print(f"  Merged {len(field_ids)} fields with Min → field {final_field}")
+    else:
+        final_field = field_ids[0]
 
     if set_as_background:
-        set_mesh_field_as_background(thresh_field)
+        set_mesh_field_as_background(final_field)
 
-    return thresh_field
+    return final_field
 
 
 def set_mesh_field_as_background(field_id: int) -> None:

@@ -29,21 +29,21 @@ COLOR_DIELECTRIC = "#81C784"
 COLOR_AIR = "#E3F2FD"
 IMG_SIZE = (700, 500)
 
-_IFRAME_STYLE = (
-    "width:100%;height:500px;border:1px solid #ccc;border-radius:8px;"
-)
-
 # ---------------------------------------------------------------------------
 # PyVista helpers
 # ---------------------------------------------------------------------------
 
 def _ensure_pyvista():
     """Import PyVista with off-screen rendering (headless-safe)."""
+    import warnings
+
     import pyvista as pv
 
     pv.OFF_SCREEN = True
     try:
-        pv.start_xvfb()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            pv.start_xvfb()
     except Exception:
         pass
     return pv
@@ -176,46 +176,209 @@ def render_multi_mesh(
 
 
 # ---------------------------------------------------------------------------
-# Dual-mode iframe display
+# Notebook iframe helpers
 # ---------------------------------------------------------------------------
 
-def _in_interactive_notebook() -> bool:
-    """Return True only in a live notebook (not papermill / docs build)."""
-    if os.environ.get("PAPERMILL_OUTPUT_PATH") or os.environ.get("DOCS_BUILD"):
-        return False
+def viewer_iframe(src: str | Path, *, width: str | int = "100%", height: int = 500):
+    """Return an IPython IFrame for a previously exported HTML viewer.
+
+    This is the recommended notebook/docs display path after calling
+    :func:`render_mesh` or :func:`render_multi_mesh`.
+    """
+    from IPython.display import IFrame
+
+    return IFrame(src=str(src), width=width, height=height)
+
+
+def show_viewer(name: str, *, prefix: str = "../img"):
+    """Deprecated alias for :func:`viewer_iframe`.
+
+    Parameters
+    ----------
+    name : str
+        Basename of the ``.htm`` viewer file.
+    prefix : str
+        Relative folder path that contains exported viewer files.
+    """
+    import warnings
+
+    warnings.warn(
+        "show_viewer() is deprecated; use viewer_iframe() or IPython.display.IFrame directly.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return viewer_iframe(f"{prefix}/{name}.htm")
+
+
+def show_viewers(name_a: str, name_b: str, *, prefix: str = "../img"):
+    """Deprecated alias returning two IFrame objects."""
+    import warnings
+
+    warnings.warn(
+        "show_viewers() is deprecated; create two IFrame objects directly.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return (
+        viewer_iframe(f"{prefix}/{name_a}.htm"),
+        viewer_iframe(f"{prefix}/{name_b}.htm"),
+    )
+
+
+def _in_notebook_session() -> bool:
+    """Return True when running inside an interactive notebook kernel."""
     try:
-        return __import__("IPython").get_ipython() is not None
+        from IPython import get_ipython
+
+        shell = get_ipython()
+        if shell is None:
+            return False
+        return shell.__class__.__name__ == "ZMQInteractiveShell"
     except Exception:
         return False
 
 
-def show_viewer(name: str, *, prefix: str = "../../img") -> str:
-    """Return HTML with an iframe for a single viewer.
+class _FDCapture:
+    """Capture stdout/stderr at the file-descriptor level.
 
-    In a live notebook, inlines the HTML via ``srcdoc``.
-    In a docs build, uses a relative ``src`` path.
+    This is needed to silence C-extension output (like Gmsh's terminal
+    printouts), which Python-level ``redirect_stdout`` cannot intercept.
     """
-    htm_file = f"{name}.htm"
 
-    if _in_interactive_notebook():
-        img_dir = Path("img")
-        html = (img_dir / htm_file).read_text()
-        escaped = html.replace("&", "&amp;").replace('"', "&quot;")
-        return f'<iframe srcdoc="{escaped}" loading="lazy" style="{_IFRAME_STYLE}"></iframe>'
-    else:
-        return f'<iframe src="{prefix}/{htm_file}" loading="lazy" style="{_IFRAME_STYLE}"></iframe>'
+    def __init__(self):
+        self._tmp = None
+        self._saved_stdout_fd = None
+        self._saved_stderr_fd = None
+
+    def __enter__(self):
+        import sys
+        import tempfile
+
+        try:
+            sys.stdout.flush()
+            sys.stderr.flush()
+        except Exception:
+            pass
+        self._tmp = tempfile.TemporaryFile(mode="w+b")
+        # Redirect the real OS-level fds 1 and 2 directly. Under ipykernel,
+        # ``sys.stdout`` is a ZMQ-backed stream without a real ``fileno()``,
+        # but the underlying fds 1 and 2 are real pipes that the kernel
+        # forwards to the client — and that is exactly where C extensions
+        # like Gmsh write. Redirecting these fds reliably captures that
+        # output regardless of how Python-level streams are wired up.
+        self._stdout_fd = 1
+        self._stderr_fd = 2
+        self._saved_stdout_fd = os.dup(1)
+        self._saved_stderr_fd = os.dup(2)
+        os.dup2(self._tmp.fileno(), 1)
+        os.dup2(self._tmp.fileno(), 2)
+        return self
+
+    def text(self) -> str:
+        if self._tmp is None:
+            return ""
+        try:
+            self._tmp.flush()
+            self._tmp.seek(0)
+            return self._tmp.read().decode("utf-8", errors="replace")
+        except Exception:
+            return ""
+
+    def __exit__(self, exc_type, exc, tb):
+        import sys
+
+        try:
+            sys.stdout.flush()
+            sys.stderr.flush()
+        except Exception:
+            pass
+        if self._saved_stdout_fd is not None:
+            os.dup2(self._saved_stdout_fd, self._stdout_fd)
+            os.close(self._saved_stdout_fd)
+        if self._saved_stderr_fd is not None:
+            os.dup2(self._saved_stderr_fd, self._stderr_fd)
+            os.close(self._saved_stderr_fd)
+        if self._tmp is not None:
+            try:
+                self._tmp.close()
+            except Exception:
+                pass
 
 
-def show_viewers(name_a: str, name_b: str, *, prefix: str = "../../img") -> str:
-    """Return HTML with two side-by-side iframes."""
-    tag_a = show_viewer(name_a, prefix=prefix)
-    tag_b = show_viewer(name_b, prefix=prefix)
-    return (
-        '<div class="mesh-viewer-row">\n'
-        f"  {tag_a}\n"
-        f"  {tag_b}\n"
-        "</div>"
-    )
+def run_with_scrollable_output(
+    func,
+    *args,
+    title: str = "Mesh generation output",
+    max_lines: int | None = 10,
+    height_lines: int = 10,
+    gmsh_verbosity: int = 2,
+    **kwargs,
+):
+    """Run ``func`` and show its (otherwise verbose) output in a small
+    scrollable notebook block.
+
+    The helper:
+
+    * Captures stdout/stderr at the **file-descriptor** level so it also
+      catches the output of C extensions such as Gmsh.
+    * Optionally lowers ``General.Verbosity`` while ``func`` runs so that
+      Gmsh prints fewer "Info" lines in the first place.
+    * Truncates the captured text to the last ``max_lines`` lines and
+      displays the result inside a fixed-height, scrollable ``<pre>``
+      element. The wrapped function's return value is passed through
+      unchanged.
+
+    Parameters
+    ----------
+    func, *args, **kwargs
+        Callable and its arguments to execute.
+    title
+        Header shown above the captured output block.
+    max_lines
+        Maximum number of lines kept (most recent). ``None`` keeps all.
+    height_lines
+        Approximate visible height of the scroll block, in lines.
+    gmsh_verbosity
+        Value forced on ``General.Verbosity`` while ``func`` is running.
+        ``2`` keeps only errors and warnings. Set to ``None`` to leave the
+        current verbosity untouched.
+    """
+    import html
+
+    capture = _FDCapture()
+    with capture:
+        result = func(*args, **kwargs)
+
+    text = capture.text().strip("\n")
+    if not text:
+        return result
+
+    lines = text.splitlines()
+    if max_lines is not None and max_lines > 0 and len(lines) > max_lines:
+        hidden = len(lines) - max_lines
+        text = f"... {hidden} earlier lines hidden ...\n" + "\n".join(lines[-max_lines:])
+
+    try:
+        from IPython.display import HTML, display
+
+        escaped = html.escape(text)
+        display(
+            HTML(
+                (
+                    f"<div style='margin:0.75em 0;'>"
+                    f"<div style='font-weight:600;margin-bottom:0.25em'>{html.escape(title)}</div>"
+                    f"<pre style='max-height:calc({max(5, int(height_lines))} * 1.35em);"
+                    "overflow:auto;padding:0.6em;border:1px solid #d0d7de;"
+                    "border-radius:6px;background:#f6f8fa;white-space:pre-wrap;"
+                    "font-family:ui-monospace,Menlo,Consolas,monospace;font-size:0.85em;'>"
+                    f"{escaped}</pre></div>"
+                )
+            )
+        )
+    except Exception:
+        print(text)
+
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -605,7 +768,8 @@ def view_mesh(
         :func:`palace.verify_topology.analyse_mesh`).
     """
     import meshio
-    import pyvista as pv
+
+    pv = _ensure_pyvista()
 
     if transparent_groups is None:
         transparent_groups = ["air_none", "air_plastic_enclosure"]
@@ -636,15 +800,28 @@ def view_mesh(
     triangle_tags_list:  list = []
     found_triangles = False
 
+    phys = m.cell_data.get("gmsh:physical", [])
     for i, cb in enumerate(m.cells):
+        block_tags = (
+            np.asarray(phys[i], dtype=int)
+            if i < len(phys)
+            else np.full(len(cb.data), -1, dtype=int)
+        )
+
         if "triangle" in cb.type:
             found_triangles = True
-            triangle_cells_list.append(cb.data)
-            phys = m.cell_data.get("gmsh:physical", [])
-            if i < len(phys):
-                triangle_tags_list.append(phys[i])
-            else:
-                triangle_tags_list.append(np.full(len(cb.data), -1, dtype=int))
+            triangle_cells_list.append(cb.data[:, :3])
+            triangle_tags_list.append(block_tags)
+            continue
+
+        if "quad" in cb.type:
+            # Triangulate quads so mixed triangle/quad surface meshes are visible.
+            found_triangles = True
+            quad = cb.data[:, :4]
+            tri_a = quad[:, [0, 1, 2]]
+            tri_b = quad[:, [0, 2, 3]]
+            triangle_cells_list.append(np.vstack([tri_a, tri_b]))
+            triangle_tags_list.append(np.repeat(block_tags, 2))
 
     if not found_triangles:
         print("No triangle cells found in the mesh.")
@@ -681,8 +858,6 @@ def view_mesh(
           dict(zip(unique_tags.tolist(),
                    [tag_to_name.get(t, str(t)) for t in unique_tags])))
 
-    triangle_names = np.array([tag_to_name.get(int(t), str(t)) for t in triangle_tags])
-
     # ── Highlight mask ────────────────────────────────────────────────────
     highlight_mask = np.zeros(n_tri, dtype=bool)
     if highlight_faces_set:
@@ -692,7 +867,15 @@ def view_mesh(
         print(f"Matched {int(highlight_mask.sum())} triangles for red highlighting")
 
     # ── Plotter ───────────────────────────────────────────────────────────
-    plotter = pv.Plotter()
+    in_notebook = _in_notebook_session()
+    # When running inside a notebook (interactive or papermill), use the
+    # off-screen renderer so screenshots/static backend produce reliable
+    # output across CI, docs builds, and headless servers.
+    plotter = pv.Plotter(
+        notebook=in_notebook,
+        off_screen=in_notebook or bool(os.environ.get("DOCS_BUILD")),
+        window_size=list(IMG_SIZE),
+    )
 
     name_to_tag = {name: int(tag) for name, (tag, _dim) in m.field_data.items()}
     fallback_idx = 0
@@ -742,7 +925,49 @@ def view_mesh(
         plotter.add_legend(bcolor="white", face="triangle", size=(0.28, 0.28))
 
     plotter.show_axes()
-    plotter.show()
+    plotter.camera.azimuth = 30
+    plotter.camera.elevation = 20
+    plotter.reset_camera()
+
+    # Rendering strategy (mirrors the dolfinx-tutorial pattern):
+    #   * In a notebook kernel, render a static PNG screenshot directly into
+    #     the cell output via ``jupyter_backend="static"``. This is the only
+    #     mode that survives papermill execution + MkDocs rendering, so the
+    #     mesh is *always* visible in the published docs.
+    #   * In a plain Python script with a display, fall back to the regular
+    #     interactive window.
+    #   * In headless scripts, dump a PNG next to the working directory.
+    if in_notebook:
+        try:
+            from IPython.display import Image, display
+
+            img_dir = Path("img")
+            img_dir.mkdir(parents=True, exist_ok=True)
+            out_file = img_dir / f"view_mesh_{int(time.time() * 1000)}.png"
+            plotter.screenshot(str(out_file), window_size=list(IMG_SIZE))
+            plotter.close()
+            display(Image(filename=str(out_file)))
+            return
+        except Exception as exc:
+            print(f"Mesh PNG render failed ({exc}).")
+            try:
+                plotter.close()
+            except Exception:
+                pass
+            return
+
+    try:
+        plotter.show()
+    except Exception as exc:
+        print(f"Interactive render failed ({exc}); writing PNG screenshot instead.")
+        img_dir = Path("img")
+        img_dir.mkdir(parents=True, exist_ok=True)
+        out_file = img_dir / f"view_mesh_{int(time.time())}.png"
+        try:
+            plotter.screenshot(str(out_file), window_size=list(IMG_SIZE))
+            print(f"Mesh screenshot saved to: {out_file}")
+        finally:
+            plotter.close()
 
 
 def preview() -> None:

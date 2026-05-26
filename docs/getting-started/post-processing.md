@@ -51,7 +51,7 @@ These use conformal-mapping formulas for coplanar waveguide (CPW) lines.
 ### Interactive viewer (notebooks)
 
 ```python
-from palacetoolkit.view_mesh import view_mesh
+from palacetoolkit.viz import view_mesh
 
 view_mesh("model.msh", transparent_groups=["air"])
 ```
@@ -59,10 +59,17 @@ view_mesh("model.msh", transparent_groups=["air"])
 ### Static HTML export (docs)
 
 ```python
+from pathlib import Path
+from IPython.display import IFrame
+
 from palacetoolkit.viz import render_mesh, render_multi_mesh
 
-render_mesh(mesh_path, output_html, title="My Model")
+img_dir = Path("img")
+img_dir.mkdir(exist_ok=True)
+
+render_mesh(mesh, img_dir / "my_model.htm", title="My Model")
+IFrame(src="img/my_model.htm", width="100%", height=500)
 ```
 
 The exported `.htm` files are self-contained PyVista viewers that can be
-embedded via `<iframe>` in documentation pages.
+displayed in notebooks (or embedded via `<iframe>` in documentation pages).
