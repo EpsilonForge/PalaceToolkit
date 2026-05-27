@@ -746,6 +746,8 @@ def view_mesh(
     palace_config_filename: str | None = None,
     transparent_groups: list[str] | None = None,
     highlight_faces: list[tuple[int, ...]] | None = None,
+    azimuth = 20,
+    elevation = 30, 
 ) -> None:
     """Interactive PyVista viewer for Gmsh ``.msh`` files.
 
@@ -925,8 +927,8 @@ def view_mesh(
         plotter.add_legend(bcolor="white", face="triangle", size=(0.28, 0.28))
 
     plotter.show_axes()
-    plotter.camera.azimuth = 30
-    plotter.camera.elevation = 20
+    plotter.camera.azimuth = azimuth
+    plotter.camera.elevation = elevation
     plotter.reset_camera()
 
     # Rendering strategy (mirrors the dolfinx-tutorial pattern):
