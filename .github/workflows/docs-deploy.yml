@@ -1,17 +1,9 @@
 name: Deploy PalaceToolkit Docs
 
 on:
-  workflow_dispatch:
-    inputs:
-      stage:
-        description: "SST stage"
-        required: false
-        default: "production"
-        type: choice
-        options:
-          - production
-          - staging
-  push:
+  pull_request_target:
+    types:
+      - closed
     branches:
       - main
     paths:
@@ -27,16 +19,22 @@ permissions:
   contents: read
 
 concurrency:
-  group: epsilonforge-palace-docs-${{ github.event.inputs.stage || 'production' }}
+  group: epsilonforge-palace-docs-production
   cancel-in-progress: false
 
 env:
-  AWS_ACCOUNT_ID: "527097962874"
+  # Override via repository variable EPSILON_FORGE_AWS_ACCOUNT_ID when needed.
+  AWS_ACCOUNT_ID: ${{ vars['EPSILON_FORGE_AWS_ACCOUNT_ID'] || '527097962874' }}
   AWS_REGION: us-east-2
-  SST_STAGE: ${{ github.event.inputs.stage || 'production' }}
+  SST_STAGE: production
 
 jobs:
   deploy-docs:
+    if: github.event.pull_request.merged == true
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: read
     runs-on: ubuntu-24.04
 
     steps:
