@@ -33,6 +33,10 @@ plot_s_params("postpro/my_antenna/port-S.csv")
 Generates magnitude plots of $|S_{11}|$ (and $|S_{21}|$ when available)
 versus frequency.
 
+WSL note:
+If plots do not open a window, install `python3-tk` and set matplotlib
+backend to `TkAgg` in `~/.config/matplotlib/matplotlibrc`.
+
 ## Analytic reference values
 
 Compare simulation results against closed-form expressions:

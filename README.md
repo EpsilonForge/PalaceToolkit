@@ -48,6 +48,28 @@ Expected output includes:
 - resolved runtime mode/path
 - Palace version line from `--version`
 
+### WSL notes (Ubuntu on Windows)
+
+If you run inside WSL, you may need extra system libraries for runtime and plotting:
+
+```bash
+sudo apt update
+sudo apt install -y libglu1-mesa-dev libgomp1 libxft2
+```
+
+Matplotlib may default to a non-interactive backend (`FigureCanvasAgg`).
+If you want interactive plot windows:
+
+```bash
+sudo apt install -y python3-tk
+```
+
+Then set a GUI backend in `~/.config/matplotlib/matplotlibrc`:
+
+```text
+backend: TkAgg
+```
+
 ### Compatibility Policy
 
 - Stable releases of `palace-toolkit` are validated against a matching stable release of `palacetoolkit-palace-cpu`.

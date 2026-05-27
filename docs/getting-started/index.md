@@ -27,6 +27,27 @@ palace-toolkit-check
 Expected output includes `Palace runtime check: OK`, the selected runtime path,
 and a Palace version line.
 
+## 3b. WSL users (optional GUI + runtime libraries)
+
+Some WSL environments need additional runtime libraries:
+
+```bash
+sudo apt update
+sudo apt install -y libglu1-mesa-dev libgomp1 libxft2
+```
+
+For interactive matplotlib windows in WSL:
+
+```bash
+sudo apt install -y python3-tk
+```
+
+Then set the backend in `~/.config/matplotlib/matplotlibrc`:
+
+```text
+backend: TkAgg
+```
+
 ## 4. Optional power-user source builds (latest/custom Palace)
 
 Use this only when you explicitly want a source-built Palace (nightly/custom

@@ -24,6 +24,28 @@ palace-toolkit-check
 
 For versioning/support guarantees, see `docs/getting-started/compatibility-policy.md`.
 
+## WSL troubleshooting notes
+
+On WSL, install these libraries if runtime/plotting issues appear:
+
+```bash
+sudo apt update
+sudo apt install -y libglu1-mesa-dev libgomp1 libxft2
+```
+
+Matplotlib in WSL is often non-interactive by default (`FigureCanvasAgg`).
+For interactive windows:
+
+```bash
+sudo apt install -y python3-tk
+```
+
+Then set:
+
+```text
+backend: TkAgg
+```
+
 ## Optional: Source Build (Nightly/Custom)
 
 Only use this mode if you need non-default Palace options (CUDA/HIP/MAGMA, etc.)
