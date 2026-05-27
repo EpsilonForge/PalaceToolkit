@@ -172,6 +172,7 @@ def generate_3d_mesh(
     mesh_sizes: dict[str, float],
     output_file: str,
     optimize: bool = True,
+    verbose: bool = True,
 ) -> None:
     """Set mesh sizes, generate and write a 3D mesh.
 
@@ -181,7 +182,21 @@ def generate_3d_mesh(
         output_file: path for the output .msh file.
         optimize:    whether to run Netgen optimisation (disable for complex
                      imported CAD to avoid segfaults in thin-volume meshes).
+        verbose:     if False, reduce Gmsh terminal output to warnings/errors
+                     during mesh generation and suppress summary prints.
     """
+
+    previous_verbosity = None
+    try:
+        previous_verbosity = gmsh.option.getNumber("General.Verbosity")
+    except Exception:
+        previous_verbosity = None
+
+    if not verbose:
+        try:
+            gmsh.option.setNumber("General.Verbosity", 2)
+        except Exception:
+            pass
 
 
     def _apply_point_sizes(*, use_entity_tags: bool = True) -> int:
@@ -216,43 +231,51 @@ def generate_3d_mesh(
 
         return applied
 
-    _apply_point_sizes(use_entity_tags=True)
-
-
     try:
-        gmsh.model.mesh.generate(3)
-    except Exception as exc:
-        msg = str(exc).lower()
-        if "invalid boundary mesh" not in msg and "overlapping facets" not in msg:
-            raise
+        _apply_point_sizes(use_entity_tags=True)
 
-        print("  Meshing failed with overlapping facets; attempting OCC repair + retry...")
-        gmsh.model.mesh.clear()
         try:
-            gmsh.model.occ.removeAllDuplicates()
-        except Exception:
-            pass
-        try:
-            gmsh.model.occ.healShapes()
-        except Exception:
-            pass
-        gmsh.model.occ.synchronize()
+            gmsh.model.mesh.generate(3)
+        except Exception as exc:
+            msg = str(exc).lower()
+            if "invalid boundary mesh" not in msg and "overlapping facets" not in msg:
+                raise
 
-        applied = _apply_point_sizes(use_entity_tags=False)
-        if applied == 0 and mesh_sizes:
-            # Last-resort sizing when entity tags are no longer valid after repair.
-            gmsh.model.mesh.setSize(gmsh.model.getEntities(0), min(mesh_sizes.values()))
+            if verbose:
+                print("  Meshing failed with overlapping facets; attempting OCC repair + retry...")
+            gmsh.model.mesh.clear()
+            try:
+                gmsh.model.occ.removeAllDuplicates()
+            except Exception:
+                pass
+            try:
+                gmsh.model.occ.healShapes()
+            except Exception:
+                pass
+            gmsh.model.occ.synchronize()
 
-        gmsh.model.mesh.generate(3)
+            applied = _apply_point_sizes(use_entity_tags=False)
+            if applied == 0 and mesh_sizes:
+                # Last-resort sizing when entity tags are no longer valid after repair.
+                gmsh.model.mesh.setSize(gmsh.model.getEntities(0), min(mesh_sizes.values()))
 
-    if optimize:
-            gmsh.model.mesh.optimize("Netgen") 
-    gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
-    gmsh.write(output_file)
-    print(f"Mesh saved to {output_file}")
-    print(f"  Nodes: {len(gmsh.model.mesh.getNodes()[0])}")
-    elems = gmsh.model.mesh.getElements()
-    print(f"  Elements: {sum(len(e) for e in elems[1])}")
+            gmsh.model.mesh.generate(3)
+
+        if optimize:
+            gmsh.model.mesh.optimize("Netgen")
+        gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
+        gmsh.write(output_file)
+        if verbose:
+            print(f"Mesh saved to {output_file}")
+            print(f"  Nodes: {len(gmsh.model.mesh.getNodes()[0])}")
+            elems = gmsh.model.mesh.getElements()
+            print(f"  Elements: {sum(len(e) for e in elems[1])}")
+    finally:
+        if previous_verbosity is not None:
+            try:
+                gmsh.option.setNumber("General.Verbosity", previous_verbosity)
+            except Exception:
+                pass
 
 
 def refine_near_surfaces(
