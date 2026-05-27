@@ -6,16 +6,63 @@ import gmsh
 # ---------------------------------------------------------------------------
 # Minimalistic meshwell-style entity + pipeline
 # ---------------------------------------------------------------------------
-
 class Entity:
     """A named geometric entity with priority (mesh_order) and tracked dimtags."""
 
-    def __init__(self, name: str, dim: int, mesh_order: int, tags: list[int]):
+    def __init__(self, name: str, 
+                 dim: int, 
+                 btype: str, 
+                 mesh_order: int, 
+                 tags: list[int],
+                 # Dielectric
+                 loss_tan: float | None = None,
+                 eps_r: float | None = None,
+                 mu_r: float | None = None,
+                 # Lumped port
+                 R: float | None = None,
+                 direction: str | None = None,
+                 excitation: bool | None = None,
+                 # Waveport
+                 mode: int | None = None):
+
+        if btype == "dielectric":
+            if any(v is None for v in (loss_tan, eps_r, mu_r)):
+                raise ValueError(f"Entity '{name}' is dielectric but loss_tan, eps_r, mu_r must all be provided.")
+        elif btype == "lumped_port":
+            if any(v is None for v in (R, direction)):
+                raise ValueError(f"Entity '{name}' is lumped_port but R and direction must be provided.")
+        elif btype == "waveport":
+            pass  # all optional, defaults handled in to_dict
+
         self.name = name
         self.dim = dim
+        self.boundary_type = btype
         self.mesh_order = mesh_order
         self.dimtags = [(dim, t) for t in tags]
 
+        # Dielectric
+        self.loss_tan = loss_tan
+        self.eps_r = eps_r
+        self.mu_r = mu_r
+
+        # Lumped port
+        self.R = R
+        self.direction = direction
+        self.excitation = excitation if excitation is not None else True
+
+        # Waveport
+        self.mode = mode if mode is not None else 1
+
+    def to_dict(self) -> dict:
+        d = {"name": self.name, "boundary_type": self.boundary_type}
+        if self.boundary_type == "dielectric":
+            d.update({"eps_r": self.eps_r, "mu_r": self.mu_r, "loss_tan": self.loss_tan})
+        elif self.boundary_type == "lumped_port":
+            d.update({"R": self.R, "Direction": self.direction, "Excitation": self.excitation})
+        elif self.boundary_type == "waveport":
+            d.update({"Mode": self.mode, "Excitation": self.excitation})
+        return d
+    
     def __repr__(self):
         return f"Entity({self.name!r}, dim={self.dim}, order={self.mesh_order}, tags={[t for _, t in self.dimtags]})"
 
