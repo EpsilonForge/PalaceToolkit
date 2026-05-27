@@ -797,7 +797,7 @@ def view_mesh(
         try:
             import html as html_lib
 
-            from IPython.display import HTML, display
+            from IPython.display import HTML, Image, display
 
             html_obj = plotter.export_html(None)
             html_text = html_obj.getvalue() if hasattr(html_obj, "getvalue") else str(html_obj)
@@ -811,9 +811,21 @@ def view_mesh(
         except Exception as exc:
             print(
                 "Warning: interactive PyVista HTML export failed; "
-                f"falling back to default renderer ({exc})"
+                f"falling back to static PNG renderer ({exc})"
             )
-            plotter.show()
+            try:
+                import tempfile
+
+                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                    png_path = Path(tmp.name)
+                plotter.screenshot(str(png_path))
+                display(Image(data=png_path.read_bytes(), format="png"))
+                png_path.unlink(missing_ok=True)
+            except Exception as png_exc:
+                print(
+                    "Warning: static PyVista PNG fallback failed; "
+                    f"no mesh preview available ({png_exc})"
+                )
         finally:
             plotter.close()
     else:
@@ -824,7 +836,9 @@ def run_with_scrollable_output(
     func,
     *args,
     title: str = "Command output",
-    max_lines: int = 120,
+    max_lines: int | None = None,
+    visible_lines: int = 10,
+    line_height: float = 1.35,
     **kwargs,
 ):
     """Run ``func`` and show stdout/stderr in a scrollable notebook block.
@@ -847,20 +861,23 @@ def run_with_scrollable_output(
     text = stream.getvalue().rstrip("\n")
     if text:
         lines = text.splitlines()
-        if max_lines > 0 and len(lines) > max_lines:
+        if max_lines is not None and max_lines > 0 and len(lines) > max_lines:
             shown = lines[:max_lines]
             shown.append(
                 f"... ({len(lines) - max_lines} more lines hidden; "
-                "increase max_lines to view more)"
+                "set max_lines=None to keep full output)"
             )
             text = "\n".join(shown)
+
+        visible_lines = max(3, int(visible_lines))
+        line_height = max(1.0, float(line_height))
         escaped = html.escape(text)
         display(
             HTML(
-                "<details open>"
+                '<details open class="ptk-scroll-output">'
                 f"<summary><strong>{html.escape(title)}</strong></summary>"
-                '<pre style="max-height:260px; overflow:auto; border:1px solid #ddd; '
-                'padding:0.75rem; border-radius:8px; background:#fafafa;">'
+                f'<pre style="--ptk-output-visible-lines:{visible_lines}; '
+                f'--ptk-output-line-height:{line_height};">'
                 f"{escaped}</pre></details>"
             )
         )

@@ -212,6 +212,20 @@ distribution ID from AWS SSM Parameter Store.
 
 - Role name pattern: `epsilon-forge-palace-toolkit-docs-deploy-<stage>`
 - SSM parameter pattern: `/epsilon-forge/<stage>/router-distribution-id`
+- AWS account has an IAM OIDC provider for `https://token.actions.githubusercontent.com`
+
+For account `527097962874`, the provider ARN is expected to be:
+
+```text
+arn:aws:iam::527097962874:oidc-provider/token.actions.githubusercontent.com
+```
+
+The deploy role trust policy must allow `sts:AssumeRoleWithWebIdentity` for this
+repository. For pushes to `main`, the subject should match:
+
+```text
+repo:EpsilonForge/PalaceToolkit:ref:refs/heads/main
+```
 
 Both are created by the private infrastructure repo stack outputs.
 ### Other useful recipes
