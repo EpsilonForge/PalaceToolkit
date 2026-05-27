@@ -1,0 +1,12 @@
+{
+  "name": "palace-toolkit-docs-deploy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy:docs": "sst deploy --stage production",
+    "diff:docs": "sst diff --stage production"
+  },
+  "devDependencies": {
+    "sst": "^3.9.28"
+  }
+}

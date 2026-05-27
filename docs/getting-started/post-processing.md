@@ -60,20 +60,6 @@ from palacetoolkit.viz import view_mesh
 view_mesh("model.msh", transparent_groups=["air"])
 ```
 
-### Static HTML export (docs)
-
-```python
-from pathlib import Path
-from IPython.display import IFrame
-
-from palacetoolkit.viz import render_mesh, render_multi_mesh
-
-img_dir = Path("img")
-img_dir.mkdir(exist_ok=True)
-
-render_mesh(mesh, img_dir / "my_model.htm", title="My Model")
-IFrame(src="img/my_model.htm", width="100%", height=500)
-```
-
-The exported `.htm` files are self-contained PyVista viewers that can be
-displayed in notebooks (or embedded via `<iframe>` in documentation pages).
+`view_mesh()` now uses PyVista's interactive notebook backend when executed
+inside Jupyter (including docs notebook runs), so the rendered mesh remains
+pan/zoom/rotate capable in the generated documentation.

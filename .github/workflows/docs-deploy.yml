@@ -1,0 +1,87 @@
+name: Deploy PalaceToolkit Docs
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "SST stage"
+        required: false
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - "sst.config.ts"
+      - "package.json"
+      - ".github/workflows/docs-deploy.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: epsilonforge-palace-docs-${{ github.event.inputs.stage || 'production' }}
+  cancel-in-progress: false
+
+env:
+  AWS_ACCOUNT_ID: "527097962874"
+  AWS_REGION: us-east-2
+  SST_STAGE: ${{ github.event.inputs.stage || 'production' }}
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/epsilon-forge-palace-toolkit-docs-deploy-${{ env.SST_STAGE }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: palacetoolkit-docs-deploy
+
+      - name: Resolve shared router distribution ID
+        id: router
+        run: |
+          set -euo pipefail
+          PARAMETER_NAME="/epsilon-forge/$SST_STAGE/router-distribution-id"
+          ROUTER_DISTRIBUTION_ID="$(aws ssm get-parameter --name "$PARAMETER_NAME" --query 'Parameter.Value' --output text)"
+          echo "router_distribution_id=$ROUTER_DISTRIBUTION_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Install docs build tools
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install mkdocs mkdocs-material mkdocs-jupyter
+
+      - name: Install deploy dependencies
+        run: |
+          set -euo pipefail
+          npm install --no-fund --no-audit
+
+      - name: Deploy docs
+        env:
+          EPSILON_FORGE_ROUTER_DISTRIBUTION_ID: ${{ steps.router.outputs.router_distribution_id }}
+        run: |
+          set -euo pipefail
+          npx sst deploy --stage "$SST_STAGE"

@@ -175,6 +175,45 @@ just docs       # build the MkDocs static site
 just serve      # starts a dev server on http://localhost:8080
 ```
 
+## Deploying docs to epsilonforge.com/palace-toolkit
+
+This repository can deploy its docs independently and attach them to the shared
+Router managed by the private website infrastructure.
+
+### One-time setup
+
+1. Install deploy dependencies:
+
+```bash
+npm install
+python -m pip install mkdocs mkdocs-material mkdocs-jupyter
+```
+
+2. Set environment variables:
+
+```bash
+export EPSILON_FORGE_ROUTER_DISTRIBUTION_ID="<router-distribution-id>"
+export AWS_REGION="us-east-2"
+```
+
+The `EPSILON_FORGE_ROUTER_DISTRIBUTION_ID` value comes from the private repo
+stack output `routerDistributionId`.
+
+### Deploy
+
+```bash
+npx sst deploy --stage production
+```
+
+### GitHub Actions assumptions
+
+The workflow assumes a deterministic IAM role name and reads the shared Router
+distribution ID from AWS SSM Parameter Store.
+
+- Role name pattern: `epsilon-forge-palace-toolkit-docs-deploy-<stage>`
+- SSM parameter pattern: `/epsilon-forge/<stage>/router-distribution-id`
+
+Both are created by the private infrastructure repo stack outputs.
 ### Other useful recipes
 
 | Recipe | Description |

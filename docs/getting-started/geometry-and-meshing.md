@@ -84,13 +84,5 @@ from palacetoolkit.viz import view_mesh
 view_mesh("my_model.msh")
 ```
 
-For static HTML exports (used in the docs site):
-
-```python
-from IPython.display import IFrame
-
-from palacetoolkit.viz import render_mesh
-
-render_mesh(mesh, Path("img") / "my_model.htm", title="My Model")
-IFrame(src="img/my_model.htm", width="100%", height=500)
-```
+`view_mesh()` uses PyVista's interactive notebook backend when executed in
+Jupyter, so the mesh remains pan/zoom/rotate capable in rendered docs.
