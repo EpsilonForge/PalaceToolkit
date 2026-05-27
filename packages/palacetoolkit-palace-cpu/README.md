@@ -6,10 +6,13 @@ Platform wheel package that ships a prebuilt CPU-default Palace executable for P
 
 1. Build Palace with the CPU-default profile.
 2. Stage the resulting executable and shared libraries:
-   - `tools/stage_palace_binary.sh /path/to/palace /path/to/libdir [/path/to/lib64 ...]`
+    - `tools/stage_palace_binary.sh /path/to/bin /path/to/libdir [/path/to/lib64 ...]`
    - This populates:
      - `src/palacetoolkit_palace_cpu/bin/palace`
+       - `src/palacetoolkit_palace_cpu/bin/palace-x86_64.bin`
      - `src/palacetoolkit_palace_cpu/lib/*`
+    - Only runtime-required shared libraries are copied, and binaries/libraries
+       are stripped when possible to reduce wheel size.
 3. Build wheel:
    - `python -m build`
 

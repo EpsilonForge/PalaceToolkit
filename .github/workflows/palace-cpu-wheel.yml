@@ -80,7 +80,7 @@ jobs:
           set -euo pipefail
           ls -lah /tmp/palace-install/bin
           ./packages/palacetoolkit-palace-cpu/tools/stage_palace_binary.sh \
-            /tmp/palace-install/bin/palace \
+            /tmp/palace-install/bin \
             /tmp/palace-install/lib \
             /tmp/palace-install/lib64
 
