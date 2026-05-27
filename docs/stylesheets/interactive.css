@@ -21,3 +21,25 @@
   color: var(--md-default-fg-color--light);
   margin-top: 0.25rem;
 }
+
+/* Scrollable stdout/stderr block used by run_with_scrollable_output */
+.ptk-scroll-output {
+  margin: 0.75rem 0;
+}
+
+.ptk-scroll-output > summary {
+  cursor: pointer;
+  margin-bottom: 0.35rem;
+}
+
+.ptk-scroll-output pre {
+  margin: 0.35rem 0 0;
+  max-height: calc(var(--ptk-output-visible-lines, 10) * var(--ptk-output-line-height, 1.35) * 1em);
+  overflow: auto;
+  padding: 0.75rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  background: var(--md-code-bg-color, #fafafa);
+  line-height: var(--ptk-output-line-height, 1.35);
+  white-space: pre;
+}
