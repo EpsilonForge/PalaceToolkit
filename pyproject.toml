@@ -1,10 +1,10 @@
 [project]
 name = "palace-toolkit"
-version = "0.1.0"
+version = "0.1.1"
 description = "PALACE electromagnetic simulation course materials"
 requires-python = ">=3.8"
 dependencies = [
-    "palacetoolkit-palace-cpu @ https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-v0.1.1/palacetoolkit_palace_cpu-0.1.1-py3-none-linux_x86_64.whl ; platform_system == 'Linux' and platform_machine == 'x86_64'",
+    "palacetoolkit-palace-cpu @ https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-v0.1.2/palacetoolkit_palace_cpu-0.1.2-py3-none-linux_x86_64.whl ; platform_system == 'Linux' and platform_machine == 'x86_64'",
     "gmsh",
     "numpy",
     "scipy",
@@ -17,7 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 plot = ["pandas", "matplotlib"]
-palace-cpu = ["palacetoolkit-palace-cpu @ https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-v0.1.1/palacetoolkit_palace_cpu-0.1.1-py3-none-linux_x86_64.whl ; platform_system == 'Linux' and platform_machine == 'x86_64'"]
+palace-cpu = ["palacetoolkit-palace-cpu @ https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-v0.1.2/palacetoolkit_palace_cpu-0.1.2-py3-none-linux_x86_64.whl ; platform_system == 'Linux' and platform_machine == 'x86_64'"]
 docs = [
     "mkdocs",
     "mkdocs-material",
