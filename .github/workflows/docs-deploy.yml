@@ -1,9 +1,7 @@
 name: Deploy PalaceToolkit Docs
 
 on:
-  pull_request_target:
-    types:
-      - closed
+  push:
     branches:
       - main
     paths:
@@ -30,11 +28,9 @@ env:
 
 jobs:
   deploy-docs:
-    if: github.event.pull_request.merged == true
     permissions:
       id-token: write
       contents: read
-      pull-requests: read
     runs-on: ubuntu-24.04
 
     steps:
