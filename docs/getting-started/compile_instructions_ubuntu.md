@@ -2,45 +2,24 @@
 
 This guide is focused on the current recommended workflow:
 
-1. Clone PalaceToolkit
-2. Install local editable packages
+1. Install `palace-toolkit` from PyPI
+2. Verify Palace runtime
 3. Use optional source build only for power-user/nightly scenarios
 
-## Quick Start (Clone + Build)
+## Quick Start (Recommended)
 
 Examples:
 
 ```bash
-# Clone repository
-git clone https://github.com/EpsilonForge/PalaceToolkit.git
-cd PalaceToolkit
-
 # Create virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
 
-# Recommended local install
-./tools/install_local_editable.sh
+# Install package
+pip install palace-toolkit
 
-# equivalent manual commands
-pip install https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-vX.Y.Z/<wheel-file>.whl
-pip install -e .
-```
-
-`./tools/install_local_editable.sh` downloads the latest GA-built
-`palacetoolkit-palace-cpu` wheel from GitHub Releases for your platform, then
-installs `PalaceToolkit` in editable mode.
-
-Use local package mode only if needed:
-
-```bash
-PALACETOOLKIT_BINARY_SOURCE=local ./tools/install_local_editable.sh
-```
-
-Verify:
-
-```bash
-python -c "from palacetoolkit.mesh import Entity; print('Ready!')"
+# Verify Palace runtime
+palace-toolkit-check
 ```
 
 For versioning/support guarantees, see `docs/getting-started/compatibility-policy.md`.
@@ -55,6 +34,9 @@ PALACETOOLKIT_BUILD_PALACE=1 PALACETOOLKIT_CLONE_NIGHTLY=1 pip install -e .
 
 # force rebuild if cache exists
 PALACETOOLKIT_FORCE_PALACE_REBUILD=1 pip install -e .
+
+# verify custom runtime
+palace-toolkit-check
 ```
 
 ## System Information

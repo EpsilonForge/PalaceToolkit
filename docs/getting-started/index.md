@@ -1,47 +1,50 @@
 # Getting Started
 
-This project currently focuses on a local clone workflow.
+The default install path is one command from PyPI.
 
-## 1. Clone and create a Python environment
+## 1. Create a Python environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+## 2. Install PalaceToolkit
+
+```bash
+pip install palace-toolkit
+```
+
+On Linux x86_64, this also fetches the matching prebuilt Palace CPU runtime
+wheel from GitHub Releases.
+
+## 3. Verify Palace runtime
+
+```bash
+palace-toolkit-check
+```
+
+Expected output includes `Palace runtime check: OK`, the selected runtime path,
+and a Palace version line.
+
+## 4. Optional power-user source builds (latest/custom Palace)
+
+Use this only when you explicitly want a source-built Palace (nightly/custom
+flags such as CUDA/HIP/MAGMA):
 
 ```bash
 git clone https://github.com/EpsilonForge/PalaceToolkit.git
 cd PalaceToolkit
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-## 2. Install locally (binary-first runtime)
-
-```bash
-./tools/install_local_editable.sh
-```
-
-This installs:
-
-- `palacetoolkit-palace-cpu` from `packages/palacetoolkit-palace-cpu`
-- `PalaceToolkit` in editable mode
-
-Equivalent manual commands:
-
-```bash
-pip install -e packages/palacetoolkit-palace-cpu
-pip install -e ".[plot,docs]"
-```
-
-## 3. Verify your setup
-
-```bash
-python -c "from palacetoolkit.mesh import Entity; print('Ready!')"
-```
-
-## 4. Optional power-user source builds
-
-Use this only for nightly/custom Palace builds (CUDA/HIP/MAGMA options):
-
-```bash
 PALACETOOLKIT_BUILD_PALACE=1 PALACETOOLKIT_CLONE_NIGHTLY=1 pip install -e .
 ```
 
-See the dedicated Ubuntu guide and compatibility policy for details.
+You can then point PalaceToolkit at your custom runtime via Python:
+
+```bash
+python -c "from palacetoolkit.simulation import set_palace_path; set_palace_path('/path/to/palace-or-Palace.sif')"
+```
+
+See the dedicated Ubuntu build guide and compatibility policy for details.
 

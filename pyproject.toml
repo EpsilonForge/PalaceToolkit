@@ -31,6 +31,9 @@ docs = [
     "pre-commit",
 ]
 
+[project.scripts]
+palace-toolkit-check = "palacetoolkit.cli:palace_toolkit_check"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [

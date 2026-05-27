@@ -10,6 +10,124 @@ from palacetoolkit.mesh import refine_near_surfaces as _refine_near_surfaces
 from palacetoolkit.palace_runtime import resolve_palace_binary, resolve_palace_library_dir
 
 
+_PALACE_EXEC_OVERRIDE: Path | None = None
+_PALACE_SIF_OVERRIDE: Path | None = None
+
+
+def set_palace_path(path: str | Path | None) -> None:
+    """Set a global Palace runtime path override used by :func:`run_palace`.
+
+    Rules:
+    - ``None`` clears all overrides.
+    - ``*.sif`` sets an Apptainer/Singularity image override.
+    - Any other file path is treated as an executable override.
+    """
+    global _PALACE_EXEC_OVERRIDE, _PALACE_SIF_OVERRIDE
+
+    if path is None:
+        _PALACE_EXEC_OVERRIDE = None
+        _PALACE_SIF_OVERRIDE = None
+        return
+
+    resolved = Path(path).expanduser().resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"Palace path not found at {resolved}")
+
+    if resolved.suffix == ".sif":
+        _PALACE_EXEC_OVERRIDE = None
+        _PALACE_SIF_OVERRIDE = resolved
+    else:
+        _PALACE_EXEC_OVERRIDE = resolved
+        _PALACE_SIF_OVERRIDE = None
+
+
+def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
+    """Validate that the configured Palace runtime is available and executable.
+
+    This performs a lightweight smoke test by invoking ``--version`` using the
+    same runtime selection order as :func:`run_palace`.
+
+    Returns:
+        A metadata dictionary with keys ``mode``, ``path``, and ``version``.
+    """
+    selected_exec: Path | None = None
+    palace_sif_path: Path | None = None
+
+    if _PALACE_EXEC_OVERRIDE is not None:
+        selected_exec = _PALACE_EXEC_OVERRIDE
+    elif _PALACE_SIF_OVERRIDE is not None:
+        palace_sif_path = _PALACE_SIF_OVERRIDE
+
+    local_palace = resolve_palace_binary() if selected_exec is None else None
+    if selected_exec is None and local_palace is not None:
+        selected_exec = local_palace
+
+    if selected_exec is not None:
+        run_env = os.environ.copy()
+        if local_palace is not None:
+            lib_dir = resolve_palace_library_dir()
+        else:
+            lib_dir = None
+        if lib_dir is not None:
+            prior = run_env.get("LD_LIBRARY_PATH", "")
+            run_env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
+
+        cmd = [str(selected_exec), "--version"]
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                env=run_env,
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError(f"Palace executable not found: {selected_exec}") from exc
+
+        output = (result.stdout or result.stderr or "").strip()
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Palace runtime check failed with code {result.returncode}: {output}"
+            )
+        version_line = output.splitlines()[0] if output else "(no version output)"
+        return {
+            "mode": "executable",
+            "path": str(selected_exec),
+            "version": version_line,
+        }
+
+    if palace_sif_path is None:
+        palace_sif = os.environ.get("PALACE_SIF")
+        if not palace_sif:
+            raise RuntimeError(
+                "No Palace executable found. Set one with set_palace_path(...), "
+                "install a packaged binary, or set PALACE_SIF."
+            )
+        palace_sif_path = Path(palace_sif).expanduser().resolve()
+
+    if not palace_sif_path.is_file():
+        raise FileNotFoundError(f"Palace.sif not found at {palace_sif_path}")
+
+    cmd = ["apptainer", "exec", str(palace_sif_path), "palace", "--version"]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError as exc:
+        raise RuntimeError("apptainer command not found for Palace SIF runtime") from exc
+
+    output = (result.stdout or result.stderr or "").strip()
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Palace SIF runtime check failed with code {result.returncode}: {output}"
+        )
+
+    version_line = output.splitlines()[0] if output else "(no version output)"
+    return {
+        "mode": "sif",
+        "path": str(palace_sif_path),
+        "version": version_line,
+    }
+
+
 class Simulation:
     """Minimal Palace simulation helper.
 
@@ -130,12 +248,17 @@ def run_palace(
     num_procs: int = 4,
     work_dir: str | Path | None = None,
 ) -> None:
-    """Run Palace using a local prebuilt binary or Apptainer image.
+    """Run Palace using a configured executable, packaged binary, or SIF.
 
     Args:
         config_file: Path to the Palace JSON config.
         num_procs:   Number of MPI processes.
         work_dir:    Working directory (defaults to config file's parent).
+
+    Runtime selection order:
+    1. Path set with :func:`set_palace_path` (exec or ``.sif``)
+    2. Packaged/fetched local binary
+    3. ``PALACE_SIF`` environment variable
     """
     config_path = Path(config_file).resolve()
     if work_dir is None:
@@ -144,37 +267,56 @@ def run_palace(
         work_dir = str(Path(work_dir).resolve())
     config_name = config_path.name
 
-    local_palace = resolve_palace_binary()
-    if local_palace is not None:
+    selected_exec: Path | None = None
+    palace_sif_path: Path | None = None
+
+    if _PALACE_EXEC_OVERRIDE is not None:
+        selected_exec = _PALACE_EXEC_OVERRIDE
+    elif _PALACE_SIF_OVERRIDE is not None:
+        palace_sif_path = _PALACE_SIF_OVERRIDE
+
+    local_palace = resolve_palace_binary() if selected_exec is None else None
+    if selected_exec is None and local_palace is not None:
+        selected_exec = local_palace
+
+    if selected_exec is not None:
         run_env = os.environ.copy()
-        lib_dir = resolve_palace_library_dir()
+        # Only inject packaged library path when using the packaged binary.
+        if local_palace is not None:
+            lib_dir = resolve_palace_library_dir()
+        else:
+            lib_dir = None
         if lib_dir is not None:
             prior = run_env.get("LD_LIBRARY_PATH", "")
             run_env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
 
         if num_procs > 1:
-            cmd = ["mpirun", "-np", str(num_procs), str(local_palace), str(config_path)]
+            cmd = ["mpirun", "-np", str(num_procs), str(selected_exec), str(config_path)]
         else:
-            cmd = [str(local_palace), str(config_path)]
+            cmd = [str(selected_exec), str(config_path)]
         print(f"  Running: {' '.join(cmd)}")
         result = subprocess.run(cmd, cwd=work_dir, capture_output=False, env=run_env)
         if result.returncode != 0:
             raise RuntimeError(f"Palace exited with code {result.returncode}")
         return
 
-    palace_sif = os.environ.get("PALACE_SIF")
-    if not palace_sif:
-        raise RuntimeError(
-            "No local Palace binary found and PALACE_SIF environment variable not set"
-        )
-    if not Path(palace_sif).is_file():
-        raise FileNotFoundError(f"Palace.sif not found at {palace_sif}")
+    if palace_sif_path is None:
+        palace_sif = os.environ.get("PALACE_SIF")
+        if not palace_sif:
+            raise RuntimeError(
+                "No Palace executable found. Set one with set_palace_path(...), "
+                "install a packaged binary, or set PALACE_SIF."
+            )
+        palace_sif_path = Path(palace_sif).expanduser().resolve()
+
+    if not palace_sif_path.is_file():
+        raise FileNotFoundError(f"Palace.sif not found at {palace_sif_path}")
 
     if num_procs > 1:
         cmd = [
             "apptainer", "exec", "--pwd", "/work",
             "--bind", f"{work_dir}:/work",
-            palace_sif,
+            str(palace_sif_path),
             "mpirun", "-np", str(num_procs),
             "/opt/palace/bin/palace-x86_64.bin",
             f"/work/{config_name}",
@@ -183,7 +325,7 @@ def run_palace(
         cmd = [
             "apptainer", "exec", "--pwd", "/work",
             "--bind", f"{work_dir}:/work",
-            palace_sif,
+            str(palace_sif_path),
             "palace", f"/work/{config_name}",
         ]
 

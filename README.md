@@ -25,40 +25,34 @@ licence required.
 * Python ≥ 3.8
 * [Gmsh](https://gmsh.info/) (the `gmsh` Python package is pulled automatically)
 
-### Install the package
+### Install the package (recommended)
 
 ```bash
-# Clone the repository
-git clone https://github.com/EpsilonForge/PalaceToolkit.git
-cd PalaceToolkit
-
-# Create a virtual environment and install in editable mode
 python -m venv .venv
 source .venv/bin/activate
-
-# Local clone install (recommended for now)
-./tools/install_local_editable.sh
-
-# Or equivalent manual commands:
-pip install https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-vX.Y.Z/<wheel-file>.whl
-pip install -e ".[plot,docs]"
+pip install palace-toolkit
 ```
 
-Default runtime is binary-first when `palacetoolkit-palace-cpu` is installed.
+This installs `palace-toolkit` and, on Linux x86_64, fetches the matching
+prebuilt Palace CPU runtime wheel from GitHub Releases.
 
-By default, `./tools/install_local_editable.sh` fetches the latest
-GA-built binary wheel from GitHub Releases.
-
-To force local binary package mode from the checkout:
+### Verify Palace runtime after install
 
 ```bash
-PALACETOOLKIT_BINARY_SOURCE=local ./tools/install_local_editable.sh
+palace-toolkit-check
 ```
+
+Expected output includes:
+
+- `Palace runtime check: OK`
+- resolved runtime mode/path
+- Palace version line from `--version`
 
 ### Compatibility Policy
 
 - Stable releases of `palace-toolkit` are validated against a matching stable release of `palacetoolkit-palace-cpu`.
-- The default local clone path (`./tools/install_local_editable.sh`) installs both packages from the same repository checkout and is the reference development workflow.
+- The default user install path is `pip install palace-toolkit`.
+- A local clone/editable workflow is still supported for contributors.
 - Nightly Palace builds are supported for power users through opt-in source builds and are treated as best-effort (no stability guarantee across commits).
 - If API/runtime behavior differs between stable and nightly Palace, `palace-toolkit` stable behavior is defined by the stable `palacetoolkit-palace-cpu` line.
 
@@ -76,12 +70,20 @@ Source builds are opt-in and disabled by default.
 Use this only if you need custom flags (CUDA/HIP/MAGMA/etc.) or nightly Palace.
 
 ```bash
+git clone https://github.com/EpsilonForge/PalaceToolkit.git
+cd PalaceToolkit
+python -m venv .venv
+source .venv/bin/activate
+
 PALACETOOLKIT_BUILD_PALACE=1 \
 PALACETOOLKIT_CLONE_NIGHTLY=1 \
 PALACETOOLKIT_PALACE_WITH_CUDA=0 \
 PALACETOOLKIT_PALACE_WITH_HIP=0 \
 PALACETOOLKIT_PALACE_WITH_MAGMA=0 \
 pip install -e .
+
+# Optional: point runtime to your just-built Palace binary or SIF
+# python -c "from palacetoolkit.simulation import set_palace_path; set_palace_path('/path/to/palace')"
 ```
 
 Source builds are cached at:
@@ -113,30 +115,6 @@ The core install pulls `gmsh`, `numpy`, `meshio`, `pyvista`,
 | `docs` | `mkdocs`, `mkdocs-material`, `pyvista[jupyter]`, `nbconvert`, `ipykernel`, `papermill`, `nb-clean`, `pre-commit` |
 
 ## Quick start
-
-Below is a minimal example that creates a coaxial geometry, meshes it, runs
-Palace, and plots the S-parameters:
-
-```python
-import palacetoolkit as ptk
-from ptk.mesh import Entity, run_meshing_pipeline
-from ptk.simulation import run_palace
-from ptk.s_plot import plot_s_params
-
-# 1. Define entities with names, priorities and materials
-inner  = Entity(name="inner_conductor", ...)
-dielectric = Entity(name="dielectric", ...)
-outer  = Entity(name="outer_conductor", ...)
-
-# 2. Run the boolean pipeline — cuts, fragments, and meshes
-run_meshing_pipeline([inner, dielectric, outer], output="coax.msh")
-
-# 3. Run Palace with a JSON config
-run_palace("coax.json", np=4)
-
-# 4. Plot results
-plot_s_params("postpro/coax")
-```
 
 See `docs/examples/` notebooks for worked examples covering waveguides,
 dipole antennas, horn antennas, and planar microwave circuits.

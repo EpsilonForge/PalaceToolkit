@@ -11,20 +11,28 @@ packaged Palace CPU binary.
 - Main `palace-toolkit` package artifacts are built from release tags `v*`.
 - Stable behavior is defined by the matching stable binary line.
 
-## Local Clone Workflow
+## Default Install Workflow
 
 - Recommended install command:
 
   ```bash
-  ./tools/install_local_editable.sh
+  pip install palace-toolkit
   ```
 
-- By default, this script downloads the latest GA-built binary wheel from
-  GitHub Releases and installs PalaceToolkit in editable mode.
-- If needed, local in-repo binary package mode can be forced:
+- On Linux x86_64, this resolves the matching prebuilt
+  `palacetoolkit-palace-cpu` wheel from GitHub Releases.
+- Recommended post-install smoke test:
 
   ```bash
-  PALACETOOLKIT_BINARY_SOURCE=local ./tools/install_local_editable.sh
+  palace-toolkit-check
+  ```
+
+## Local Clone Workflow (contributors)
+
+- A local editable workflow is still supported for contributors and power users:
+
+  ```bash
+  ./tools/install_local_editable.sh
   ```
 
 ## Nightly and Custom Source Builds
