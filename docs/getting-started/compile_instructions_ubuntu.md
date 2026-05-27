@@ -18,6 +18,9 @@ source .venv/bin/activate
 # Install package
 pip install palace-toolkit
 
+# Optional: install prebuilt Palace CPU runtime (Linux x86_64)
+pip install "palacetoolkit-palace-cpu @ https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-v0.1.2/palacetoolkit_palace_cpu-0.1.2-py3-none-linux_x86_64.whl"
+
 # Verify Palace runtime
 palace-toolkit-check
 ```
