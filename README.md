@@ -34,12 +34,12 @@ pip install palace-toolkit
 ```
 
 This installs `palace-toolkit` and, on Linux x86_64, fetches the matching
-prebuilt Palace CPU runtime is available as a separate optional install.
+prebuilt Palace CPU runtime on first use.
 
 Optional (Linux x86_64) prebuilt runtime install:
 
 ```bash
-pip install "palacetoolkit-palace-cpu @ https://github.com/EpsilonForge/PalaceToolkit/releases/download/palace-cpu-v0.1.2/palacetoolkit_palace_cpu-0.1.2-py3-none-linux_x86_64.whl"
+palace-toolkit-install-binary
 ```
 
 ### Verify Palace runtime after install

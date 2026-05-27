@@ -14,6 +14,13 @@ _PALACE_EXEC_OVERRIDE: Path | None = None
 _PALACE_SIF_OVERRIDE: Path | None = None
 
 
+def _infer_exec_library_dir(exec_path: Path) -> Path | None:
+    candidate = exec_path.resolve().parent.parent / "lib"
+    if candidate.is_dir():
+        return candidate
+    return None
+
+
 def set_palace_path(path: str | Path | None) -> None:
     """Set a global Palace runtime path override used by :func:`run_palace`.
 
@@ -65,7 +72,7 @@ def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
     if selected_exec is not None:
         run_env = os.environ.copy()
         if local_palace is not None:
-            lib_dir = resolve_palace_library_dir()
+            lib_dir = _infer_exec_library_dir(local_palace) or resolve_palace_library_dir()
         else:
             lib_dir = None
         if lib_dir is not None:
@@ -283,7 +290,7 @@ def run_palace(
         run_env = os.environ.copy()
         # Only inject packaged library path when using the packaged binary.
         if local_palace is not None:
-            lib_dir = resolve_palace_library_dir()
+            lib_dir = _infer_exec_library_dir(local_palace) or resolve_palace_library_dir()
         else:
             lib_dir = None
         if lib_dir is not None:
