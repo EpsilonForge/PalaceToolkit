@@ -602,6 +602,8 @@ def view_mesh(
     palace_config_filename: str | None = None,
     transparent_groups: list[str] | None = None,
     highlight_faces: list[tuple[int, ...]] | None = None,
+    azimuth = 20,
+    elevation = 30, 
 ) -> None:
     """Interactive PyVista viewer for Gmsh ``.msh`` files.
 
