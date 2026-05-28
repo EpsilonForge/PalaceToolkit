@@ -19,7 +19,8 @@ electromagnetic solving.  In a single Python script you can:
 - **Generate meshes** via an automatic boolean pipeline that handles
   material priorities, interface labelling, and physical-group assignment.
 - **Configure & run Palace** — build JSON configs from entity definitions
-  and launch solves through the Apptainer container.
+  and launch solves with the downloaded executable by default, or an
+  Apptainer/SIF image when needed.
 - **Post-process results** — extract S-parameters, impedance, effective
   index, and render interactive 3D mesh viewers.
 
