@@ -11,7 +11,7 @@ licence required.
 | Module | Description |
 |--------|-------------|
 | `palace.mesh` | Priority-based boolean pipeline for multi-material Gmsh models with automatic size-field grading. |
-| `palace.simulation` | Run Palace via Apptainer/MPI and extract S-parameters and impedance. |
+| `palace.simulation` | Run Palace via downloaded runtime or optional Apptainer/SIF and extract S-parameters and impedance. |
 | `palace.verify_topology` | Validate that a 3D tetrahedral mesh is topologically consistent for Palace/MFEM. |
 | `palace.analytic` | Closed-form transmission-line formulas (CPW impedance, effective index, …). |
 | `palace.s_plot` | Quick matplotlib plots of Palace S-parameter CSV files. |
