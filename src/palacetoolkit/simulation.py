@@ -7,7 +7,11 @@ import numpy as np
 import gmsh
 
 from palacetoolkit.mesh import refine_near_surfaces as _refine_near_surfaces
-from palacetoolkit.palace_runtime import resolve_palace_binary, resolve_palace_library_dir
+from palacetoolkit.palace_runtime import (
+    install_palace_runtime,
+    resolve_palace_binary,
+    resolve_palace_library_dir,
+)
 
 
 _PALACE_EXEC_OVERRIDE: Path | None = None
@@ -46,6 +50,42 @@ def set_palace_path(path: str | Path | None) -> None:
     else:
         _PALACE_EXEC_OVERRIDE = resolved
         _PALACE_SIF_OVERRIDE = None
+
+
+def get_palace_executable(
+    install_if_missing: bool = True,
+    force_install: bool = False,
+) -> Path:
+    """Return a Palace executable path, installing the cached runtime when needed.
+
+    Args:
+        install_if_missing: Download/cache runtime when no executable is found.
+        force_install: Force re-download when installation is performed.
+
+    Returns:
+        Absolute path to a Palace executable.
+
+    Raises:
+        RuntimeError: If no executable is available and installation is disabled
+            or fails.
+    """
+    if _PALACE_EXEC_OVERRIDE is not None:
+        return _PALACE_EXEC_OVERRIDE
+
+    resolved = resolve_palace_binary()
+    if resolved is not None:
+        return resolved
+
+    if install_if_missing:
+        try:
+            return install_palace_runtime(force=force_install)
+        except Exception as exc:
+            raise RuntimeError(f"Unable to install Palace runtime: {exc}") from exc
+
+    raise RuntimeError(
+        "No Palace executable found. Set one with set_palace_path(...), "
+        "configure PALACE_BIN, or enable install_if_missing."
+    )
 
 
 def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
