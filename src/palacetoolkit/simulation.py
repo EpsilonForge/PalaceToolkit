@@ -88,6 +88,59 @@ def get_palace_executable(
     )
 
 
+def get_palace_runtime_env(
+    palace_executable: str | Path | None = None,
+    install_if_missing: bool = True,
+    force_install: bool = False,
+) -> dict[str, str]:
+    """Return environment variables required to run Palace outside this package.
+
+    The downloaded CPU runtime needs its ``lib`` directory in
+    ``LD_LIBRARY_PATH`` for direct subprocess usage.
+    """
+    exec_path = (
+        get_palace_executable(
+            install_if_missing=install_if_missing,
+            force_install=force_install,
+        )
+        if palace_executable is None
+        else Path(palace_executable).expanduser().resolve()
+    )
+
+    env = os.environ.copy()
+    lib_dir = _infer_exec_library_dir(exec_path) or resolve_palace_library_dir()
+    if lib_dir is not None:
+        prior = env.get("LD_LIBRARY_PATH", "")
+        env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
+    return env
+
+
+def get_palace_runtime(
+    install_if_missing: bool = True,
+    force_install: bool = False,
+) -> tuple[Path, dict[str, str]]:
+    """Return a Palace executable path and matching runtime environment."""
+    exec_path = get_palace_executable(
+        install_if_missing=install_if_missing,
+        force_install=force_install,
+    )
+    env = get_palace_runtime_env(palace_executable=exec_path)
+    return exec_path, env
+
+
+def run_env(
+    palace_executable: str | Path | None = None,
+    install_if_missing: bool = True,
+    force_install: bool = False,
+) -> dict[str, str]:
+    """Backward-compatible alias for :func:`get_palace_runtime_env`."""
+    return get_palace_runtime_env(
+        palace_executable=palace_executable,
+        install_if_missing=install_if_missing,
+        force_install=force_install,
+    )
+
+
 def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
     """Validate that the configured Palace runtime is available and executable.
 

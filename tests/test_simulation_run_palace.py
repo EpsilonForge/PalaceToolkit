@@ -72,3 +72,43 @@ def test_get_palace_executable_installs_when_missing(monkeypatch, tmp_path: Path
 
     assert result == installed_exec
     assert calls == [True]
+
+
+def test_get_palace_runtime_env_includes_inferred_lib_dir(monkeypatch, tmp_path: Path) -> None:
+    """Runtime env helper should inject sibling lib dir for bundled runtime."""
+    runtime_bin = tmp_path / "runtime" / "bin"
+    runtime_lib = tmp_path / "runtime" / "lib"
+    runtime_bin.mkdir(parents=True)
+    runtime_lib.mkdir(parents=True)
+    fake_exec = runtime_bin / "palace"
+    fake_exec.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    monkeypatch.setenv("LD_LIBRARY_PATH", "/usr/lib")
+    env = simulation.get_palace_runtime_env(palace_executable=fake_exec)
+
+    assert env["LD_LIBRARY_PATH"].startswith(str(runtime_lib))
+    assert env["LD_LIBRARY_PATH"].endswith(":/usr/lib")
+
+
+def test_get_palace_runtime_returns_path_and_env(monkeypatch, tmp_path: Path) -> None:
+    """Combined helper should return both executable path and run environment."""
+    fake_exec = tmp_path / "palace"
+    fake_env = {"LD_LIBRARY_PATH": "/tmp/lib"}
+
+    monkeypatch.setattr(simulation, "get_palace_executable", lambda **_: fake_exec)
+    monkeypatch.setattr(simulation, "get_palace_runtime_env", lambda **_: fake_env)
+
+    result_exec, result_env = simulation.get_palace_runtime()
+
+    assert result_exec == fake_exec
+    assert result_env == fake_env
+
+
+def test_run_env_alias_calls_runtime_env(monkeypatch) -> None:
+    """run_env should be a public alias for get_palace_runtime_env."""
+    fake_env = {"LD_LIBRARY_PATH": "/tmp/lib"}
+    monkeypatch.setattr(simulation, "get_palace_runtime_env", lambda **_: fake_env)
+
+    result = simulation.run_env()
+
+    assert result == fake_env
