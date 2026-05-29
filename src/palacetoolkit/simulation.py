@@ -496,6 +496,7 @@ def generate_palace_config_from_entities(
     L0: float = 1e-3,
     solver_order: int = 2,
     absorbing_order: int = 2,
+    farfield = True
 ) -> dict:
     """Build and write a Palace JSON config from entity definitions.
 
@@ -583,6 +584,11 @@ def generate_palace_config_from_entities(
         boundaries["LumpedPort"] = lumped_ports
     if wave_ports:
         boundaries["WavePort"] = wave_ports
+    if farfield:
+        boundaries["Postprocessing"] = {"FarField": {
+                    "Attributes": sorted(absorbing_attrs),
+                    "NSample": 32000
+                }}
 
     output_stem = Path(output_file).stem
     output_folder = f"postpro/{output_stem}"
@@ -739,8 +745,14 @@ def generate_palace_config(
             "Materials": materials,
         },
         "Boundaries": {
-            "PEC":       {"Attributes": sorted(pec_attrs)},
+            "PEC":       {"Attributes": pec_attrs},
             "Absorbing": {"Attributes": sorted(absorbing_attrs), "Order": 1},
+            "Postprocessing": {
+                "FarField": {
+                    "Attributes": sorted(absorbing_attrs),
+                    "NSample": 64000
+                }
+            },
             "WavePort":  waveport_entries,
         },
         "Solver": {

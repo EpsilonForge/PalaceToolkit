@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def plot_s_params(csv_file = r"C:\Users\loloc\Desktop\Epsilon\palace-course\lecture_3_waveports\results\patch_antenna\port-S.csv"):
+def plot_s_params(csv_file):
 
     df = pd.read_csv(csv_file)
 
@@ -24,6 +24,4 @@ def plot_s_params(csv_file = r"C:\Users\loloc\Desktop\Epsilon\palace-course\lect
 
     plt.show()
 
-if __name__ == "__main__":
-    plot_s_params()
 
