@@ -54,6 +54,25 @@ Expected output includes:
 - resolved runtime mode/path
 - Palace version line from `--version`
 
+### Use Palace runtime from another project
+
+If you are using `palace-toolkit` only to provide the Palace binary in another
+codebase, use the runtime helpers so shared libraries are configured correctly:
+
+```python
+import subprocess
+from palacetoolkit.simulation import get_palace_runtime
+
+palace_executable, run_env = get_palace_runtime()
+subprocess.run(
+	[str(palace_executable), "-np", "1", "config.json"],
+	env=run_env,
+	check=True,
+)
+```
+
+This avoids runtime errors like `libpalace.so: cannot open shared object file`.
+
 ### WSL notes (Ubuntu on Windows)
 
 If you run inside WSL, you may need extra system libraries for runtime and plotting:
