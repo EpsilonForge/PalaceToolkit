@@ -31,7 +31,36 @@ def test_run_palace_uses_resolved_executable(monkeypatch, tmp_path: Path) -> Non
     assert len(calls) == 1
     launched = calls[0]["cmd"]
     assert launched[0] == str(fake_exec)
-    assert launched[1] == str(config_file.resolve())
+    assert launched[1] == "--serial"
+    assert launched[2] == str(config_file.resolve())
+
+
+def test_run_palace_uses_launcher_np_flag_for_parallel(monkeypatch, tmp_path: Path) -> None:
+    """When using launcher script, run_palace should not wrap with outer mpirun."""
+    config_file = tmp_path / "config.json"
+    config_file.write_text("{}", encoding="utf-8")
+
+    fake_exec = tmp_path / "palace"
+    calls: list[dict] = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append({"cmd": cmd, "kwargs": kwargs})
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "resolve_palace_binary", lambda: fake_exec)
+    monkeypatch.setattr(simulation, "resolve_palace_library_dir", lambda: None)
+    monkeypatch.setattr(simulation.subprocess, "run", fake_run)
+
+    simulation.run_palace(config_file=config_file, num_procs=4)
+
+    assert len(calls) == 1
+    launched = calls[0]["cmd"]
+    assert launched[0] == str(fake_exec)
+    assert launched[1] == "-np"
+    assert launched[2] == "4"
+    assert launched[3] == str(config_file.resolve())
 
 
 def test_get_palace_executable_returns_resolved(monkeypatch, tmp_path: Path) -> None:
@@ -90,20 +119,6 @@ def test_get_palace_runtime_env_includes_inferred_lib_dir(monkeypatch, tmp_path:
     assert env["LD_LIBRARY_PATH"].endswith(":/usr/lib")
 
 
-def test_get_palace_runtime_returns_path_and_env(monkeypatch, tmp_path: Path) -> None:
-    """Combined helper should return both executable path and run environment."""
-    fake_exec = tmp_path / "palace"
-    fake_env = {"LD_LIBRARY_PATH": "/tmp/lib"}
-
-    monkeypatch.setattr(simulation, "get_palace_executable", lambda **_: fake_exec)
-    monkeypatch.setattr(simulation, "get_palace_runtime_env", lambda **_: fake_env)
-
-    result_exec, result_env = simulation.get_palace_runtime()
-
-    assert result_exec == fake_exec
-    assert result_env == fake_env
-
-
 def test_run_env_alias_calls_runtime_env(monkeypatch) -> None:
     """run_env should be a public alias for get_palace_runtime_env."""
     fake_env = {"LD_LIBRARY_PATH": "/tmp/lib"}
@@ -112,3 +127,33 @@ def test_run_env_alias_calls_runtime_env(monkeypatch) -> None:
     result = simulation.run_env()
 
     assert result == fake_env
+
+
+def test_simulation_write_config_without_mesh_options(tmp_path: Path) -> None:
+    """Simulation should support config-only usage without touching gmsh state."""
+    sim = simulation.Simulation(output_dir=tmp_path, apply_mesh_options=False)
+    sim.config = {"Problem": {"Type": "Driven"}}
+
+    config_path = sim.write_config("example.json")
+
+    assert config_path == tmp_path / "example.json"
+    assert config_path.read_text(encoding="utf-8") == '{\n  "Problem": {\n    "Type": "Driven"\n  }\n}'
+
+
+def test_run_palace_suppresses_runtime_error_in_docs_build(monkeypatch, tmp_path: Path) -> None:
+    """run_palace should not raise on Palace runtime failures during docs builds."""
+    config_file = tmp_path / "config.json"
+    config_file.write_text("{}", encoding="utf-8")
+    fake_exec = tmp_path / "palace"
+
+    def fake_run(cmd, **kwargs):
+        return SimpleNamespace(returncode=1)
+
+    monkeypatch.setenv("DOCS_BUILD", "1")
+    monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "resolve_palace_binary", lambda: fake_exec)
+    monkeypatch.setattr(simulation, "resolve_palace_library_dir", lambda: None)
+    monkeypatch.setattr(simulation.subprocess, "run", fake_run)
+
+    simulation.run_palace(config_file=config_file, num_procs=1)

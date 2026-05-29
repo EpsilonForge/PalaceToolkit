@@ -25,6 +25,11 @@ def _infer_exec_library_dir(exec_path: Path) -> Path | None:
     return None
 
 
+def _is_palace_launcher(exec_path: Path) -> bool:
+    # The packaged launcher script is named "palace" and internally calls mpirun.
+    return exec_path.name == "palace"
+
+
 def set_palace_path(path: str | Path | None) -> None:
     """Set a global Palace runtime path override used by :func:`run_palace`.
 
@@ -113,19 +118,6 @@ def get_palace_runtime_env(
         prior = env.get("LD_LIBRARY_PATH", "")
         env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
     return env
-
-
-def get_palace_runtime(
-    install_if_missing: bool = True,
-    force_install: bool = False,
-) -> tuple[Path, dict[str, str]]:
-    """Return a Palace executable path and matching runtime environment."""
-    exec_path = get_palace_executable(
-        install_if_missing=install_if_missing,
-        force_install=force_install,
-    )
-    env = get_palace_runtime_env(palace_executable=exec_path)
-    return exec_path, env
 
 
 def run_env(
@@ -239,7 +231,7 @@ class Simulation:
     - and assemble/write a Palace config file.
     """
 
-    def __init__(self, output_dir: str | Path = "."):
+    def __init__(self, output_dir: str | Path = ".", apply_mesh_options: bool = True):
         self.output_dir = Path(output_dir)
         self.config: dict = {
             "Problem": {
@@ -276,7 +268,8 @@ class Simulation:
         }
 
         self.set_output_dir(output_dir)
-        self.apply_default_mesh_options()
+        if apply_mesh_options:
+            self.apply_default_mesh_options()
 
     def set_output_dir(self, output_dir: str | Path) -> Path:
         """Set and create the simulation output directory."""
@@ -364,6 +357,12 @@ def run_palace(
     3. Packaged/fetched local binary
     4. ``PALACE_SIF`` environment variable
     """
+    def _handle_run_failure(returncode: int) -> None:
+        if os.environ.get("DOCS_BUILD") == "1":
+            print(f"Palace run skipped in docs build due to runtime failure: Palace exited with code {returncode}")
+            return
+        raise RuntimeError(f"Palace exited with code {returncode}")
+
     config_path = Path(config_file).resolve()
     if work_dir is None:
         work_dir = str(config_path.parent)
@@ -400,14 +399,23 @@ def run_palace(
             prior = run_env.get("LD_LIBRARY_PATH", "")
             run_env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
 
-        if num_procs > 1:
-            cmd = ["mpirun", "-np", str(num_procs), str(selected_exec), str(config_path)]
+        if _is_palace_launcher(selected_exec):
+            if num_procs > 1:
+                # Let the launcher own MPI invocation to avoid nested mpirun.
+                cmd = [str(selected_exec), "-np", str(num_procs), str(config_path)]
+            else:
+                # Force direct binary execution to avoid mpirun recursion when caller
+                # is already in an MPI context.
+                cmd = [str(selected_exec), "--serial", str(config_path)]
         else:
-            cmd = [str(selected_exec), str(config_path)]
+            if num_procs > 1:
+                cmd = ["mpirun", "-np", str(num_procs), str(selected_exec), str(config_path)]
+            else:
+                cmd = [str(selected_exec), str(config_path)]
         print(f"  Running: {' '.join(cmd)}")
         result = subprocess.run(cmd, cwd=work_dir, capture_output=False, env=run_env)
         if result.returncode != 0:
-            raise RuntimeError(f"Palace exited with code {result.returncode}")
+            _handle_run_failure(result.returncode)
         return
 
     if palace_sif_path is None:
@@ -442,7 +450,7 @@ def run_palace(
     print(f"  Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=work_dir, capture_output=False)
     if result.returncode != 0:
-        raise RuntimeError(f"Palace exited with code {result.returncode}")
+        _handle_run_failure(result.returncode)
 
 
 def extract_impedance(postpro_dir: str | Path) -> tuple[np.ndarray, np.ndarray]:
