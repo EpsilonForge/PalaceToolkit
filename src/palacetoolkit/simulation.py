@@ -588,7 +588,7 @@ def generate_palace_config_from_entities(
     if farfield:
         boundaries["Postprocessing"] = {"FarField": {
                     "Attributes": sorted(absorbing_attrs),
-                    "NSample": 32000
+                    "NSample": 16000
                 }}
 
     output_stem = Path(output_file).stem
