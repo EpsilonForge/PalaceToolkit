@@ -535,8 +535,9 @@ def generate_palace_config_from_entities(
     for name, tag in sorted(pg_map.items()):
         edef = defs_by_name.get(name)
         if edef is None:
-            # Auto-generated surface (e.g. "air__None") → absorbing BC
-            absorbing_attrs.append(tag)
+            if "substrate" not in name.lower():
+                absorbing_attrs.append(tag)
+                # else: internal interface, no explicit BC needed
             continue
 
         btype = edef.get("boundary_type")
