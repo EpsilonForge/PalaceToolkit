@@ -47,11 +47,11 @@ def extract_eplane(df: pd.DataFrame, tolerance_deg: float = 5.0) -> dict:
         result["half1"] = (a1[idx], m1[idx])
         print(f"  E-plane phi~0°:   {mask1.sum()} points")
 
-    # half2: phi~180°, theta 0->180 maps to polar angle 360->180
+    # half2: phi~180°, theta 0->180 maps to polar angle 180->360
     mask2 = np.abs(phi - 180.0) < tolerance_deg
     if np.any(mask2):
         d2 = df.loc[mask2]
-        a2 = 360.0 - d2["theta"].to_numpy(float)  # 360° → 180°
+        a2 = 180.0 + d2["theta"].to_numpy(float)  # 180° → 360°
         m2 = compute_field_magnitude(d2)
         idx = np.argsort(a2)
         result["half2"] = (a2[idx], m2[idx])
@@ -94,7 +94,6 @@ def polar_plots(
     fig = plt.figure(figsize=(11, 5))
 
     # ── E-plane ──────────────────────────────────────────────────────
-    # ── E-plane ──────────────────────────────────────────────────────
     ax1 = fig.add_subplot(1, 2, 1, projection="polar")
     style_polar_ax(ax1, f"E-plane ({label})", db_min)
 
@@ -109,26 +108,29 @@ def polar_plots(
 
         if "half2" in e_data:
             a, m = e_data["half2"]
-            parts_angles.append(a[::-1])
-            parts_mags.append(m[::-1])
+            parts_angles.append(a)   # already sorted 180->360, no reversal needed
+            parts_mags.append(m)
 
         if parts_angles:
-            # Combine
+            # Combine and sort (0 -> 360)
             all_angles = np.concatenate(parts_angles)
             all_mags   = np.concatenate(parts_mags)
-            
-            # Sort to ensure sequence (0 -> 360)
-            sort_idx = np.argsort(all_angles)
+            sort_idx   = np.argsort(all_angles)
             all_angles = all_angles[sort_idx]
-            all_mags = all_mags[sort_idx]
-            
+            all_mags   = all_mags[sort_idx]
+
+            # Normalize globally so both halves share the same 0 dB reference
             db = compute_db(all_mags, db_min)
-            
-            # Close the loop (connect last point to first)
-            e_angles_closed = np.append(all_angles, all_angles[0])
-            e_db_closed = np.append(db, db[0])
-            
-            ax1.plot(np.deg2rad(e_angles_closed), e_db_closed, linewidth=2, color="tab:blue")
+
+            # Close the loop only if data actually spans ~360 degrees
+            if abs(all_angles[-1] - all_angles[0] - 360) < 10:
+                plot_angles = np.append(all_angles, all_angles[0] + 360)
+                plot_db     = np.append(db, db[0])
+            else:
+                plot_angles = all_angles
+                plot_db     = db
+
+            ax1.plot(np.deg2rad(plot_angles), plot_db, linewidth=2, color="tab:blue")
             ax1.scatter(np.deg2rad(all_angles), db, s=18, color="tab:blue", zorder=5)
         else:
             ax1.text(0.5, 0.5, "No E-plane points found",
