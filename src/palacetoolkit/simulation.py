@@ -7,7 +7,11 @@ import numpy as np
 import gmsh
 
 from palacetoolkit.mesh import refine_near_surfaces as _refine_near_surfaces
-from palacetoolkit.palace_runtime import resolve_palace_binary, resolve_palace_library_dir
+from palacetoolkit.palace_runtime import (
+    install_palace_runtime,
+    resolve_palace_binary,
+    resolve_palace_library_dir,
+)
 
 
 _PALACE_EXEC_OVERRIDE: Path | None = None
@@ -46,6 +50,42 @@ def set_palace_path(path: str | Path | None) -> None:
     else:
         _PALACE_EXEC_OVERRIDE = resolved
         _PALACE_SIF_OVERRIDE = None
+
+
+def get_palace_executable(
+    install_if_missing: bool = True,
+    force_install: bool = False,
+) -> Path:
+    """Return a Palace executable path, installing the cached runtime when needed.
+
+    Args:
+        install_if_missing: Download/cache runtime when no executable is found.
+        force_install: Force re-download when installation is performed.
+
+    Returns:
+        Absolute path to a Palace executable.
+
+    Raises:
+        RuntimeError: If no executable is available and installation is disabled
+            or fails.
+    """
+    if _PALACE_EXEC_OVERRIDE is not None:
+        return _PALACE_EXEC_OVERRIDE
+
+    resolved = resolve_palace_binary()
+    if resolved is not None:
+        return resolved
+
+    if install_if_missing:
+        try:
+            return install_palace_runtime(force=force_install)
+        except Exception as exc:
+            raise RuntimeError(f"Unable to install Palace runtime: {exc}") from exc
+
+    raise RuntimeError(
+        "No Palace executable found. Set one with set_palace_path(...), "
+        "configure PALACE_BIN, or enable install_if_missing."
+    )
 
 
 def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
@@ -254,18 +294,22 @@ def run_palace(
     config_file: str | Path,
     num_procs: int = 4,
     work_dir: str | Path | None = None,
+    sif_path: str | Path | None = None,
 ) -> None:
-    """Run Palace using a configured executable, packaged binary, or SIF.
+    """Run Palace using a downloaded executable by default, or an optional SIF.
 
     Args:
         config_file: Path to the Palace JSON config.
         num_procs:   Number of MPI processes.
         work_dir:    Working directory (defaults to config file's parent).
+        sif_path:    Optional path to a Palace ``.sif`` image. When provided,
+                     this is used instead of executable runtime discovery.
 
     Runtime selection order:
-    1. Path set with :func:`set_palace_path` (exec or ``.sif``)
-    2. Packaged/fetched local binary
-    3. ``PALACE_SIF`` environment variable
+    1. Explicit ``sif_path`` argument
+    2. Path set with :func:`set_palace_path` (exec or ``.sif``)
+    3. Packaged/fetched local binary
+    4. ``PALACE_SIF`` environment variable
     """
     config_path = Path(config_file).resolve()
     if work_dir is None:
@@ -277,13 +321,19 @@ def run_palace(
     selected_exec: Path | None = None
     palace_sif_path: Path | None = None
 
-    if _PALACE_EXEC_OVERRIDE is not None:
+    if sif_path is not None:
+        palace_sif_path = Path(sif_path).expanduser().resolve()
+    elif _PALACE_EXEC_OVERRIDE is not None:
         selected_exec = _PALACE_EXEC_OVERRIDE
     elif _PALACE_SIF_OVERRIDE is not None:
         palace_sif_path = _PALACE_SIF_OVERRIDE
 
-    local_palace = resolve_palace_binary() if selected_exec is None else None
-    if selected_exec is None and local_palace is not None:
+    local_palace = (
+        resolve_palace_binary()
+        if selected_exec is None and palace_sif_path is None
+        else None
+    )
+    if selected_exec is None and palace_sif_path is None and local_palace is not None:
         selected_exec = local_palace
 
     if selected_exec is not None:
@@ -312,7 +362,7 @@ def run_palace(
         if not palace_sif:
             raise RuntimeError(
                 "No Palace executable found. Set one with set_palace_path(...), "
-                "install a packaged binary, or set PALACE_SIF."
+                "pass run_palace(..., sif_path=...), or set PALACE_SIF."
             )
         palace_sif_path = Path(palace_sif).expanduser().resolve()
 

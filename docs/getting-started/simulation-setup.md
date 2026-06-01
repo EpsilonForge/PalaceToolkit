@@ -13,8 +13,16 @@ from palacetoolkit.simulation import run_palace
 run_palace("config.json", num_procs=4)
 ```
 
-This calls Palace via the Apptainer container pointed to by the
-`PALACE_SIF` environment variable.
+By default, this uses the Palace executable shipped/fetched by PalaceToolkit.
+
+If you want to run through an Apptainer/Singularity image instead, pass a
+``.sif`` path explicitly:
+
+```python
+run_palace("config.json", num_procs=4, sif_path="/path/to/Palace.sif")
+```
+
+If ``sif_path`` is omitted, `PALACE_SIF` is still supported as a fallback.
 
 ## Generating a config from entities
 
