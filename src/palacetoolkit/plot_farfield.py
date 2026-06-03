@@ -7,11 +7,9 @@ import pyvista as pv
 from scipy.spatial import Delaunay
 from scipy.interpolate import griddata
 
-
 def clean_column(name: str) -> str:
     name = re.sub(r"\s*\([^)]*\)", "", name)
     return name.strip()
-
 
 def compute_field_magnitude(df: pd.DataFrame) -> np.ndarray:
     Ex_re = df["r*Re{E_x}"].to_numpy(float)
@@ -35,44 +33,34 @@ def compute_db(magnitude: np.ndarray, floor_db: float = -25.0) -> np.ndarray:
     return np.clip(db, floor_db, 0.0)
 
 
-def extract_eplane(df: pd.DataFrame, tolerance_deg: float = 2.0) -> dict:
-    """
-    E-plane (xz-plane): phi ~ 0° and phi ~ 180°.
-    Returns a dict with each half stored separately to avoid
-    the diagonal slash caused by joining them in one array.
-    """
-    phi    = df["phi"].to_numpy(float)
+def extract_eplane(df: pd.DataFrame, tolerance_deg: float = 5.0) -> dict:
+    phi = df["phi"].to_numpy(float)
     result = {}
 
+    # half1: phi~0°, theta 0->180 maps to polar angle 0->180
     mask1 = np.abs(phi - 0.0) < tolerance_deg
     if np.any(mask1):
-        d1  = df.loc[mask1]
-        a1  = d1["theta"].to_numpy(float)
-        m1  = compute_field_magnitude(d1)
+        d1 = df.loc[mask1]
+        a1 = d1["theta"].to_numpy(float)          # 0° → 180°
+        m1 = compute_field_magnitude(d1)
         idx = np.argsort(a1)
         result["half1"] = (a1[idx], m1[idx])
         print(f"  E-plane phi~0°:   {mask1.sum()} points")
-    else:
-        print("  E-plane phi~0°:   0 points — try increasing tolerance_deg")
 
+    # half2: phi~180°, theta 0->180 maps to polar angle 360->180
     mask2 = np.abs(phi - 180.0) < tolerance_deg
     if np.any(mask2):
-        d2  = df.loc[mask2]
-        a2  = 360.0 - d2["theta"].to_numpy(float)
-        m2  = compute_field_magnitude(d2)
+        d2 = df.loc[mask2]
+        a2 = 360.0 - d2["theta"].to_numpy(float)  # 360° → 180°
+        m2 = compute_field_magnitude(d2)
         idx = np.argsort(a2)
         result["half2"] = (a2[idx], m2[idx])
         print(f"  E-plane phi~180°: {mask2.sum()} points")
-    else:
-        print("  E-plane phi~180°: 0 points — try increasing tolerance_deg")
-
-    if not result:
-        print("  WARNING: No E-plane points found at all")
 
     return result
 
 
-def extract_hplane(df: pd.DataFrame, tolerance_deg: float = 2.0):
+def extract_hplane(df: pd.DataFrame, tolerance_deg: float = 5.0):
     """H-plane (xy-plane): theta ~ 90°."""
     theta = df["theta"].to_numpy(float)
     mask  = np.abs(theta - 90.0) < tolerance_deg
@@ -93,11 +81,9 @@ def style_polar_ax(ax, title: str, db_min: float = -25.0):
     ax.set_rlabel_position(45)
     ax.grid(True, color="lightgray", linewidth=0.8)
 
-
 def polar_plots(
     df: pd.DataFrame,
     label: str,
-    filename: str = "farfield_polar.png",
     db_min: float = -25.0,
 ):
     print("Extracting E-plane...")
@@ -108,19 +94,45 @@ def polar_plots(
     fig = plt.figure(figsize=(11, 5))
 
     # ── E-plane ──────────────────────────────────────────────────────
+    # ── E-plane ──────────────────────────────────────────────────────
     ax1 = fig.add_subplot(1, 2, 1, projection="polar")
     style_polar_ax(ax1, f"E-plane ({label})", db_min)
 
     if e_data:
-        for key, (angles, mags) in e_data.items():
-            if mags.size > 1:
-                db = compute_db(mags, db_min)
-                ax1.plot(np.deg2rad(angles), db, linewidth=2, color="tab:blue")
-                ax1.scatter(np.deg2rad(angles), db, s=18, color="tab:blue", zorder=5)
-    else:
-        ax1.text(0.5, 0.5, "No E-plane points found",
-                 transform=ax1.transAxes, ha="center", va="center")
+        parts_angles = []
+        parts_mags   = []
 
+        if "half1" in e_data:
+            a, m = e_data["half1"]
+            parts_angles.append(a)
+            parts_mags.append(m)
+
+        if "half2" in e_data:
+            a, m = e_data["half2"]
+            parts_angles.append(a[::-1])
+            parts_mags.append(m[::-1])
+
+        if parts_angles:
+            # Combine
+            all_angles = np.concatenate(parts_angles)
+            all_mags   = np.concatenate(parts_mags)
+            
+            # Sort to ensure sequence (0 -> 360)
+            sort_idx = np.argsort(all_angles)
+            all_angles = all_angles[sort_idx]
+            all_mags = all_mags[sort_idx]
+            
+            db = compute_db(all_mags, db_min)
+            
+            # Close the loop (connect last point to first)
+            e_angles_closed = np.append(all_angles, all_angles[0])
+            e_db_closed = np.append(db, db[0])
+            
+            ax1.plot(np.deg2rad(e_angles_closed), e_db_closed, linewidth=2, color="tab:blue")
+            ax1.scatter(np.deg2rad(all_angles), db, s=18, color="tab:blue", zorder=5)
+        else:
+            ax1.text(0.5, 0.5, "No E-plane points found",
+                        transform=ax1.transAxes, ha="center", va="center")
     # ── H-plane ──────────────────────────────────────────────────────
     ax2 = fig.add_subplot(1, 2, 2, projection="polar")
     style_polar_ax(ax2, f"H-plane ({label})", db_min)
@@ -140,19 +152,14 @@ def polar_plots(
 
     fig.suptitle(label, y=1.01)
     fig.tight_layout()
-    fig.savefig(filename, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-    print(f"Saved {filename}")
+    plt.show()
 
 
 def three_d_plot(
     df: pd.DataFrame,
     label: str,
-    screenshot: str  = "farfield_3d.png",
-    show: bool       = True,
-    off_screen: bool = False,
-    n_theta: int     = 360,
-    n_phi: int       = 720,
+    n_theta: int            = 360,
+    n_phi: int              = 720,
     n_smooth: int           = 100,
     taubin_pass_band: float = 0.1,
 ):
@@ -164,8 +171,6 @@ def three_d_plot(
     phi_raw   = df["phi"].to_numpy(float)
 
     # ── 1. Interpolate onto a regular (theta, phi) grid ──────────────
-    # ✅ Start from 1° and end at 179° — avoids the pole singularity
-    #    entirely. The tiny holes at top/bottom are capped later.
     theta_lin = np.linspace(1,   179, n_theta)
     phi_lin   = np.linspace(0,   360, n_phi)
     TH, PH    = np.meshgrid(theta_lin, phi_lin, indexing="ij")
@@ -173,16 +178,14 @@ def three_d_plot(
     pts_src = np.column_stack([theta_raw, phi_raw])
     E_grid  = griddata(pts_src, E_raw, (TH, PH), method="linear")
 
-    # Fill NaN holes with nearest-neighbour
     nan_mask = np.isnan(E_grid)
     if nan_mask.any():
         E_fill           = griddata(pts_src, E_raw, (TH, PH), method="nearest")
         E_grid[nan_mask] = E_fill[nan_mask]
 
-    # Normalize
     E_grid /= np.max(E_grid)
 
-    # ── 2. Wrap the φ seam (duplicate φ=0 column at φ=360) ───────────
+    # ── 2. Wrap the φ seam ────────────────────────────────────────────
     E_wrap      = np.hstack([E_grid, E_grid[:, :1]])
     TH_w        = np.hstack([TH,     TH[:, :1]])
     PH_w        = np.hstack([PH,     PH[:, :1]])
@@ -203,9 +206,7 @@ def three_d_plot(
     # ── 5. Extract surface ────────────────────────────────────────────
     mesh = grid.extract_surface()
 
-    # ── 6. Cap the small pole holes ───────────────────────────────────
-    # The 1°–179° trim leaves a tiny open ring at top and bottom.
-    # fill_holes() closes them cleanly with no spikes.
+    # ── 6. Cap pole holes ─────────────────────────────────────────────
     mesh = mesh.fill_holes(hole_size=10000)
 
     # ── 7. Taubin smoothing ───────────────────────────────────────────
@@ -217,38 +218,22 @@ def three_d_plot(
         normalize_coordinates=True,
     )
 
-    # ── 8. Plotting ───────────────────────────────────────────────────
-    def _build_plotter(off: bool) -> pv.Plotter:
-        pl = pv.Plotter(off_screen=off)
-        pl.set_background("white")
-        pl.add_title(f"Relative E-field magnitude ({label})", font_size=12)
-        pl.add_mesh(
-            mesh,
-            scalars="E_norm",
-            cmap="viridis",
-            smooth_shading=True,
-            scalar_bar_args={"title": "Normalized |E|"},
-        )
-        pl.add_axes()
-        pl.camera_position = "iso"
-        return pl
-
-    pl_save = _build_plotter(off=True)
-    pl_save.show(auto_close=False)
-    pl_save.screenshot(screenshot)
-    pl_save.close()
-    print(f"Saved {screenshot}")
-
-    if show and not off_screen:
-        pl_show = _build_plotter(off=False)
-        pl_show.show()
-
-def main():
-    filename = (
-        sys.argv[1] if len(sys.argv) > 1
-        else "postpro/horn_antenna/farfield-rE.csv"
+    # ── 8. Plotting (notebook) ────────────────────────────────────────
+    pl = pv.Plotter(notebook=True)
+    pl.set_background("white")
+    pl.add_title(f"Relative E-field magnitude ({label})", font_size=12)
+    pl.add_mesh(
+        mesh,
+        scalars="E_norm",
+        cmap="viridis",
+        smooth_shading=True,
+        scalar_bar_args={"title": "Normalized |E|"},
     )
+    pl.add_axes()
+    pl.camera_position = "iso"
+    pl.show()
 
+def load_data(filename, freq):
     try:
         df = pd.read_csv(filename)
     except FileNotFoundError:
@@ -265,7 +250,7 @@ def main():
         label = f"m = {m0}"
         print(f"Processing mode: {m0}  ({len(data)} rows)")
     elif "f" in df.columns:
-        f0    = df["f"].iloc[0]
+        f0    = freq
         data  = df[df["f"] == f0].copy()
         label = f"f = {f0:.4f} GHz"
         print(f"Processing frequency: {f0} GHz  ({len(data)} rows)")
@@ -273,20 +258,4 @@ def main():
         data  = df.copy()
         label = "all data"
         print(f"No 'm' or 'f' column found; plotting all {len(data)} rows.")
-
-    polar_plots(data, label, filename="farfield_polar.png")
-    three_d_plot(
-        data,
-        label,
-        screenshot        = "farfield_3d.png",
-        show              = True,
-        off_screen        = False,
-        n_theta           = 360,
-        n_phi             = 720,
-        n_smooth          = 100,
-        taubin_pass_band  = 0.1,
-    )
-
-
-if __name__ == "__main__":
-    main()
+    return data, label
