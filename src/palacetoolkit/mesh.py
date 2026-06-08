@@ -216,22 +216,33 @@ def run_meshing_pipeline(entities: list[Entity]):
 
 def generate_3d_mesh(
     entities: list[Entity],
-    mesh_sizes: dict[str, float],
-    output_file: str,
+    mesh_sizes: dict[str, float] | None = None,
+    output_file: str | None = None,
     optimize: bool = True,
     verbose: bool = True,
 ) -> None:
-    """Set mesh sizes, generate and write a 3D mesh.
+    """Generate and write a 3D mesh.
 
     Args:
         entities:    list of Entity objects with ``.name`` and ``.dimtags``.
-        mesh_sizes:  mapping from entity name → characteristic length.
+        mesh_sizes:  optional mapping from entity name → characteristic length.
+                     When omitted, no point-wise sizes are imposed and mesh
+                     sizing is driven by active gmsh fields (e.g. from
+                     :func:`refine_near_surfaces`).
         output_file: path for the output .msh file.
         optimize:    whether to run Netgen optimisation (disable for complex
                      imported CAD to avoid segfaults in thin-volume meshes).
         verbose:     if False, reduce Gmsh terminal output to warnings/errors
                      during mesh generation and suppress summary prints.
     """
+
+    if isinstance(mesh_sizes, str) and output_file is None:
+        # Backward-compatible shorthand: generate_3d_mesh(entities, "mesh.msh")
+        output_file = mesh_sizes
+        mesh_sizes = None
+
+    if output_file is None:
+        raise ValueError("output_file must be provided")
 
     previous_verbosity = None
     try:
@@ -247,6 +258,9 @@ def generate_3d_mesh(
 
 
     def _apply_point_sizes(*, use_entity_tags: bool = True) -> int:
+        if not mesh_sizes:
+            return 0
+
         applied = 0
         for entity in entities:
             lc = mesh_sizes.get(entity.name)
