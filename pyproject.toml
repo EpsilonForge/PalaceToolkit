@@ -9,7 +9,7 @@ dependencies = [
     "scipy",
     "meshio",
     "mfem",
-    "pyvista",
+    "pyvista[jupyter]",
     "enlighten",
     "pint",
 ]
