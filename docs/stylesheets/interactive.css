@@ -43,3 +43,30 @@
   line-height: var(--ptk-output-line-height, 1.35);
   white-space: pre;
 }
+
+/* mkdocs-jupyter text outputs: clamp to ~10 lines and scroll vertically. */
+.jupyter-wrapper .jp-OutputArea .jp-RenderedText.jp-OutputArea-output > pre {
+  max-height: calc(var(--ptk-notebook-output-lines, 10) * 1.35em) !important;
+  overflow-y: auto !important;
+  overflow-x: auto;
+  display: block;
+  line-height: 1.35;
+  box-sizing: border-box;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 6px;
+  background: #ffffff !important;
+  color: var(--md-default-fg-color, #1f2937) !important;
+  padding: 0.75rem;
+  margin: 0;
+  white-space: pre;
+}
+
+/* Keep HTML/interactive outputs full-size with no clipping by default. */
+.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output,
+.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output * {
+  max-height: none !important;
+}
+
+.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output {
+  overflow: visible !important;
+}

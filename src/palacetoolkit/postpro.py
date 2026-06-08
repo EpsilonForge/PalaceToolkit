@@ -1,7 +1,8 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_s_params(csv_file = r"C:\Users\loloc\Desktop\Epsilon\palace-course\lecture_3_waveports\results\patch_antenna\port-S.csv"):
+def s_params(csv_file):
 
     df = pd.read_csv(csv_file)
 
@@ -24,6 +25,8 @@ def plot_s_params(csv_file = r"C:\Users\loloc\Desktop\Epsilon\palace-course\lect
 
     plt.show()
 
-if __name__ == "__main__":
-    plot_s_params()
+    # Frequency where min |S11| is reached
+    idx = np.argmin(df["S11_dB"])
+
+    return df["Freq_GHz"][idx]
 
