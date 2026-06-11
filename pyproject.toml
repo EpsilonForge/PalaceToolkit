@@ -18,9 +18,14 @@ dependencies = [
 plot = ["pandas", "matplotlib"]
 palace-cpu = []
 docs = [
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocs-jupyter",
+    "sphinx",
+    "pydata-sphinx-theme",
+    "myst-parser",
+    "myst-nb",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "sphinx-autobuild",
+    "linkify-it-py",
     "pyvista[jupyter]",
     "nbconvert",
     "ipykernel",

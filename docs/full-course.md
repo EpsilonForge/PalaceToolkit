@@ -37,7 +37,7 @@ design workflows.
 ---
 
 <div style="text-align: center; margin: 2em 0;">
-<a href="https://www.epsilonforge.com/#course" class="md-button md-button--primary" style="font-size: 1.2em; padding: 0.8em 2em;">
+<a href="https://www.epsilonforge.com/#course" class="ptk-cta-button" style="font-size: 1.2em; padding: 0.8em 2em;">
     Get the Full Course →
 </a>
 </div>

@@ -1,3 +1,11 @@
+/* Theme variable bridge: Material (old) + PyData (new). */
+:root {
+  --ptk-border-color: var(--pst-color-border, var(--md-default-fg-color--lightest, #d1d5db));
+  --ptk-muted-text-color: var(--pst-color-text-muted, var(--md-default-fg-color--light, #6b7280));
+  --ptk-text-color: var(--pst-color-text-base, var(--md-default-fg-color, #1f2937));
+  --ptk-code-bg: var(--pst-color-surface, var(--md-code-bg-color, #fafafa));
+}
+
 /* Side-by-side interactive 3D viewer iframes */
 .mesh-viewer-row {
   display: flex;
@@ -10,7 +18,7 @@
   flex: 1 1 48%;
   min-width: 300px;
   height: 450px;
-  border: 1px solid var(--md-default-fg-color--lightest);
+  border: 1px solid var(--ptk-border-color);
   border-radius: 8px;
 }
 
@@ -18,7 +26,7 @@
   width: 100%;
   text-align: center;
   font-style: italic;
-  color: var(--md-default-fg-color--light);
+  color: var(--ptk-muted-text-color);
   margin-top: 0.25rem;
 }
 
@@ -37,25 +45,35 @@
   max-height: calc(var(--ptk-output-visible-lines, 10) * var(--ptk-output-line-height, 1.35) * 1em);
   overflow: auto;
   padding: 0.75rem;
-  border: 1px solid var(--md-default-fg-color--lightest);
+  border: 1px solid var(--ptk-border-color);
   border-radius: 8px;
-  background: var(--md-code-bg-color, #fafafa);
+  background: var(--ptk-code-bg);
   line-height: var(--ptk-output-line-height, 1.35);
   white-space: pre;
 }
 
-/* mkdocs-jupyter text outputs: clamp to ~10 lines and scroll vertically. */
-.jupyter-wrapper .jp-OutputArea .jp-RenderedText.jp-OutputArea-output > pre {
+/* Notebook text outputs: clamp to ~10 lines and scroll vertically. */
+.jupyter-wrapper .jp-OutputArea .jp-RenderedText.jp-OutputArea-output > pre,
+.nboutput .output_area .output pre,
+.nboutput .output_area pre,
+.cell_output .output.stream pre,
+.cell_output .output.stderr pre,
+.cell_output .output.text_plain pre,
+.cell-output .output.stream pre,
+.cell-output .output.stderr pre,
+.cell-output .output.text_plain pre,
+.cell_output pre[id^="codecell"],
+.cell-output pre[id^="codecell"] {
   max-height: calc(var(--ptk-notebook-output-lines, 10) * 1.35em) !important;
   overflow-y: auto !important;
   overflow-x: auto;
   display: block;
   line-height: 1.35;
   box-sizing: border-box;
-  border: 1px solid var(--md-default-fg-color--lightest);
+  border: 1px solid var(--ptk-border-color);
   border-radius: 6px;
   background: #ffffff !important;
-  color: var(--md-default-fg-color, #1f2937) !important;
+  color: var(--ptk-text-color) !important;
   padding: 0.75rem;
   margin: 0;
   white-space: pre;
@@ -63,10 +81,111 @@
 
 /* Keep HTML/interactive outputs full-size with no clipping by default. */
 .jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output,
-.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output * {
+.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output *,
+.nboutput .output_area .output_html,
+.nboutput .output_area .output_html *,
+.cell_output .output.text_html,
+.cell_output .output.text_html *,
+.cell-output .output.text_html,
+.cell-output .output.text_html * {
   max-height: none !important;
 }
 
-.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output {
+.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output,
+.nboutput .output_area .output_html,
+.cell_output .output.text_html,
+.cell-output .output.text_html {
   overflow: visible !important;
+}
+
+.ptk-cta-button {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid var(--ptk-text-color);
+  color: var(--ptk-text-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.ptk-cta-button:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.ptk-gallery-card {
+  height: 100%;
+  border: 1px solid var(--ptk-border-color);
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.ptk-gallery-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ptk-gallery-link:hover {
+  text-decoration: none;
+}
+
+.ptk-gallery-link:hover .ptk-gallery-card {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.ptk-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+@media (max-width: 1100px) {
+  .ptk-gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .ptk-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ptk-gallery-card .sd-card-img-top {
+  height: 140px;
+  object-fit: contain;
+  padding: 0.75rem;
+  background: var(--ptk-code-bg);
+  border-bottom: 1px solid var(--ptk-border-color);
+}
+
+.ptk-gallery-card .sd-card-title {
+  min-height: 2.6em;
+}
+
+.ptk-gallery-card img {
+  display: block;
+  width: 100%;
+  height: 96px;
+  object-fit: contain;
+  padding: 0.5rem;
+  background: var(--ptk-code-bg);
+  border-bottom: 1px solid var(--ptk-border-color);
+}
+
+.ptk-gallery-card h3 {
+  margin: 0;
+  padding: 0.6rem 0.7rem 0.25rem;
+  font-size: 0.95rem;
+}
+
+.ptk-gallery-card p {
+  margin: 0;
+  padding: 0 0.7rem 0.7rem;
+  color: var(--ptk-muted-text-color);
+  font-size: 0.88rem;
+  line-height: 1.4;
 }

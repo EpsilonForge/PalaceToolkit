@@ -14,13 +14,20 @@ nbrun: ipykernel
         {{python}} -m papermill "$nb" "$nb" -k palacetoolkit --cwd {{examples}}; \
     done
 
-# Step 2: Build MkDocs site (renders notebooks directly via mkdocs-jupyter)
+# Step 2: Build Sphinx site (renders notebooks via myst-nb)
 nbdocs:
-    @echo "Notebook conversion is not required; MkDocs renders .ipynb directly."
+    @echo "Notebook conversion is not required; Sphinx renders .ipynb directly."
 
-# Step 3: Build MkDocs site
+# Step 3: Build Sphinx site
 docs:
-    {{python}} -m mkdocs build
+    rm -rf site
+    {{python}} -m sphinx -W --keep-going -b html docs site
+
+# Alias used by contributors coming from MkDocs-style workflows
+build: docs
+
+# Explicit docs build alias for CI/local parity
+docs-build: docs
 
 # All three steps in sequence
 docs-full: nbrun nbdocs docs
@@ -36,7 +43,15 @@ install-local:
 
 # Dev server
 serve:
-    {{python}} -m mkdocs serve -a localhost:8080
+    {{python}} -m sphinx_autobuild docs site --host localhost --port 8080 \
+        --ignore "site/*" \
+        --ignore "jupyter_execute/*" \
+        --ignore ".jupyter_cache/*" \
+        --re-ignore "docs/examples/postpro/.*" \
+        --re-ignore "docs/examples/.*\\.(msh|json|config|conf)$"
+
+# Explicit docs serve alias
+docs-serve: serve
 
 # Strip outputs from notebooks before committing
 nbclean:

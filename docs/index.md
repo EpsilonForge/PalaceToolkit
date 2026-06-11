@@ -1,12 +1,12 @@
 <div style="text-align: center; margin-bottom: 1em;">
-  <img src="PalaceToolkit.png" alt="PalaceToolkit" style="max-width: 320px;">
+  <img src="_static/PalaceToolkit.png" alt="PalaceToolkit" style="max-width: 320px;">
 </div>
 
 # PalaceToolkit
 
-A lightweight Python package that integrates
+PalaceToolkit is a lightweight Python package that integrates
 [Palace](https://awslabs.github.io/palace/) and
-[Gmsh](https://gmsh.info/) into a unified simulation workflow.
+[Gmsh](https://gmsh.info/) into a unified open-source electromagnetic FEM simulation workflow.
 
 ---
 
@@ -33,3 +33,12 @@ electromagnetic solving.  In a single Python script you can:
 | [Full Course](full-course.md) | Structured video lectures |
 | [Palace docs](https://awslabs.github.io/palace/) | Upstream Palace reference |
 | [Gmsh docs](https://gmsh.info/doc/texinfo/gmsh.html) | Upstream Gmsh reference |
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+getting-started/index
+examples/index
+full-course
+```

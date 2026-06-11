@@ -101,7 +101,7 @@ dipole antennas, horn antennas, and planar microwave circuits.
 ## Building the docs
 
 The documentation site is built with
-[MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
+[PyData Sphinx Theme](https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html).
 A [justfile](https://github.com/casey/just) automates the full pipeline.
 
 ```bash
@@ -119,8 +119,8 @@ just doctest
 
 # Or run each step individually:
 just nbrun      # execute docs example notebooks with papermill
-just nbdocs     # no-op (MkDocs renders .ipynb directly)
-just docs       # build the MkDocs static site
+just nbdocs     # no-op (Sphinx renders .ipynb directly)
+just docs       # build the Sphinx static site (strict mode)
 
 # Serve locally for development
 just serve      # starts a dev server on http://localhost:8080
@@ -137,7 +137,7 @@ Router managed by the private website infrastructure.
 
 ```bash
 npm install
-python -m pip install mkdocs mkdocs-material mkdocs-jupyter
+python -m pip install sphinx pydata-sphinx-theme myst-parser myst-nb sphinx-copybutton sphinx-design linkify-it-py
 ```
 
 2. Set environment variables:
