@@ -73,3 +73,11 @@ python -c "from palacetoolkit.simulation import set_palace_path; set_palace_path
 
 See the dedicated Ubuntu build guide and compatibility policy for details.
 
+```{toctree}
+:maxdepth: 1
+
+geometry-and-meshing
+simulation-setup
+post-processing
+```
+

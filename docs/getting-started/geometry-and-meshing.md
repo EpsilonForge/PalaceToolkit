@@ -45,9 +45,10 @@ The pipeline:
 5. **Assigns physical groups** — volumes get their entity name; surfaces
    at material interfaces are auto-labelled (e.g. `"conductor__dielectric"`).
 
-!!! tip
-    The `mesh_order` controls which material wins at overlapping regions.
-    Think of it as a z-index: small number = highest priority = never cut.
+```{tip}
+The `mesh_order` controls which material wins at overlapping regions.
+Think of it as a z-index: small number = highest priority = never cut.
+```
 
 ## Mesh generation
 

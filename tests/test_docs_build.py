@@ -19,7 +19,17 @@ def test_docs_build_has_no_errors() -> None:
     env["DOCS_BUILD"] = "1"
 
     result = subprocess.run(
-        [sys.executable, "-m", "mkdocs", "build", "--strict"],
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-W",
+            "--keep-going",
+            "-b",
+            "html",
+            "docs",
+            "site",
+        ],
         cwd=ROOT,
         env=env,
         capture_output=True,
@@ -30,7 +40,7 @@ def test_docs_build_has_no_errors() -> None:
     if result.returncode != 0:
         output = "\n".join([result.stdout.strip(), result.stderr.strip()]).strip()
         pytest.fail(
-            "mkdocs build failed in strict mode.\n"
+            "sphinx-build failed in strict mode.\n"
             f"exit_code={result.returncode}\n"
             f"{output}"
         )

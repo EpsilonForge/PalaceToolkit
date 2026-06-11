@@ -35,7 +35,7 @@ export default $config({
     const docs = new sst.aws.StaticSite("PalaceToolkitDocs", {
       path: ".",
       build: {
-        command: "mkdocs build",
+        command: "python -m sphinx -W --keep-going -b html docs site",
         output: "site",
       },
       router: {

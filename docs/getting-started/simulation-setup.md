@@ -76,8 +76,8 @@ A typical Palace JSON config has these top-level keys:
 {
   "Problem": { "Type": "Driven" },
   "Model": { "Mesh": "model.msh", "L0": 1e-3 },
-  "Domains": { "Materials": [...] },
-  "Boundaries": { "PEC": {...}, "LumpedPort": [...], "Absorbing": {...} },
+  "Domains": { "Materials": [] },
+  "Boundaries": { "PEC": {}, "LumpedPort": [], "Absorbing": {} },
   "Solver": { "Driven": { "MinFreq": 1.0, "MaxFreq": 10.0, "FreqStep": 0.5 } }
 }
 ```
