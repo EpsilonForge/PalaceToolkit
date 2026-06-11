@@ -28,6 +28,8 @@ MANIFEST
 
 # built docs
 site/
+jupyter_execute/
+.jupyter_cache/
 
 # Installer logs
 pip-log.txt

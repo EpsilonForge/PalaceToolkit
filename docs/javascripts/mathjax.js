@@ -1,16 +1,3 @@
-window.MathJax = {
-  tex: {
-    inlineMath: [["$", "$"], ["\\(", "\\)"]],
-    displayMath: [["$$", "$$"], ["\\[", "\\]"]],
-    processEscapes: true,
-    processEnvironments: true,
-  },
-  options: {
-    ignoreHtmlClass: "tex2jax_ignore|mathjax_ignore",
-    processHtmlClass: "arithmatex|jp-RenderedHTMLCommon|jp-RenderedMarkdown",
-  },
-};
-
 (() => {
   const mathTargetSelector = [
     ".arithmatex",
@@ -31,21 +18,16 @@ window.MathJax = {
     });
   };
 
-  // Run once after all scripts are loaded.
-  window.addEventListener("load", typesetMath);
-
-  // Re-typeset after Material for MkDocs instant navigation updates the DOM.
-  const subscribeToInstantNavigation = () => {
-    if (typeof document$ !== "undefined" && document$.subscribe) {
-      document$.subscribe(() => {
-        window.requestAnimationFrame(typesetMath);
-      });
-    }
-  };
-
-  if (document.readyState === "complete") {
-    subscribeToInstantNavigation();
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    window.requestAnimationFrame(typesetMath);
   } else {
-    window.addEventListener("load", subscribeToInstantNavigation);
+    window.addEventListener("DOMContentLoaded", () => {
+      window.requestAnimationFrame(typesetMath);
+    });
   }
+
+  // Some browsers restore page state from bfcache on history navigation.
+  window.addEventListener("pageshow", () => {
+    window.requestAnimationFrame(typesetMath);
+  });
 })();
