@@ -59,7 +59,6 @@ html_static_path = [
     "stylesheets",
     "javascripts",
 ]
-html_extra_path = ["examples/img"]
 
 html_css_files = ["interactive.css"]
 html_js_files = [
