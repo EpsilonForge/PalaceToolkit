@@ -6,6 +6,7 @@ requires-python = ">=3.8"
 dependencies = [
     "gmsh",
     "numpy",
+    "pandas",
     "scipy",
     "meshio",
     "mfem",
