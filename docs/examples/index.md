@@ -18,7 +18,7 @@ Palace configuration, simulation, and post-processing.
 	<a class="ptk-gallery-link" href="dipole_antenna_mesh.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/dipole.png" alt="Dipole Antenna Mesh preview">
-			<h3>Dipole Antenna Mesh</h3>
+			<h3>Dipole Antenna</h3>
 			<p>Half-wave dipole geometry and mesh generation workflow.</p>
 		</article>
 	</a>
@@ -27,13 +27,6 @@ Palace configuration, simulation, and post-processing.
 			<img src="../_static/dipole.png" alt="Monopole Antenna preview">
 			<h3>Monopole Antenna</h3>
 			<p>Quarter-wave monopole example with meshing and Palace setup.</p>
-		</article>
-	</a>
-	<a class="ptk-gallery-link" href="l_antenna.html">
-		<article class="ptk-gallery-card">
-			<img src="../_static/bend.png" alt="L Antenna preview">
-			<h3>L Antenna</h3>
-			<p>Bent-wire L-shaped antenna workflow including geometry and driven simulation setup.</p>
 		</article>
 	</a>
 	<a class="ptk-gallery-link" href="patch_antenna.html">
@@ -57,14 +50,21 @@ Palace configuration, simulation, and post-processing.
 <div class="ptk-gallery-grid">
 	<a class="ptk-gallery-link" href="open_ended_stub.html">
 		<article class="ptk-gallery-card">
-			<img src="../_static/patch.png" alt="Open-ended Stub preview">
+			<img src="../_static/open_ended.png" alt="Open-ended Stub preview">
 			<h3>Open-ended Stub</h3>
 			<p>Open-ended microstrip stub component with geometry and simulation setup.</p>
 		</article>
 	</a>
+	<a class="ptk-gallery-link" href="l_antenna.html">
+		<article class="ptk-gallery-card">
+			<img src="../_static/bend.png" alt="L Antenna preview">
+			<h3>L Antenna</h3>
+			<p>Bent-wire L-shaped antenna workflow including geometry and driven simulation setup.</p>
+		</article>
+	</a>	
 	<a class="ptk-gallery-link" href="step_in_width.html">
 		<article class="ptk-gallery-card">
-			<img src="../_static/patch.png" alt="Step in Width preview">
+			<img src="../_static/step.png" alt="Step in Width preview">
 			<h3>Step in Width</h3>
 			<p>Microstrip step-discontinuity example for meshing and EM analysis.</p>
 		</article>
@@ -76,7 +76,7 @@ Palace configuration, simulation, and post-processing.
 <div class="ptk-gallery-grid">
 	<a class="ptk-gallery-link" href="waveguide_box.html">
 		<article class="ptk-gallery-card">
-			<img src="../_static/coax.png" alt="Waveguide Box preview">
+			<img src="../_static/box.png" alt="Waveguide Box preview">
 			<h3>Waveguide Box</h3>
 			<p>Closed waveguide cavity/box example including full 3D setup and analysis.</p>
 		</article>
