@@ -120,6 +120,5 @@ postpro/
 
 
 # Docs/_build/
-docs/examples/img/*
 site/*postpro/
 postpro/
