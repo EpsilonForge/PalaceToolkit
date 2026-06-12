@@ -441,6 +441,7 @@ def _style_for_tag(
     style_by_attr: dict[int, dict],
     name_to_tag: dict[str, int],
     transparent_groups: list[str],
+    transparent_alpha: float,
     fallback_index: int,
 ) -> dict:
     style = style_by_attr.get(int(tag))
@@ -457,7 +458,11 @@ def _style_for_tag(
     if group_name in transparent_groups:
         hash_val = int(hashlib.md5(group_name.encode()).hexdigest()[:6], 16)
         color = f"#{hash_val:06x}"
-        return {"kind": "transparent", "color": color, "opacity": 0.2}
+        return {
+            "kind": "transparent",
+            "color": color,
+            "opacity": float(np.clip(transparent_alpha, 0.0, 1.0)),
+        }
 
     return {
         "kind": "default",
@@ -601,6 +606,7 @@ def view_mesh(
     mesh_filename: str = "straight_microstrip.msh",
     palace_config_filename: str | None = None,
     transparent_groups: list[str] | None = None,
+    transparent_alpha: float = 0.05,
     highlight_faces: list[tuple[int, ...]] | None = None,
     azimuth = 20,
     elevation = 30, 
@@ -619,7 +625,10 @@ def view_mesh(
         Optional Palace config ``.json`` path. If provided, boundary/material
         attributes are used to select colors and opacities.
     transparent_groups : list[str] | None
-        Physical group names to render semi-transparently (opacity = 0.2).
+        Physical group names to render semi-transparently.
+    transparent_alpha : float
+        Opacity used for groups listed in ``transparent_groups``.
+        Clipped to ``[0, 1]``. Default is ``0.05``.
     highlight_faces : list[tuple[int, ...]] | None
         Triangular faces to overlay in solid red.  Each entry must be a
         **sorted** 3-tuple of vertex indices (as produced by
@@ -631,6 +640,7 @@ def view_mesh(
 
     if transparent_groups is None:
         transparent_groups = ["air_none", "air_plastic_enclosure"]
+    transparent_alpha = float(np.clip(transparent_alpha, 0.0, 1.0))
     highlight_faces_set = set(highlight_faces) if highlight_faces else set()
 
     print(f"Loading mesh file: {mesh_filename}")
@@ -761,6 +771,7 @@ def view_mesh(
             style_by_attr=style_by_attr,
             name_to_tag=name_to_tag,
             transparent_groups=transparent_groups,
+            transparent_alpha=transparent_alpha,
             fallback_index=fallback_idx,
         )
         fallback_idx += 1

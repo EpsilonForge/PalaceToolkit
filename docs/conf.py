@@ -58,6 +58,7 @@ html_theme_options = {
 html_static_path = [
     "stylesheets",
     "javascripts",
+    "examples/img",
 ]
 
 html_css_files = ["interactive.css"]
