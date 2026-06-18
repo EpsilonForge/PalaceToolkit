@@ -29,3 +29,13 @@ try:
     from palacetoolkit.utils import *         # noqa: F401,F403
 except ImportError:
     pass
+
+try:
+    from palacetoolkit.postpro import *       # noqa: F401,F403
+except ImportError:
+    pass
+
+try:
+    from palacetoolkit.postpro_vtu import *   # noqa: F401,F403
+except ImportError:
+    pass
