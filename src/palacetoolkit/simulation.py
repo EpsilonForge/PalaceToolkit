@@ -576,14 +576,18 @@ def generate_palace_config_from_entities(
 
     # Boundaries section
     boundaries: dict = {
-        "PEC":       {"Attributes": sorted(pec_attrs)},
-        "Absorbing": {"Attributes": sorted(absorbing_attrs), "Order": absorbing_order},
+        "PEC": {"Attributes": sorted(pec_attrs)},
     }
+    if absorbing_attrs:
+        boundaries["Absorbing"] = {
+            "Attributes": sorted(absorbing_attrs),
+            "Order": absorbing_order,
+        }
     if lumped_ports:
         boundaries["LumpedPort"] = lumped_ports
     if wave_ports:
         boundaries["WavePort"] = wave_ports
-    if farfield:
+    if farfield and absorbing_attrs:
         boundaries["Postprocessing"] = {"FarField": {
                     "Attributes": sorted(absorbing_attrs),
                     "NSample": 16000
