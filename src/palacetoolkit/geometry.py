@@ -150,6 +150,34 @@ def extract_tag(obj):
 
 
 # ---------------------------------------------------------------------------
+# Bounding-box convenience functions
+# ---------------------------------------------------------------------------
+def xmin(dimtag):
+    """Return the minimum x-coordinate of the entity's bounding box."""
+    return gmsh.model.occ.getBoundingBox(dimtag[0], dimtag[1])[0]
+
+def ymin(dimtag):
+    """Return the minimum y-coordinate of the entity's bounding box."""
+    return gmsh.model.occ.getBoundingBox(dimtag[0], dimtag[1])[1]
+
+def zmin(dimtag):
+    """Return the minimum z-coordinate of the entity's bounding box."""
+    return gmsh.model.occ.getBoundingBox(dimtag[0], dimtag[1])[2]
+
+def xmax(dimtag):
+    """Return the maximum x-coordinate of the entity's bounding box."""
+    return gmsh.model.occ.getBoundingBox(dimtag[0], dimtag[1])[3]
+
+def ymax(dimtag):
+    """Return the maximum y-coordinate of the entity's bounding box."""
+    return gmsh.model.occ.getBoundingBox(dimtag[0], dimtag[1])[4]
+
+def zmax(dimtag):
+    """Return the maximum z-coordinate of the entity's bounding box."""
+    return gmsh.model.occ.getBoundingBox(dimtag[0], dimtag[1])[5]
+
+
+# ---------------------------------------------------------------------------
 # Convenience geometry builders
 # ---------------------------------------------------------------------------
 def make_polygonal_tube(

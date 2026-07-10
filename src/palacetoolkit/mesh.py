@@ -346,6 +346,7 @@ def create_graded_mesh(
     transition_distance: float | None = None,
     set_as_background: bool = True,
     ignore_entities: list[str] | None = None,
+    local_refinements: dict[tuple[int, int], int] | None = None,
 ) -> int:
     """Create a graded background mesh refined around every curve in the model.
 
@@ -371,10 +372,16 @@ def create_graded_mesh(
                              from the refinement field. Defaults to
                              ``["air_sphere"]`` so that the large bounding
                              air region does not drive mesh refinement.
+        local_refinements:   Optional dict mapping ``(dim, tag)`` dimtags to
+                             a local ``ppw`` value.  For each entry, an
+                             additional Distance+Threshold field is created
+                             that refines to ``wavelength / ppw`` near that
+                             entity.  All fields are combined with a ``Min``
+                             field so the finest size wins at every point.
 
     Returns:
-        The gmsh field ID of the Threshold field that was installed as
-        background (or would be, if set_as_background=False).
+        The gmsh field ID of the final background field (or the ``Min`` field
+        if *local_refinements* was used).
     """
     if ignore_entities is None:
         ignore_entities = ["air_sphere"]
@@ -443,6 +450,35 @@ def create_graded_mesh(
     gmsh.model.mesh.field.setNumber(thresh, "DistMax",  transition_distance)
 
     final_field = thresh
+
+    # --- Local refinements around specific entities ---
+    if local_refinements:
+        fields = [thresh]
+        for dimtag, ppw_local in local_refinements.items():
+            lc_local = wavelength / ppw_local
+            d = gmsh.model.mesh.field.add("Distance")
+            dim, tag = dimtag
+            if dim == 0:
+                gmsh.model.mesh.field.setNumbers(d, "PointsList", [tag])
+            elif dim == 1:
+                gmsh.model.mesh.field.setNumbers(d, "CurvesList", [tag])
+            elif dim == 2:
+                gmsh.model.mesh.field.setNumbers(d, "SurfacesList", [tag])
+            elif dim == 3:
+                gmsh.model.mesh.field.setNumbers(d, "VolumesList", [tag])
+            gmsh.model.mesh.field.setNumber(d, "Sampling", 100)
+
+            t = gmsh.model.mesh.field.add("Threshold")
+            gmsh.model.mesh.field.setNumber(t, "InField", d)
+            gmsh.model.mesh.field.setNumber(t, "SizeMin", lc_local)
+            gmsh.model.mesh.field.setNumber(t, "SizeMax", lc_far)
+            gmsh.model.mesh.field.setNumber(t, "DistMin", 0.0)
+            gmsh.model.mesh.field.setNumber(t, "DistMax", transition_distance)
+            fields.append(t)
+            print(f"  local: dimtag={dimtag}, ppw={ppw_local}, SizeMin={lc_local:.4f}")
+
+        final_field = gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(final_field, "FieldsList", fields)
 
     if set_as_background:
         set_mesh_field_as_background(final_field)
