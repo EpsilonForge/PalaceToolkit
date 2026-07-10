@@ -60,7 +60,8 @@ If you run inside WSL, you may need extra system libraries for runtime and plott
 
 ```bash
 sudo apt update
-sudo apt install -y libglu1-mesa-dev libgomp1 libxft2
+sudo apt install -y libglu1-mesa-dev libgomp1 libxft2 openmpi-bin libopenmpi-dev libopenblas0
+
 ```
 
 Matplotlib may default to a non-interactive backend (`FigureCanvasAgg`).
