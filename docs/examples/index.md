@@ -15,9 +15,9 @@ Palace configuration, simulation, and post-processing.
 			<p>WR-90 rectangular waveguide transition to a horn antenna with waveport boundaries.</p>
 		</article>
 	</a>
-	<a class="ptk-gallery-link" href="dipole_antenna_mesh.html">
+	<a class="ptk-gallery-link" href="dipole_antenna.html">
 		<article class="ptk-gallery-card">
-			<img src="../_static/dipole.png" alt="Dipole Antenna Mesh preview">
+			<img src="../_static/dipole.png" alt="Dipole Antenna preview">
 			<h3>Dipole Antenna</h3>
 			<p>Half-wave dipole geometry and mesh generation workflow.</p>
 		</article>
@@ -136,7 +136,7 @@ Palace configuration, simulation, and post-processing.
 :hidden:
 
 horn_antenna
-dipole_antenna_mesh
+dipole_antenna
 l_antenna
 patch_antenna
 vivaldi_antenna
