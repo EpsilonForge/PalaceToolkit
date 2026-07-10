@@ -16,7 +16,7 @@ from palacetoolkit.postpro_vtu import (
 FIXTURE_POSTPRO = Path("docs/examples/postpro/patch")
 FIXTURE_CONFIG = Path("docs/examples/patch.config")
 
-# This mapping is emitted by run_meshing_pipeline for the patch example.
+# This mapping is emitted by run_entity_pipeline for the patch example.
 PATCH_PG_MAP = {
     "air_sphere": 1,
     "substrate": 2,

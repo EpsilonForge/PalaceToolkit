@@ -67,7 +67,7 @@ class Entity:
         return f"Entity({self.name!r}, dim={self.dim}, order={self.mesh_order}, tags={[t for _, t in self.dimtags]})"
 
 
-def run_meshing_pipeline(entities: list[Entity]):
+def run_entity_pipeline(entities: list[Entity]):
     """
     Meshwell-style boolean pipeline (minimalistic).
 
@@ -228,7 +228,7 @@ def generate_3d_mesh(
         mesh_sizes:  optional mapping from entity name → characteristic length.
                      When omitted, no point-wise sizes are imposed and mesh
                      sizing is driven by active gmsh fields (e.g. from
-                     :func:`refine_near_surfaces`).
+                     :func:`create_graded_mesh`).)
         output_file: path for the output .msh file.
         optimize:    whether to run Netgen optimisation (disable for complex
                      imported CAD to avoid segfaults in thin-volume meshes).
@@ -339,115 +339,146 @@ def generate_3d_mesh(
                 pass
 
 
-def refine_near_surfaces(
-    surface_dimtags: list[tuple[int, int]],
+def create_graded_mesh(
     wavelength: float,
     ppw_near: int = 20,
     ppw_far: int = 5,
     transition_distance: float | None = None,
     set_as_background: bool = True,
+    ignore_entities: list[str] | None = None,
     local_refinements: dict[tuple[int, int], int] | None = None,
-    # e.g. {(2, port_tag): 40, (2, other_tag): 60}
 ) -> int:
-    """Set up mesh refinement that clusters elements near conductor boundary curves.
+    """Create a graded background mesh refined around every curve in the model.
 
-    Creates Distance + Threshold background mesh fields so that elements are
-    finest (``wavelength / ppw_near``) right at the boundary curves of the
-    given surfaces and grade quickly to the coarse size
-    (``wavelength / ppw_far``) over ``transition_distance``.
+    Builds a Distance + Threshold background mesh field driven by *all* curves
+    present in the current gmsh model, so that elements are finest
+    (``wavelength / ppw_near``) right at any geometric edge and grade quickly
+    to the coarse size (``wavelength / ppw_far``) over ``transition_distance``.
 
-    Additional per-surface local refinements can be injected via
-    ``local_refinements``. Each entry adds its own Distance+Threshold field
-    pair and all fields (global + local) are merged with a ``Min`` field so
-    the finest size always wins at every point.
-
-    When *set_as_background* is True (default), the final Min field is
-    immediately installed as the background mesh and meshing options are
-    configured. Set it to False to compose multiple fields with a ``Min``
-    field before calling :func:`set_mesh_field_as_background` yourself.
+    When *set_as_background* is True (default), the final field is immediately
+    installed as the background mesh and meshing options are configured. Set
+    it to False to compose multiple fields with a ``Min`` field before calling
+    :func:`set_mesh_field_as_background` yourself.
 
     Args:
-        surface_dimtags:     List of ``(dim, tag)`` pairs for the surfaces whose
-                             boundary curves drive the global refinement (typically
-                             PEC and port surfaces).
         wavelength:          Operating wavelength in model units.
-        ppw_near:            Points per wavelength on the conductor boundary curves.
-        ppw_far:             Points per wavelength far from conductors.
+        ppw_near:            Points per wavelength on the boundary curves.
+        ppw_far:             Points per wavelength far from curves.
         transition_distance: Distance over which the mesh size grades from fine
                              to coarse. Defaults to ``wavelength / 4``.
         set_as_background:   If True, install the final field as the background
                              mesh and configure meshing options.
-        local_refinements:   Optional dict mapping ``(dim, tag)`` → ``ppw_local``
-                             for surfaces that need finer resolution than the
-                             global ``ppw_near``. Each gets its own
-                             Distance+Threshold pair with the same
-                             ``transition_distance`` and ``ppw_far``.
+        ignore_entities:     Names of entities whose curves should be excluded
+                             from the refinement field. Defaults to
+                             ``["air_sphere"]`` so that the large bounding
+                             air region does not drive mesh refinement.
+        local_refinements:   Optional dict mapping ``(dim, tag)`` dimtags to
+                             a local ``ppw`` value.  For each entry, an
+                             additional Distance+Threshold field is created
+                             that refines to ``wavelength / ppw`` near that
+                             entity.  All fields are combined with a ``Min``
+                             field so the finest size wins at every point.
 
     Returns:
-        The gmsh field ID of the final (Min or Threshold) field that was
-        installed as background (or would be, if set_as_background=False).
+        The gmsh field ID of the final background field (or the ``Min`` field
+        if *local_refinements* was used).
     """
+    if ignore_entities is None:
+        ignore_entities = ["air_sphere"]
+
     if transition_distance is None:
         transition_distance = 0.25 * wavelength
 
     lc_near = wavelength / ppw_near
     lc_far  = wavelength / ppw_far
 
-    # ── helper: build one Distance+Threshold pair for a set of dimtags ──
-    def _make_threshold(
-        dimtags: list[tuple[int, int]],
-        size_min: float,
-        label: str = "",
-    ) -> int:
-        edge_set: set[int] = set()
-        for dt in dimtags:
-            for _, et in gmsh.model.getBoundary(
-                [dt], combined=False, oriented=False, recursive=False
-            ):
-                edge_set.add(abs(et))
-        edge_list = sorted(edge_set)
-        print(f"  {label}: {len(edge_list)} curves, SizeMin={size_min:.4f}")
+    # Collect every curve (dim=1) in the model — refinement is driven by all
+    # geometric edges, regardless of which entity they belong to.
+    edge_list = [t for _, t in gmsh.model.getEntities(1)]
+    edge_list.sort()
 
-        dist = gmsh.model.mesh.field.add("Distance")
-        gmsh.model.mesh.field.setNumbers(dist, "CurvesList", edge_list)
-        gmsh.model.mesh.field.setNumber(dist, "Sampling", 200)
+    # Exclude curves that belong to the *exterior* surface groups of ignored
+    # entities.  After :func:`run_entity_pipeline`, the exterior surfaces of
+    # a volume named ``X`` are stored in a dim=2 physical group named
+    # ``X__None``.  We collect the surface tags from those groups and remove
+    # every curve that is adjacent *only* to those surfaces — this catches
+    # seam curves between sphere patches that ``getBoundary`` misses on
+    # closed surfaces, while preserving curves on shared interfaces
+    # (``air_sphere__substrate``) and all conductor/substrate/port curves.
+    if ignore_entities:
+        ignored_surface_names = {f"{name}__None" for name in ignore_entities}
+        ignored_surfaces: set[int] = set()
+        for dim, pg_tag in gmsh.model.getPhysicalGroups():
+            if dim != 2:
+                continue
+            pg_name = gmsh.model.getPhysicalName(dim, pg_tag)
+            if pg_name in ignored_surface_names:
+                for t in gmsh.model.getEntitiesForPhysicalGroup(dim, pg_tag):
+                    ignored_surfaces.add(int(t))
 
-        thresh = gmsh.model.mesh.field.add("Threshold")
-        gmsh.model.mesh.field.setNumber(thresh, "InField",  dist)
-        gmsh.model.mesh.field.setNumber(thresh, "SizeMin",  size_min)
-        gmsh.model.mesh.field.setNumber(thresh, "SizeMax",  lc_far)
-        gmsh.model.mesh.field.setNumber(thresh, "DistMin",  0.0)
-        gmsh.model.mesh.field.setNumber(thresh, "DistMax",  transition_distance)
-        return thresh
+        # For every curve in the model, check if all surfaces that own it
+        # are in the ignored set.  If so, the curve lives entirely on the
+        # exterior shell and should be dropped.
+        ignored_curves: set[int] = set()
+        for ctag in edge_list:
+            try:
+                up, _ = gmsh.model.getAdjacencies(1, ctag)
+            except Exception:
+                continue
+            owners = {abs(int(s)) for s in up}
+            if owners and owners.issubset(ignored_surfaces):
+                ignored_curves.add(ctag)
 
-    # ── 1. Global field ──────────────────────────────────────────────
+        if ignored_curves:
+            edge_list = [t for t in edge_list if t not in ignored_curves]
+            print(f"  ignoring {len(ignored_curves)} curves from {ignored_surface_names}")
+
+    print(f"  global: {len(edge_list)} curves, SizeMin={lc_near:.4f}")
+
     print(f"  ppw_near={ppw_near}  ppw_far={ppw_far}")
     print(f"  SizeMax={lc_far:.4f}  transition={transition_distance:.4f}")
 
-    field_ids = [
-        _make_threshold(surface_dimtags, lc_near, label="global")
-    ]
+    dist = gmsh.model.mesh.field.add("Distance")
+    gmsh.model.mesh.field.setNumbers(dist, "CurvesList", edge_list)
+    gmsh.model.mesh.field.setNumber(dist, "Sampling", 200)
 
-    # ── 2. Local override fields ─────────────────────────────────────
-    # Each runs AFTER the global field so a finer ppw_local always wins
-    # once merged by the Min field below.
+    thresh = gmsh.model.mesh.field.add("Threshold")
+    gmsh.model.mesh.field.setNumber(thresh, "InField",  dist)
+    gmsh.model.mesh.field.setNumber(thresh, "SizeMin",  lc_near)
+    gmsh.model.mesh.field.setNumber(thresh, "SizeMax",  lc_far)
+    gmsh.model.mesh.field.setNumber(thresh, "DistMin",  0.0)
+    gmsh.model.mesh.field.setNumber(thresh, "DistMax",  transition_distance)
+
+    final_field = thresh
+
+    # --- Local refinements around specific entities ---
     if local_refinements:
+        fields = [thresh]
         for dimtag, ppw_local in local_refinements.items():
             lc_local = wavelength / ppw_local
-            field_ids.append(
-                _make_threshold([dimtag], lc_local, label=f"local {dimtag}")
-            )
+            d = gmsh.model.mesh.field.add("Distance")
+            dim, tag = dimtag
+            if dim == 0:
+                gmsh.model.mesh.field.setNumbers(d, "PointsList", [tag])
+            elif dim == 1:
+                gmsh.model.mesh.field.setNumbers(d, "CurvesList", [tag])
+            elif dim == 2:
+                gmsh.model.mesh.field.setNumbers(d, "SurfacesList", [tag])
+            elif dim == 3:
+                gmsh.model.mesh.field.setNumbers(d, "VolumesList", [tag])
+            gmsh.model.mesh.field.setNumber(d, "Sampling", 100)
 
-    # ── 3. Merge all fields with Min ─────────────────────────────────
-    # Min field takes the smallest lc at every point in space, so local
-    # overrides never conflict — they only ever refine, never coarsen.
-    if len(field_ids) > 1:
-        min_field = gmsh.model.mesh.field.add("Min")
-        gmsh.model.mesh.field.setNumbers(min_field, "FieldsList", field_ids)
-        final_field = min_field
-        print(f"  Merged {len(field_ids)} fields with Min → field {final_field}")
-    else:
-        final_field = field_ids[0]
+            t = gmsh.model.mesh.field.add("Threshold")
+            gmsh.model.mesh.field.setNumber(t, "InField", d)
+            gmsh.model.mesh.field.setNumber(t, "SizeMin", lc_local)
+            gmsh.model.mesh.field.setNumber(t, "SizeMax", lc_far)
+            gmsh.model.mesh.field.setNumber(t, "DistMin", 0.0)
+            gmsh.model.mesh.field.setNumber(t, "DistMax", transition_distance)
+            fields.append(t)
+            print(f"  local: dimtag={dimtag}, ppw={ppw_local}, SizeMin={lc_local:.4f}")
+
+        final_field = gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(final_field, "FieldsList", fields)
 
     if set_as_background:
         set_mesh_field_as_background(final_field)
