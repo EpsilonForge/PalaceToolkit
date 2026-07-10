@@ -22,13 +22,6 @@ Palace configuration, simulation, and post-processing.
 			<p>Half-wave dipole geometry and mesh generation workflow.</p>
 		</article>
 	</a>
-	<a class="ptk-gallery-link" href="monopole_antenna.html">
-		<article class="ptk-gallery-card">
-			<img src="../_static/dipole.png" alt="Monopole Antenna preview">
-			<h3>Monopole Antenna</h3>
-			<p>Quarter-wave monopole example with meshing and Palace setup.</p>
-		</article>
-	</a>
 	<a class="ptk-gallery-link" href="patch_antenna.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/patch.png" alt="Patch Antenna preview">
@@ -144,7 +137,6 @@ Palace configuration, simulation, and post-processing.
 
 horn_antenna
 dipole_antenna_mesh
-monopole_antenna
 l_antenna
 patch_antenna
 vivaldi_antenna

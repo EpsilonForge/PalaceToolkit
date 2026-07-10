@@ -10,6 +10,12 @@ dependencies = [
     "scipy",
     "meshio",
     "mfem",
+    # mfem depends on numba (unconstrained). Without a pin, uv's cross-platform
+    # resolution backtracks to numba 0.53.1 on Windows (due to a numpy<2.5 vs
+    # numpy 2.5.1 conflict with scipy), which pulls llvmlite 0.36.0 — incompatible
+    # with Python 3.12. numba 0.62.1 has wheels for all target platforms (win,
+    # macOS x86_64/arm64, Linux x86_64) and supports Python 3.12.
+    "numba>=0.62,<0.63",
     "pyvista",
     "enlighten",
     "pint",

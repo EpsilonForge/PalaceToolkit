@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import gmsh
 
-from palacetoolkit.mesh import refine_near_surfaces as _refine_near_surfaces
+from palacetoolkit.mesh import create_graded_mesh as _create_graded_mesh
 from palacetoolkit.palace_runtime import (
     install_palace_runtime,
     resolve_palace_binary,
@@ -285,18 +285,16 @@ class Simulation:
         gmsh.option.setNumber("Mesh.MshFileVersion", 2.2)
         gmsh.option.setNumber("Mesh.Binary", 0)
 
-    def refine_near_surfaces(
+    def create_graded_mesh(
         self,
-        surface_dimtags: list[tuple[int, int]],
         wavelength: float,
         ppw_near: int = 20,
         ppw_far: int = 5,
         transition_distance: float | None = None,
         set_as_background: bool = True,
     ) -> int:
-        """Wrapper around :func:`palacetoolkit.mesh.refine_near_surfaces`."""
-        return _refine_near_surfaces(
-            surface_dimtags=surface_dimtags,
+        """Wrapper around :func:`palacetoolkit.mesh.create_graded_mesh`."""
+        return _create_graded_mesh(
             wavelength=wavelength,
             ppw_near=ppw_near,
             ppw_far=ppw_far,
@@ -647,7 +645,7 @@ def generate_palace_config(
     """Build and write a Palace-compatible JSON configuration file.
 
     Classifies physical groups from *pg_map* using the naming conventions
-    established by :func:`run_meshing_pipeline`:
+    established by :func:`run_entity_pipeline`:
 
     - Plain names (no ``__``) that don't start with ``waveport`` → 3D volume
       (material domain).
@@ -659,7 +657,7 @@ def generate_palace_config(
 
     Args:
         pg_map:          name → physical-group tag, as returned by
-                         :func:`run_meshing_pipeline`.
+                         :func:`run_entity_pipeline`.
         mesh_file:       path to the .msh file (stored in ``Model.Mesh``).
         output_file:     destination JSON path.
         eps_r:           substrate relative permittivity.

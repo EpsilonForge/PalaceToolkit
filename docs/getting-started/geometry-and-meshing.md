@@ -11,7 +11,7 @@ Every geometric region — conductors, dielectrics, air boxes, ports — is
 represented as an `Entity`:
 
 ```python
-from palacetoolkit.mesh import Entity, run_meshing_pipeline
+from palacetoolkit.mesh import Entity, run_entity_pipeline
 
 conductor = Entity(name="conductor", dim=3, mesh_order=0, tags=[1])
 dielectric = Entity(name="dielectric", dim=3, mesh_order=1, tags=[2])
@@ -27,11 +27,11 @@ air = Entity(name="air", dim=3, mesh_order=2, tags=[3])
 
 ## Boolean pipeline
 
-After defining entities, call `run_meshing_pipeline` to perform automatic
+After defining entities, call `run_entity_pipeline` to perform automatic
 priority-based cuts and fragmentation:
 
 ```python
-run_meshing_pipeline([conductor, dielectric, air])
+run_entity_pipeline([conductor, dielectric, air])
 ```
 
 The pipeline:
