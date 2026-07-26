@@ -161,7 +161,14 @@ def _binary_is_runnable(binary: Path, lib_dir: Path | None, timeout: float = 15.
         )
     except Exception:
         return False
-    return result.returncode == 0
+    if result.returncode == 0:
+        return True
+    # The wrapper script may fail (e.g. mpirun not available). Try the
+    # native binary directly.
+    native = binary.parent / "palace-x86_64.bin"
+    if native.is_file() and native != binary:
+        return _binary_is_runnable(native, lib_dir, timeout)
+    return False
 
 
 def _auto_download_enabled() -> bool:
