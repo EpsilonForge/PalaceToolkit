@@ -1,45 +1,25 @@
 name: Deploy PalaceToolkit Docs
 
 on:
-  push:
+  workflow_run:
+    workflows: ["PalaceToolkit Docs"]
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - "docs/**"
-      - "pyproject.toml"
-      - "sst.config.ts"
-      - "package.json"
-      - ".github/workflows/docs-deploy.yml"
 
 permissions:
   id-token: write
   contents: read
 
-concurrency:
-  group: epsilonforge-palace-docs-production
-  cancel-in-progress: false
-
-env:
-  # Override via repository variable EPSILON_FORGE_AWS_ACCOUNT_ID when needed.
-  AWS_ACCOUNT_ID: ${{ vars['EPSILON_FORGE_AWS_ACCOUNT_ID'] || '527097962874' }}
-  AWS_REGION: us-east-2
-  SST_STAGE: production
-
 jobs:
-  deploy-docs:
-    permissions:
-      id-token: write
-      contents: read
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -49,32 +29,23 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/epsilon-forge-palace-toolkit-docs-deploy-${{ env.SST_STAGE }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ vars['EPSILON_FORGE_AWS_ACCOUNT_ID'] || '527097962874' }}:role/epsilon-forge-palace-toolkit-docs-deploy-production
+          aws-region: us-east-2
           role-session-name: palacetoolkit-docs-deploy
-
-      - name: Resolve shared router distribution ID
-        id: router
-        run: |
-          set -euo pipefail
-          PARAMETER_NAME="/epsilon-forge/$SST_STAGE/router-distribution-id"
-          ROUTER_DISTRIBUTION_ID="$(aws ssm get-parameter --name "$PARAMETER_NAME" --query 'Parameter.Value' --output text)"
-          echo "router_distribution_id=$ROUTER_DISTRIBUTION_ID" >> "$GITHUB_OUTPUT"
-
-      - name: Install docs build tools
-        run: |
-          set -euo pipefail
-          python -m pip install --upgrade pip
-          python -m pip install sphinx pydata-sphinx-theme myst-parser myst-nb sphinx-copybutton sphinx-design linkify-it-py
 
       - name: Install deploy dependencies
         run: |
           set -euo pipefail
           npm install --no-fund --no-audit
 
+      - name: Download built site
+        uses: actions/download-pages-artifact@v3
+        with:
+          path: site
+
       - name: Deploy docs
         env:
-          EPSILON_FORGE_ROUTER_DISTRIBUTION_ID: ${{ steps.router.outputs.router_distribution_id }}
+          SST_STAGE: production
         run: |
           set -euo pipefail
           npx sst deploy --stage "$SST_STAGE"

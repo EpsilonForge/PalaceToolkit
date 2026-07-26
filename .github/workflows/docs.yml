@@ -1,0 +1,183 @@
+name: PalaceToolkit Docs
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - ".github/workflows/docs.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+  SST_STAGE: ${{ github.ref_name == 'main' && 'production' || format('pr-{0}', github.event.pull_request.number || 'local') }}
+  AWS_ACCOUNT_ID: ${{ vars['EPSILON_FORGE_AWS_ACCOUNT_ID'] || '527097962874' }}
+  AWS_REGION: us-east-2
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1. Fast static checks on PR only
+  # ------------------------------------------------------------------
+  static-checks:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system libraries (Gmsh/PyVista/MPI deps)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install -e ".[docs]"
+
+      - name: Install Palace runtime binary
+        run: |
+          set -euo pipefail
+          palace-toolkit-install-binary
+
+      - name: Run static doc-import checks and unit tests
+        run: |
+          set -euo pipefail
+          python -m pytest tests/test_doc_imports.py \
+            tests/test_postpro.py \
+            tests/test_simulation_run_palace.py \
+            tests/test_postpro_vtu.py -v
+
+  # ------------------------------------------------------------------
+  # 2. Build docs: execute notebooks → build Sphinx → deploy
+  #    Runs on both PR and push to main.
+  # ------------------------------------------------------------------
+  build:
+    if: github.event_name == 'pull_request' || github.ref_name == 'main'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system libraries (Gmsh/MPI deps)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install docs dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install -e ".[docs]"
+
+      - name: Install Palace runtime binary
+        run: |
+          set -euo pipefail
+          palace-toolkit-install-binary
+
+      - name: Register Jupyter kernel
+        run: |
+          set -euo pipefail
+          python -m ipykernel install --user --name palacetoolkit --display-name "PalaceToolkit"
+
+      - name: Execute all example notebooks (10 min max per notebook)
+        run: |
+          set -euo pipefail
+          export DOCS_BUILD=1
+          find docs/examples -maxdepth 1 -name "*.ipynb" \
+            -not -path "*/.ipynb_checkpoints/*" | sort | while read nb; do
+            echo "--- Running: $(basename "$nb") ---"
+            python -m papermill "$nb" "$nb" -k palacetoolkit \
+              --cwd docs/examples --progress-bar False \
+              --request-save-on-cell-execute False \
+              --execution-timeout 600
+          done
+
+      - name: Build Sphinx site
+        run: |
+          set -euo pipefail
+          rm -rf site
+          python -m sphinx -W --keep-going -b html docs site
+
+      - name: Upload built site as artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  # ------------------------------------------------------------------
+  # 3. Deploy to AWS (main branch only, after successful build)
+  # ------------------------------------------------------------------
+  deploy:
+    if: github.ref_name == 'main'
+    needs: [build]
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/epsilon-forge-palace-toolkit-docs-deploy-${{ env.SST_STAGE }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: palacetoolkit-docs-deploy
+
+      - name: Resolve shared router distribution ID
+        id: router
+        run: |
+          set -euo pipefail
+          PARAMETER_NAME="/epsilon-forge/$SST_STAGE/router-distribution-id"
+          ROUTER_DISTRIBUTION_ID="$(aws ssm get-parameter --name "$PARAMETER_NAME" --query 'Parameter.Value' --output text)"
+          echo "router_distribution_id=$ROUTER_DISTRIBUTION_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Install deploy dependencies
+        run: |
+          set -euo pipefail
+          npm install --no-fund --no-audit
+
+      - name: Download built site
+        uses: actions/download-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy docs
+        env:
+          EPSILON_FORGE_ROUTER_DISTRIBUTION_ID: ${{ steps.router.outputs.router_distribution_id }}
+        run: |
+          set -euo pipefail
+          npx sst deploy --stage "$SST_STAGE"
