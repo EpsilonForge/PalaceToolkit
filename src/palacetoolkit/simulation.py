@@ -363,10 +363,8 @@ def run_palace(
             return
         raise RuntimeError(f"Palace exited with code {returncode}")
 
-    if os.environ.get("DOCS_BUILD") == "1":
-        try:
-            resolve_palace_binary()
-        except Exception:
+    if os.environ.get("DOCS_BUILD") == "1" and sif_path is None:
+        if resolve_palace_binary() is None:
             print("Palace run skipped in docs build (no runtime binary available)")
             return
 
