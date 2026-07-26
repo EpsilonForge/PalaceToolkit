@@ -363,6 +363,13 @@ def run_palace(
             return
         raise RuntimeError(f"Palace exited with code {returncode}")
 
+    if os.environ.get("DOCS_BUILD") == "1":
+        try:
+            resolve_palace_binary()
+        except Exception:
+            print("Palace run skipped in docs build (no runtime binary available)")
+            return
+
     config_path = Path(config_file).resolve()
     if work_dir is None:
         work_dir = str(config_path.parent)
