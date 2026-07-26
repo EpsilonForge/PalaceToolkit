@@ -363,11 +363,6 @@ def run_palace(
             return
         raise RuntimeError(f"Palace exited with code {returncode}")
 
-    if os.environ.get("DOCS_BUILD") == "1" and sif_path is None:
-        if resolve_palace_binary() is None:
-            print("Palace run skipped in docs build (no runtime binary available)")
-            return
-
     config_path = Path(config_file).resolve()
     if work_dir is None:
         work_dir = str(config_path.parent)
@@ -426,11 +421,13 @@ def run_palace(
     if palace_sif_path is None:
         palace_sif = os.environ.get("PALACE_SIF")
         if not palace_sif:
-            raise RuntimeError(
-                "No Palace executable found. Set one with set_palace_path(...), "
-                "pass run_palace(..., sif_path=...), or set PALACE_SIF."
+            print(
+                "Warning: Palace executable not found. "
+                "Install one with palace-toolkit-install-binary, "
+                "set_palace_path(...), or set PALACE_SIF. "
+                "Skipping simulation."
             )
-        palace_sif_path = Path(palace_sif).expanduser().resolve()
+            return
 
     if not palace_sif_path.is_file():
         raise FileNotFoundError(f"Palace.sif not found at {palace_sif_path}")
