@@ -1,6 +1,6 @@
 [project]
 name = "palace-toolkit"
-version = "0.1.5"
+version = "0.2.0"
 description = "PALACE electromagnetic simulation course materials"
 requires-python = ">=3.8"
 dependencies = [
