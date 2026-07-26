@@ -1,6 +1,6 @@
 [project]
 name = "palacetoolkit-palace-cpu"
-version = "0.1.0"
+version = "0.17.0"
 description = "Prebuilt Palace CPU binary for PalaceToolkit"
 requires-python = ">=3.8"
 license = {text = "BSD-3-Clause"}

@@ -78,14 +78,18 @@ def _resolve_source_dir(cache_root: Path) -> tuple[Path, str]:
 
     nightly_dir = cache_root / "_sources" / "palace-nightly"
     nightly_dir.parent.mkdir(parents=True, exist_ok=True)
+
+    version = os.environ.get("PALACETOOLKIT_PALACE_VERSION", "v0.17.0").strip()
     if not nightly_dir.exists():
-        _run(["git", "clone", "--depth", "1", "https://github.com/awslabs/palace.git", str(nightly_dir)])
+        _run(["git", "clone", "--depth", "1", "--branch", version, "https://github.com/awslabs/palace.git", str(nightly_dir)])
     else:
-        _run(["git", "fetch", "--depth", "1", "origin", "HEAD"], cwd=nightly_dir)
+        _run(["git", "fetch", "--depth", "1", "origin", f"refs/tags/{version}:refs/tags/{version}"], cwd=nightly_dir)
         _run(["git", "reset", "--hard", "FETCH_HEAD"], cwd=nightly_dir)
+        _run(["git", "checkout", version], cwd=nightly_dir)
 
     commit = _submodule_commit(nightly_dir)[:12]
-    return nightly_dir, f"nightly-{commit}"
+    short_ver = version.lstrip("v")
+    return nightly_dir, f"v{short_ver}-{commit}"
 
 
 def _submodule_commit(source_dir: Path) -> str:
