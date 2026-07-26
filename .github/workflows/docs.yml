@@ -117,8 +117,8 @@ jobs:
             -not -path "*/.ipynb_checkpoints/*" | sort | while read nb; do
             echo "--- Running: $(basename "$nb") ---"
             python -m papermill "$nb" "$nb" -k palacetoolkit \
-              --cwd docs/examples --progress-bar=False \
-              --request-save-on-cell-execute=False \
+              --cwd docs/examples --no-progress-bar \
+              --request-save-on-cell-execute \
               --execution-timeout 600
           done
 
