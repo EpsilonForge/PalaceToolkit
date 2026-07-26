@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from palacetoolkit.postpro_vtu import (
     build_selector_context,
