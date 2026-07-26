@@ -44,7 +44,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev
+            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev libopenblas0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -86,7 +86,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev
+            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev libopenblas0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -103,20 +103,6 @@ jobs:
         run: |
           set -euo pipefail
           palace-toolkit-install-binary
-
-      - name: Verify Palace binary works (debug)
-        run: |
-          set -euo pipefail
-          PALACE=$(find ~/.cache/palacetoolkit/runtime -name palace -type f 2>/dev/null | head -1)
-          echo "Found binary: $PALACE"
-          ls -la "$PALACE"
-          NATIVE=$(dirname "$PALACE")/palace-x86_64.bin
-          echo "Native binary: $NATIVE"
-          ls -la "$NATIVE"
-          echo "--- Testing native binary ---"
-          LD_LIBRARY_PATH="$(dirname "$PALACE")/../lib" "$NATIVE" --version
-          echo "--- Testing wrapper binary ---"
-          LD_LIBRARY_PATH="$(dirname "$PALACE")/../lib" "$PALACE" --version
 
       - name: Register Jupyter kernel
         run: |
