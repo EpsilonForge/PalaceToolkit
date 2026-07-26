@@ -6,7 +6,7 @@ Import as::
     from palacetoolkit.mesh import Entity, run_entity_pipeline
     from palacetoolkit.simulation import run_palace, generate_palace_config
     from palacetoolkit.viz import view_mesh
-    from palacetoolkit.verify_topology import analyse_mesh
+    from palacetoolkit.verify_topology import verify
 """
 
 from palacetoolkit.analytic import *          # noqa: F401,F403
@@ -15,11 +15,6 @@ from palacetoolkit.simulation import *         # noqa: F401,F403
 from palacetoolkit.verify_topology import *   # noqa: F401,F403
 
 # Optional submodules — silently skip when extra deps are missing
-try:
-    from palacetoolkit.s_plot import *        # noqa: F401,F403
-except ImportError:
-    pass
-
 try:
     from palacetoolkit.viz import *           # noqa: F401,F403
 except ImportError:

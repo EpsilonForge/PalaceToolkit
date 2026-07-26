@@ -10,13 +10,13 @@ licence required.
 
 | Module | Description |
 |--------|-------------|
-| `palace.mesh` | Priority-based boolean pipeline for multi-material Gmsh models with automatic size-field grading. |
-| `palace.simulation` | Run Palace via downloaded runtime or optional Apptainer/SIF and extract S-parameters and impedance. |
-| `palace.verify_topology` | Validate that a 3D tetrahedral mesh is topologically consistent for Palace/MFEM. |
-| `palace.analytic` | Closed-form transmission-line formulas (CPW impedance, effective index, …). |
-| `palace.s_plot` | Quick matplotlib plots of Palace S-parameter CSV files. |
-| `palace.view_mesh` | Interactive PyVista viewer with per-group colouring. |
-| `palace.viz` | Headless-safe visualisation helpers that export standalone HTML for docs and notebooks. |
+| `palacetoolkit.mesh` | Priority-based boolean pipeline for multi-material Gmsh models with automatic size-field grading. |
+| `palacetoolkit.simulation` | Run Palace via downloaded runtime or optional Apptainer/SIF and extract S-parameters and impedance. |
+| `palacetoolkit.verify_topology` | Validate that a 3D tetrahedral mesh is topologically consistent for Palace/MFEM. |
+| `palacetoolkit.analytic` | Closed-form transmission-line formulas (CPW impedance, effective index, …). |
+| `palacetoolkit.postpro` | Quick matplotlib plots of Palace S-parameter CSV files. |
+| `palacetoolkit.viz` | Interactive PyVista mesh viewer with per-group colouring. |
+| `palacetoolkit.utils` | Headless-safe visualisation helpers that export standalone HTML for docs and notebooks. |
 
 ## Installation
 

@@ -181,7 +181,8 @@ def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
             raise RuntimeError(
                 f"Palace runtime check failed with code {result.returncode}: {output}"
             )
-        version_line = output.splitlines()[0] if output else "(no version output)"
+        lines = output.splitlines()
+        version_line = next((l for l in lines if "Palace version" in l), lines[0] if lines else "(no version output)")
         return {
             "mode": "executable",
             "path": str(selected_exec),
@@ -212,7 +213,8 @@ def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
             f"Palace SIF runtime check failed with code {result.returncode}: {output}"
         )
 
-    version_line = output.splitlines()[0] if output else "(no version output)"
+    lines = output.splitlines()
+    version_line = next((l for l in lines if "Palace version" in l), lines[0] if lines else "(no version output)")
     return {
         "mode": "sif",
         "path": str(palace_sif_path),

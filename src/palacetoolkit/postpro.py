@@ -3,30 +3,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def s_params(csv_file):
-
     df = pd.read_csv(csv_file)
 
-    # Renombrar columnas si es necesario (según tu archivo)
     if df.shape[1] == 5:
         df.columns = ["Freq_GHz", "S11_dB", "S11_phase_deg", "S21_dB", "S21_phase_deg"]
     else:
         df.columns = ["Freq_GHz", "S11_dB", "S11_phase_deg"]
 
-    # Plot S11, S21
-    plt.figure(figsize=(10,6))
-    plt.plot(df["Freq_GHz"], df["S11_dB"], label="|S11| (dB)", marker='o')
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(df["Freq_GHz"], df["S11_dB"], label="|S11| (dB)", marker='o')
     if df.shape[1] == 5:
-        plt.plot(df["Freq_GHz"], df["S21_dB"], label="|S21| (dB)", marker='s')
-    plt.xlabel("Frecuencia (GHz)")
-    plt.ylabel("Magnitud (dB)")
-    plt.title("S parameters magnitude")
-    plt.grid(True)
-    plt.legend()
+        ax.plot(df["Freq_GHz"], df["S21_dB"], label="|S21| (dB)", marker='s')
+    ax.set_xlabel("Frequency (GHz)")
+    ax.set_ylabel("Magnitude (dB)")
+    ax.set_title("S-parameter magnitude")
+    ax.grid(True)
+    ax.legend()
 
-    plt.show()
-
-    # Frequency where min |S11| is reached
-    idx = np.argmin(df["S11_dB"])
-
-    return df["Freq_GHz"][idx]
+    return fig, ax
 
