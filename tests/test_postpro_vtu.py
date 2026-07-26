@@ -14,7 +14,13 @@ from palacetoolkit.postpro_vtu import (
 
 
 FIXTURE_POSTPRO = Path("docs/examples/postpro/patch")
+FIXTURE_PV_DIR = FIXTURE_POSTPRO / "paraview"
 FIXTURE_CONFIG = Path("docs/examples/patch.config")
+
+needs_paraview_output = pytest.mark.skipif(
+    not FIXTURE_PV_DIR.is_dir(),
+    reason="Paraview output fixtures not present (run Palace simulation first)"
+)
 
 # This mapping is emitted by run_entity_pipeline for the patch example.
 PATCH_PG_MAP = {
@@ -28,6 +34,7 @@ PATCH_PG_MAP = {
 }
 
 
+@needs_paraview_output
 def test_discover_paraview_datasets_patch_fixture():
     datasets = discover_paraview_datasets(FIXTURE_POSTPRO)
     assert "driven" in datasets
@@ -36,6 +43,7 @@ def test_discover_paraview_datasets_patch_fixture():
     assert len(datasets["driven_boundary"].steps) > 0
 
 
+@needs_paraview_output
 def test_strict_boundary_rejects_volume_dataset():
     ctx = build_selector_context(FIXTURE_CONFIG, PATCH_PG_MAP)
 
@@ -53,6 +61,7 @@ def test_strict_boundary_rejects_volume_dataset():
         assert "Strict boundary mode" in str(exc)
 
 
+@needs_paraview_output
 def test_load_boundary_for_entity_selector():
     ctx = build_selector_context(FIXTURE_CONFIG, PATCH_PG_MAP)
 
@@ -72,6 +81,7 @@ def test_load_boundary_for_entity_selector():
     assert "S" in data.point_arrays
 
 
+@needs_paraview_output
 def test_load_boundary_for_boundary_type_selector():
     ctx = build_selector_context(FIXTURE_CONFIG, PATCH_PG_MAP)
 
@@ -89,6 +99,7 @@ def test_load_boundary_for_boundary_type_selector():
     assert set(np.unique(attrs).tolist()).issubset({3, 4})
 
 
+@needs_paraview_output
 def test_strict_volume_rejects_boundary_dataset():
     try:
         load_volume_field_data(
@@ -102,6 +113,7 @@ def test_strict_volume_rejects_boundary_dataset():
         assert "Strict volume mode" in str(exc)
 
 
+@needs_paraview_output
 def test_load_volume_and_extract_cutplane():
     data = load_volume_field_data(
         FIXTURE_POSTPRO,
@@ -116,6 +128,7 @@ def test_load_volume_and_extract_cutplane():
     assert "E_real" in cut.point_data
 
 
+@needs_paraview_output
 def test_extract_contours_from_slice():
     data = load_volume_field_data(FIXTURE_POSTPRO, dataset_name="driven", step_index=0)
     cut = extract_axis_slice(data, axis="z", value=0.0)
@@ -123,6 +136,7 @@ def test_extract_contours_from_slice():
     assert cont.n_cells > 0
 
 
+@needs_paraview_output
 def test_resolve_synced_step_indices_by_timestep():
     bidx, vidx = resolve_synced_step_indices(
         FIXTURE_POSTPRO,

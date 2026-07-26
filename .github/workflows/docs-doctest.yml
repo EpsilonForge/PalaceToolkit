@@ -97,6 +97,11 @@ jobs:
           pip install -e ".[docs]"
           pip install pytest-timeout
 
+      - name: Install Palace runtime binary
+        run: |
+          set -euo pipefail
+          palace-toolkit-install-binary
+
       - name: Register Jupyter kernel
         run: |
           set -euo pipefail
@@ -139,6 +144,11 @@ jobs:
           set -euo pipefail
           python -m venv /tmp/fresh-venv
           /tmp/fresh-venv/bin/pip install dist/palace_toolkit-*.tar.gz
+
+      - name: Install Palace runtime binary (for import tests)
+        run: |
+          set -euo pipefail
+          /tmp/fresh-venv/bin/palace-toolkit-install-binary
 
       - name: Run non-docs tests
         run: |
