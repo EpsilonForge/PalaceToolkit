@@ -159,6 +159,9 @@ jobs:
           cmake --build "$PALACE_BUILD" 2>&1 || rc=$?
           set -e
           if [ "${rc:-0}" -ne 0 ]; then
+            echo "DEBUG: PALACE_BUILD=$PALACE_BUILD"
+            echo "DEBUG: HYPRE_UTIL=$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
+            echo "DEBUG: listing hypre src: $(ls $PALACE_BUILD/extern/hypre/src/utilities/ 2>&1 | head -5)"
             HYPRE_UTIL="$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
             [ -f "$HYPRE_UTIL" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_UTIL" && echo "Patched HYPRE ffs"
             [ -f "$HYPRE_UTIL" ] && sed -i '/#include <malloc.h>/d' "$HYPRE_UTIL" && echo "Patched HYPRE malloc.h"
