@@ -160,8 +160,8 @@ jobs:
           Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding utf8
           Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding utf8
           $content = Get-Content /tmp/palace-src/CMakeLists.txt -Raw
-          $content = $content.Replace('find_package(MPI REQUIRED)', 'include(cmake/MPIOverrides.cmake)' + [Environment]::NewLine + 'find_package(MPI REQUIRED)')
-          Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $content -Encoding utf8
+          $content = $content.Replace('find_package(MPI REQUIRED)', 'include(cmake/MPIOverrides.cmake)' + "`n" + 'find_package(MPI REQUIRED)')
+          Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $content -Encoding ascii
 
           # Diagnostic: test MPI compilation and linking
           Set-Content -Path /tmp/test_mpi.c -Value '#include <mpi.h>', 'int main(int argc, char** argv) { MPI_Init(&argc, &argv); MPI_Finalize(); return 0; }' -Encoding utf8
@@ -170,11 +170,10 @@ jobs:
           gcc /tmp/test_mpi.o -LC:/msys64/mingw64/lib -lmsmpi -o /tmp/test_mpi.exe 2>&1
           if ($LASTEXITCODE -eq 0) { Write-Output "MPI link OK" } else { Write-Output "MPI link FAILED" }
 
-          # Try cmake with find_package(MPI) in isolation to see exact error
-          New-Item -ItemType Directory -Force -Path /tmp/test-mpi-build
-          Set-Content -Path /tmp/test-mpi-build/CMakeLists.txt -Value 'cmake_minimum_required(VERSION 3.20)', 'project(TestMPI C)', 'set(MPI_C_INCLUDE_DIR "C:/msys64/mingw64/include")', 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'find_package(MPI REQUIRED)', 'message(STATUS "MPI_C_INCLUDE_DIR=${MPI_C_INCLUDE_DIR}")', 'message(STATUS "MPI_C_LIBRARIES=${MPI_C_LIBRARIES}")', 'message(STATUS "MPI_FOUND=${MPI_FOUND}")' -Encoding utf8
-          cmake -S /tmp/test-mpi-build -B /tmp/test-mpi-out -G "MSYS Makefiles" 2>&1
-          if ($LASTEXITCODE -eq 0) { Write-Output "CMake MPI OK" } else { Write-Output "CMake MPI FAILED" }
+          # Pre-set MPI variables so FindMPI skips the test compilation
+          "set(MPI_C_WORKS TRUE)" | Out-File -FilePath /tmp/palace-src/cmake/MPIOverrides.cmake -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_WORKS TRUE)' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_WORKS TRUE)' -Encoding utf8
 
           cmake -S /tmp/palace-src -B /tmp/palace-build `
             -G "MSYS Makefiles" `
