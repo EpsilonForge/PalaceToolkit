@@ -1,6 +1,8 @@
+import html
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -16,6 +18,13 @@ from palacetoolkit.palace_runtime import (
 
 _PALACE_EXEC_OVERRIDE: Path | None = None
 _PALACE_SIF_OVERRIDE: Path | None = None
+
+
+def _in_notebook() -> bool:
+    try:
+        return __import__("IPython").get_ipython() is not None
+    except Exception:
+        return False
 
 
 def _infer_exec_library_dir(exec_path: Path) -> Path | None:
@@ -415,8 +424,24 @@ def run_palace(
                 cmd = ["mpirun", "-np", str(num_procs), str(selected_exec), str(config_path)]
             else:
                 cmd = [str(selected_exec), str(config_path)]
-        print(f"  Running: {' '.join(cmd)}")
-        result = subprocess.run(cmd, cwd=work_dir, capture_output=False, env=run_env)
+        output = [f"  Running: {' '.join(cmd)}"]
+        result = subprocess.run(cmd, cwd=work_dir, capture_output=True, text=True, env=run_env)
+        if result.stdout:
+            output.append(result.stdout)
+        if result.stderr:
+            output.append(result.stderr)
+        full_output = "\n".join(output).rstrip("\n")
+        if _in_notebook():
+            from IPython.display import HTML, display
+            display(HTML(
+                '<details open class="ptk-scroll-output">'
+                "<summary><strong>Palace simulation output</strong></summary>"
+                f'<pre style="--ptk-output-visible-lines:20; --ptk-output-line-height:1.35;">'
+                f"{html.escape(full_output)}</pre></details>"
+            ))
+        else:
+            sys.stdout.write(full_output + "\n")
+            sys.stdout.flush()
         if result.returncode != 0:
             _handle_run_failure(result.returncode)
         return
@@ -450,8 +475,24 @@ def run_palace(
             "palace", f"/work/{config_name}",
         ]
 
-    print(f"  Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=work_dir, capture_output=False)
+    output = [f"  Running: {' '.join(cmd)}"]
+    result = subprocess.run(cmd, cwd=work_dir, capture_output=True, text=True)
+    if result.stdout:
+        output.append(result.stdout)
+    if result.stderr:
+        output.append(result.stderr)
+    full_output = "\n".join(output).rstrip("\n")
+    if _in_notebook():
+        from IPython.display import HTML, display
+        display(HTML(
+            '<details open class="ptk-scroll-output">'
+            "<summary><strong>Palace simulation output</strong></summary>"
+            f'<pre style="--ptk-output-visible-lines:20; --ptk-output-line-height:1.35;">'
+            f"{html.escape(full_output)}</pre></details>"
+        ))
+    else:
+        sys.stdout.write(full_output + "\n")
+        sys.stdout.flush()
     if result.returncode != 0:
         _handle_run_failure(result.returncode)
 

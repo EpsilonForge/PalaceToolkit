@@ -122,3 +122,9 @@ postpro/
 # Docs/_build/
 site/*postpro/
 postpro/
+
+# Built wheels
+*.whl
+
+# Project plans
+windows-support-plan.md

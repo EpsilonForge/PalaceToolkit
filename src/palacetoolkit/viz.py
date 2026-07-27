@@ -851,7 +851,7 @@ def run_with_scrollable_output(
     *args,
     title: str = "Command output",
     max_lines: int | None = None,
-    visible_lines: int = 10,
+    visible_lines: int = 20,
     line_height: float = 1.35,
     **kwargs,
 ):
