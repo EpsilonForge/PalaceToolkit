@@ -163,6 +163,11 @@ jobs:
           $content = $content.Replace('find_package(MPI REQUIRED)', 'include(cmake/MPIOverrides.cmake)' + [Environment]::NewLine + 'find_package(MPI REQUIRED)')
           Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $content -Encoding utf8
 
+          # Diagnostic: test MPI compilation
+          Set-Content -Path /tmp/test_mpi.c -Value '#include <mpi.h>', 'int main(int argc, char** argv) { MPI_Init(&argc, &argv); MPI_Finalize(); return 0; }' -Encoding utf8
+          gcc -IC:/msys64/mingw64/include -c /tmp/test_mpi.c -o /tmp/test_mpi.o 2>&1
+          if ($LASTEXITCODE -eq 0) { Write-Output "MPI compilation OK" } else { Write-Output "MPI compilation FAILED" }
+
           cmake -S /tmp/palace-src -B /tmp/palace-build `
             -G "MSYS Makefiles" `
             -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
