@@ -150,18 +150,7 @@ jobs:
           git -C /tmp/palace-src checkout "$env:PALACE_REF"
 
           # Inject MPI overrides before Palace's find_package(MPI)
-          "set(MPI_C_SKIP_GUESSING TRUE)" | Out-File -FilePath /tmp/palace-src/cmake/MPIOverrides.cmake -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_C_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_SKIP_GUESSING TRUE)' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_SKIP_GUESSING TRUE)' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding utf8
-          $content = Get-Content /tmp/palace-src/CMakeLists.txt -Raw
-          $content = $content.Replace('find_package(MPI REQUIRED)', 'include(cmake/MPIOverrides.cmake)' + "`n" + 'find_package(MPI REQUIRED)')
-          Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $content -Encoding ascii
+          Set-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value "set(MPI_C_WORKS TRUE)" -Encoding utf8
 
           # Diagnostic: test MPI compilation and linking
           Set-Content -Path /tmp/test_mpi.c -Value '#include <mpi.h>', 'int main(int argc, char** argv) { MPI_Init(&argc, &argv); MPI_Finalize(); return 0; }' -Encoding utf8
@@ -169,11 +158,6 @@ jobs:
           if ($LASTEXITCODE -eq 0) { Write-Output "MPI compile OK" } else { Write-Output "MPI compile FAILED" }
           gcc /tmp/test_mpi.o -LC:/msys64/mingw64/lib -lmsmpi -o /tmp/test_mpi.exe 2>&1
           if ($LASTEXITCODE -eq 0) { Write-Output "MPI link OK" } else { Write-Output "MPI link FAILED" }
-
-          # Pre-set MPI variables so FindMPI skips the test compilation
-          "set(MPI_C_WORKS TRUE)" | Out-File -FilePath /tmp/palace-src/cmake/MPIOverrides.cmake -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_WORKS TRUE)' -Encoding utf8
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_WORKS TRUE)' -Encoding utf8
 
           cmake -S /tmp/palace-src -B /tmp/palace-build `
             -G "MSYS Makefiles" `
@@ -184,10 +168,9 @@ jobs:
             -DCMAKE_Fortran_COMPILER=gfortran `
             -DMPI_C_INCLUDE_DIR="C:/msys64/mingw64/include" `
             -DMPI_C_LIBRARIES="C:/msys64/mingw64/lib/libmsmpi.dll.a" `
-            -DMPI_CXX_INCLUDE_DIR="C:/msys64/mingw64/include" `
-            -DMPI_CXX_LIBRARIES="C:/msys64/mingw64/lib/libmsmpi.dll.a" `
-            -DMPI_Fortran_INCLUDE_DIR="C:/msys64/mingw64/include" `
-            -DMPI_Fortran_LIBRARIES="C:/msys64/mingw64/lib/libmsmpi.dll.a" `
+            -DMPI_C_WORKS=TRUE `
+            -DMPI_CXX_WORKS=TRUE `
+            -DMPI_Fortran_WORKS=TRUE `
             -DBUILD_SHARED_LIBS:BOOL=ON `
             -DPALACE_WITH_64BIT_INT:BOOL=OFF `
             -DPALACE_WITH_OPENMP:BOOL=ON `
