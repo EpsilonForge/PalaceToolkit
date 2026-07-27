@@ -171,6 +171,9 @@ jobs:
             -DMPI_C_WORKS=TRUE `
             -DMPI_CXX_WORKS=TRUE `
             -DMPI_Fortran_WORKS=TRUE `
+            -DBLA_VENDOR=OpenBLAS `
+            -DBLAS_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" `
+            -DLAPACK_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" `
             -DBUILD_SHARED_LIBS:BOOL=ON `
             -DPALACE_WITH_64BIT_INT:BOOL=OFF `
             -DPALACE_WITH_OPENMP:BOOL=ON `
