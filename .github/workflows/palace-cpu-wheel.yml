@@ -159,9 +159,15 @@ jobs:
           # Fix patch file line endings
           find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
 
+          # Pre-patch HYPRE ffs (known MinGW issue)
+          HYPRE_FILE_SRC="$PALACE_SRC/extern/hypre/src/utilities/_hypre_utilities.h"
+          [ -f "$HYPRE_FILE_SRC" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_FILE_SRC" && echo "Pre-patched HYPRE ffs" || true
+
           # Patch external projects that need mingw32-make (Ninja doesn't work with raw Makefiles)
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
+          # Add WERROR=0 to libxsmm build options to suppress -Werror overflow on rv64
+          sed -i '/STATIC=0/s/$/ WERROR=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
 
           # Configure
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
@@ -196,8 +202,9 @@ jobs:
             -DPALACE_WITH_GSLIB=ON 2>&1
 
           # Build with retry
-          cmake --build "$PALACE_BUILD" 2>&1 || {
-            echo "First build failed, patching and retrying..."
+          cmake --build "$PALACE_BUILD" 2>&1; first_rc=$?
+          if [ $first_rc -ne 0 ]; then
+            echo "First build failed (rc=$first_rc), patching and retrying..."
             # Patch HYPRE ffs
             HYPRE_FILE="$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
             [ -f "$HYPRE_FILE" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_FILE" && echo "Patched HYPRE ffs"
@@ -205,7 +212,7 @@ jobs:
             XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
             [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
             cmake --build "$PALACE_BUILD" 2>&1
-          }
+          fi
 
       - name: Stage Palace payload into binary package
         shell: pwsh
