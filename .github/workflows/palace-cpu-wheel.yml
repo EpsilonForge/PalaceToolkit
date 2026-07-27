@@ -164,7 +164,6 @@ jobs:
             -DCMAKE_C_COMPILER=gcc `
             -DCMAKE_CXX_COMPILER=g++ `
             -DCMAKE_Fortran_COMPILER=gfortran `
-            -DCMAKE_MAKE_PROGRAM="C:/msys64/mingw64/bin/gmake.exe" `
             -DBLA_VENDOR=OpenBLAS `
             -DBLAS_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" `
             -DLAPACK_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" `
