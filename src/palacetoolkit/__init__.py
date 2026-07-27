@@ -14,6 +14,12 @@ from palacetoolkit.mesh import *              # noqa: F401,F403
 from palacetoolkit.simulation import *         # noqa: F401,F403
 from palacetoolkit.verify_topology import *   # noqa: F401,F403
 
+# mode_solver depends on the Palace binary (available at runtime)
+try:
+    from palacetoolkit.mode_solver import *   # noqa: F401,F403
+except ImportError:
+    pass
+
 # Optional submodules — silently skip when extra deps are missing
 try:
     from palacetoolkit.viz import *           # noqa: F401,F403
