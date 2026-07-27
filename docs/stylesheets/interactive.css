@@ -81,13 +81,13 @@
 
 /* Keep HTML/interactive outputs full-size with no clipping by default. */
 .jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output,
-.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output *,
+.jupyter-wrapper .jp-OutputArea .jp-RenderedHTMLCommon.jp-OutputArea-output *:not(.ptk-scroll-output):not(.ptk-scroll-output *),
 .nboutput .output_area .output_html,
-.nboutput .output_area .output_html *,
+.nboutput .output_area .output_html *:not(.ptk-scroll-output):not(.ptk-scroll-output *),
 .cell_output .output.text_html,
-.cell_output .output.text_html *,
+.cell_output .output.text_html *:not(.ptk-scroll-output):not(.ptk-scroll-output *),
 .cell-output .output.text_html,
-.cell-output .output.text_html * {
+.cell-output .output.text_html *:not(.ptk-scroll-output):not(.ptk-scroll-output *) {
   max-height: none !important;
 }
 

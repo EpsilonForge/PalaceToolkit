@@ -41,8 +41,8 @@ def _ensure_pyvista():
     """Import PyVista with off-screen rendering (headless-safe)."""
     import warnings
 
-    os.environ.pop("DISPLAY", None)
     os.environ.setdefault("VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN", "1")
+    os.environ.pop("DISPLAY", None)
 
     import pyvista as pv
 
@@ -53,6 +53,14 @@ def _ensure_pyvista():
             pv.start_xvfb()
     except Exception:
         pass
+
+    # Silence VTK stderr warnings about missing X display connection
+    try:
+        import vtkmodules.vtkCommonCore as vtk_core
+        vtk_core.vtkLogger.SetStderrVerbosity(vtk_core.vtkLogger.VERBOSITY_OFF)
+    except Exception:
+        pass
+
     return pv
 
 
