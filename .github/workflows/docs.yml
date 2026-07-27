@@ -30,17 +30,21 @@ env:
 
 jobs:
   # ------------------------------------------------------------------
-  # 1. Fast static checks on PR only
+  # 1. Fast static checks and unit tests across all supported OS
   # ------------------------------------------------------------------
-  static-checks:
+  lint-and-unit-tests:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system libraries (Gmsh/PyVista/MPI deps)
+      - name: Install system libraries (Linux only)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
@@ -53,28 +57,30 @@ jobs:
 
       - name: Install dependencies
         run: |
-          set -euo pipefail
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
-      - name: Install Palace runtime binary
+      - name: Install Palace runtime binary (Linux only)
+        if: runner.os == 'Linux'
         run: |
-          set -euo pipefail
           palace-toolkit-install-binary
 
       - name: Run static doc-import checks and unit tests
         run: |
-          set -euo pipefail
           python -m pytest tests/test_doc_imports.py \
-            tests/test_postpro.py \
-            tests/test_simulation_run_palace.py \
+            tests/test_postpro.py -v
+
+      - name: Run simulation + VTU tests (Linux/macOS only, needs mfem)
+        if: runner.os != 'Windows'
+        run: |
+          python -m pytest tests/test_simulation_run_palace.py \
             tests/test_postpro_vtu.py -v
 
   # ------------------------------------------------------------------
-  # 2. Build docs: execute notebooks → build Sphinx → deploy
+  # 2. Build docs: execute notebooks → build Sphinx → save artifact
   #    Runs on both PR and push to main.
   # ------------------------------------------------------------------
-  build:
+  build-docs:
     if: github.event_name == 'pull_request' || github.ref_name == 'main'
     runs-on: ubuntu-24.04
 
@@ -82,11 +88,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system libraries (Gmsh/MPI deps)
+      - name: Install system libraries (Gmsh/MPI/headless rendering deps)
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev libopenblas0
+            libglu1-mesa-dev libgomp1 openmpi-bin libopenmpi-dev libopenblas0 \
+            xvfb libosmesa6 libegl1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -113,6 +120,12 @@ jobs:
         run: |
           set -uo pipefail
           export DOCS_BUILD=1
+          export MPLBACKEND=Agg
+          export PYVISTA_OFF_SCREEN=true
+          export DISPLAY=:99
+          # Start virtual framebuffer for headless rendering
+          Xvfb :99 -screen 0 1024x768x24 &
+          sleep 1
           failed=0
           for nb in $(find docs/examples -maxdepth 1 -name "*.ipynb" \
             -not -path "*/.ipynb_checkpoints/*" | sort); do
@@ -128,8 +141,6 @@ jobs:
             }
           done
           echo "--- Notebook execution complete: $failed failures ---"
-          # Report failures but don't exit with error - the Sphinx build
-          # will still produce docs from whatever outputs were generated.
           if [ "$failed" -gt 0 ]; then
             echo "Some notebooks failed. Check the logs above for details."
           fi
@@ -140,17 +151,17 @@ jobs:
           rm -rf site
           python -m sphinx -W --keep-going -b html docs site
 
-      - name: Upload built site as artifact
+      - name: Save built site as artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   # ------------------------------------------------------------------
-  # 3. Deploy to AWS (main branch only, after successful build)
+  # 3. Deploy to AWS (main branch only, after successful build-docs)
   # ------------------------------------------------------------------
-  deploy:
+  deploy-docs:
     if: github.ref_name == 'main'
-    needs: [build]
+    needs: [build-docs]
     runs-on: ubuntu-24.04
 
     steps:
