@@ -145,16 +145,21 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
-          git clone https://github.com/awslabs/palace.git /tmp/palace-src
-          git -C /tmp/palace-src fetch --all --tags
-          git -C /tmp/palace-src checkout "$env:PALACE_REF"
+          $buildRoot = $env:RUNNER_TEMP
+          if (-not $buildRoot) { $buildRoot = "C:\msys64\tmp" }
+          $palaceSrc = "$buildRoot\palace-src"
+          $palaceBuild = "$buildRoot\palace-build"
+          $palaceInstall = "$buildRoot\palace-install"
+          git clone https://github.com/awslabs/palace.git $palaceSrc
+          git -C $palaceSrc fetch --all --tags
+          git -C $palaceSrc checkout "$env:PALACE_REF"
 
           # Create a stub FindMPI.cmake to bypass the full MPI detection test
-          ('set(MPI_C_FOUND TRUE)', 'set(MPI_CXX_FOUND TRUE)', 'set(MPI_Fortran_FOUND TRUE)', 'set(MPI_FOUND TRUE)', 'set(MPI_C_COMPILER "gcc")', 'set(MPI_CXX_COMPILER "g++")', 'set(MPI_Fortran_COMPILER "gfortran")', 'set(MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe")') -join "`n" | Set-Content -Path /tmp/palace-src/cmake/FindMPI.cmake -NoNewline -Encoding ascii
+          ('set(MPI_C_FOUND TRUE)', 'set(MPI_CXX_FOUND TRUE)', 'set(MPI_Fortran_FOUND TRUE)', 'set(MPI_FOUND TRUE)', 'set(MPI_C_COMPILER "gcc")', 'set(MPI_CXX_COMPILER "g++")', 'set(MPI_Fortran_COMPILER "gfortran")', 'set(MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe")') -join "`n" | Set-Content -Path "$palaceSrc\cmake\FindMPI.cmake" -NoNewline -Encoding ascii
 
-          cmake -S /tmp/palace-src -B /tmp/palace-build `
+          cmake -S $palaceSrc -B $palaceBuild `
             -G "Unix Makefiles" `
-            -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
+            -DCMAKE_INSTALL_PREFIX=$palaceInstall `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_C_COMPILER=gcc `
             -DCMAKE_CXX_COMPILER=g++ `
@@ -183,20 +188,22 @@ jobs:
             -DPALACE_WITH_MAGMA:BOOL=OFF `
             -DPALACE_WITH_GSLIB:BOOL=ON
 
-          cmake --build /tmp/palace-build -j1 2>&1
+          cmake --build $palaceBuild -j1 2>&1
           if ($LASTEXITCODE -ne 0) {
-            Write-Output "First build attempt failed, creating missing dirs and retrying..."
-            New-Item -ItemType Directory -Force -Path /tmp/palace-build/extern | Out-Null
-            cmake --build /tmp/palace-build -j1 2>&1
+            Write-Output "First build attempt failed, retrying..."
+            cmake --build $palaceBuild -j1 2>&1
           }
 
       - name: Stage Palace payload into binary package
         shell: pwsh
         run: |
-          ls /tmp/palace-install/bin
+          $buildRoot = $env:RUNNER_TEMP
+          if (-not $buildRoot) { $buildRoot = "C:\msys64\tmp" }
+          $palaceInstall = "$buildRoot\palace-install"
+          ls $palaceInstall/bin
           .\packages\palacetoolkit-palace-cpu\tools\stage_palace_binary.ps1 `
-            -BinDir /tmp/palace-install/bin `
-            -LibDirs /tmp/palace-install/lib, /tmp/palace-install/lib64
+            -BinDir "$palaceInstall\bin" `
+            -LibDirs "$palaceInstall\lib", "$palaceInstall\lib64"
 
       - name: Build wheel
         shell: pwsh
