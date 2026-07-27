@@ -168,6 +168,8 @@ jobs:
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
           # Add WERROR=0 to libxsmm build options to suppress -Werror overflow on rv64
           sed -i '/STATIC=0/s/$/ WERROR=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
+          # Patch HYPRE ExternalProject to fix ffs on MinGW
+          sed -i 's|GIT_TAG           ${EXTERN_HYPRE_GIT_TAG}|GIT_TAG           ${EXTERN_HYPRE_GIT_TAG}\n  PATCH_COMMAND     sed -i "s/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/" <SOURCE_DIR>/src/utilities/_hypre_utilities.h|' "$PALACE_SRC/cmake/ExternalHYPRE.cmake"
 
           # Configure
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
