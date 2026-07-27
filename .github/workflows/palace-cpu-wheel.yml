@@ -144,7 +144,6 @@ jobs:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
-          source /etc/profile 2>/dev/null || true
           export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
           BUILD_ROOT="${RUNNER_TEMP:-/tmp}"
           PALACE_SRC="$BUILD_ROOT/palace-src"
@@ -190,10 +189,10 @@ jobs:
             -DPALACE_WITH_ARPACK=ON \
             -DPALACE_WITH_LIBXSMM=ON \
             -DPALACE_WITH_MAGMA=OFF \
-            -DPALACE_WITH_GSLIB=ON 2>&1 || true
+            -DPALACE_WITH_GSLIB=ON 2>&1
 
           # Build with retry
-          make -C "$PALACE_BUILD" -j1 2>&1 || {
+          mingw32-make -C "$PALACE_BUILD" -j1 2>&1 || {
             echo "First build failed, patching and retrying..."
             # Patch HYPRE ffs
             HYPRE_FILE="$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
@@ -201,7 +200,7 @@ jobs:
             # Patch libxsmm -Werror
             XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
             [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
-            make -C "$PALACE_BUILD" -j1 2>&1
+            mingw32-make -C "$PALACE_BUILD" -j1 2>&1
           }
 
       - name: Stage Palace payload into binary package
