@@ -142,8 +142,9 @@ jobs:
       - name: Build Palace (cpu-default profile)
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
-        shell: C:\msys64\usr\bin\bash.exe --login -eo pipefail '{0}'
+        shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
+          source /etc/profile 2>/dev/null || true
           export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
           BUILD_ROOT="${RUNNER_TEMP:-/tmp}"
           PALACE_SRC="$BUILD_ROOT/palace-src"
