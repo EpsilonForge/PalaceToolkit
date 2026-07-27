@@ -139,15 +139,6 @@ jobs:
           }
           if ($LASTEXITCODE -ne 0) { throw "pacman failed after $maxRetries attempts" }
 
-      - name: Install Microsoft MPI runtime and SDK
-        shell: pwsh
-        run: |
-          $url = "https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe"
-          $exePath = "$env:TEMP\msmpisetup.exe"
-          Invoke-WebRequest -Uri $url -OutFile $exePath
-          Start-Process -FilePath $exePath -ArgumentList "-unattend -force" -Wait -NoNewWindow
-          echo "MSMPI installed"
-
       - name: Build Palace (cpu-default profile)
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
@@ -158,25 +149,19 @@ jobs:
           git -C /tmp/palace-src fetch --all --tags
           git -C /tmp/palace-src checkout "$env:PALACE_REF"
 
-          # Inject MPI settings before Palace's find_package(MPI) call
-          $mpiInjection = @"
-set(MPI_C_SKIP_GUESSING TRUE)
-set(MPI_C_INCLUDE_DIR "C:/msys64/mingw64/include")
-set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")
-set(MPI_CXX_SKIP_GUESSING TRUE)
-set(MPI_CXX_INCLUDE_DIR "C:/msys64/mingw64/include")
-set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")
-set(MPI_Fortran_SKIP_GUESSING TRUE)
-set(MPI_Fortran_INCLUDE_DIR "C:/msys64/mingw64/include")
-set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")
-"@
-          $mpiInjection | Out-File -FilePath /tmp/palace-src/cmake/MPIOverrides.cmake -Encoding utf8
-          $cmakeList = Get-Content /tmp/palace-src/CMakeLists.txt -Raw
-          $cmakeList = $cmakeList.Replace(
-            'find_package(MPI REQUIRED)',
-            'include(cmake/MPIOverrides.cmake)' + [Environment]::NewLine + 'find_package(MPI REQUIRED)'
-          )
-          Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $cmakeList -Encoding utf8
+          # Inject MPI overrides before Palace's find_package(MPI)
+          "set(MPI_C_SKIP_GUESSING TRUE)" | Out-File -FilePath /tmp/palace-src/cmake/MPIOverrides.cmake -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_C_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_SKIP_GUESSING TRUE)' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_SKIP_GUESSING TRUE)' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding utf8
+          Add-Content -Path /tmp/palace-src/cmake/MPIOverrides.cmake -Value 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding utf8
+          $content = Get-Content /tmp/palace-src/CMakeLists.txt -Raw
+          $content = $content.Replace('find_package(MPI REQUIRED)', 'include(cmake/MPIOverrides.cmake)' + [Environment]::NewLine + 'find_package(MPI REQUIRED)')
+          Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $content -Encoding utf8
 
           cmake -S /tmp/palace-src -B /tmp/palace-build `
             -G "MSYS Makefiles" `
