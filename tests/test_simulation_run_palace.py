@@ -48,7 +48,7 @@ def test_run_palace_uses_resolved_executable(monkeypatch, tmp_path: Path) -> Non
 
     def fake_run(cmd, **kwargs):
         calls.append({"cmd": cmd, "kwargs": kwargs})
-        return SimpleNamespace(returncode=0)
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
     monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
@@ -75,7 +75,7 @@ def test_run_palace_uses_launcher_np_flag_for_parallel(monkeypatch, tmp_path: Pa
 
     def fake_run(cmd, **kwargs):
         calls.append({"cmd": cmd, "kwargs": kwargs})
-        return SimpleNamespace(returncode=0)
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
     monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
@@ -177,7 +177,7 @@ def test_run_palace_suppresses_runtime_error_in_docs_build(monkeypatch, tmp_path
     fake_exec = tmp_path / "palace"
 
     def fake_run(cmd, **kwargs):
-        return SimpleNamespace(returncode=1)
+        return SimpleNamespace(returncode=1, stdout="", stderr="")
 
     monkeypatch.setenv("DOCS_BUILD", "1")
     monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
