@@ -142,51 +142,65 @@ jobs:
       - name: Build Palace (cpu-default profile)
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
-        shell: pwsh
+        shell: C:\msys64\usr\bin\bash.exe --login -e -o pipefail '{0}'
         run: |
-          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
-          $buildRoot = $env:RUNNER_TEMP
-          if (-not $buildRoot) { $buildRoot = "C:\msys64\tmp" }
-          $palaceSrc = "$buildRoot\palace-src"
-          $palaceBuild = "$buildRoot\palace-build"
-          $palaceInstall = "$buildRoot\palace-install"
-          git clone https://github.com/awslabs/palace.git $palaceSrc
-          git -C $palaceSrc fetch --all --tags
-          git -C $palaceSrc checkout "$env:PALACE_REF"
+          export PATH="/mingw64/bin:/usr/bin:$PATH"
+          BUILD_ROOT="${RUNNER_TEMP:-/tmp}"
+          PALACE_SRC="$BUILD_ROOT/palace-src"
+          PALACE_BUILD="$BUILD_ROOT/palace-build"
+          PALACE_INSTALL="$BUILD_ROOT/palace-install"
+          git clone https://github.com/awslabs/palace.git "$PALACE_SRC"
+          cd "$PALACE_SRC" && git fetch --all --tags && git checkout "$PALACE_REF"
 
-          # Create a stub FindMPI.cmake to bypass the full MPI detection test
-          ('set(MPI_C_FOUND TRUE)', 'set(MPI_CXX_FOUND TRUE)', 'set(MPI_Fortran_FOUND TRUE)', 'set(MPI_FOUND TRUE)', 'set(MPI_C_COMPILER "gcc")', 'set(MPI_CXX_COMPILER "g++")', 'set(MPI_Fortran_COMPILER "gfortran")', 'set(MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe")') -join "`n" | Set-Content -Path "$palaceSrc\cmake\FindMPI.cmake" -NoNewline -Encoding ascii
+          # Create stub FindMPI.cmake
+          cmake -E make_directory "$PALACE_SRC/cmake"
+          for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" 'MPI_C_COMPILER "gcc"' 'MPI_CXX_COMPILER "g++"' 'MPI_Fortran_COMPILER "gfortran"' 'MPI_C_INCLUDE_DIRS "/mingw64/include"' 'MPI_CXX_INCLUDE_DIRS "/mingw64/include"' 'MPI_Fortran_INCLUDE_DIRS "/mingw64/include"' 'MPI_C_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPI_CXX_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPI_Fortran_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPIEXEC_EXECUTABLE "/mingw64/bin/mpiexec.exe"'; do echo "set($var)" >> "$PALACE_SRC/cmake/FindMPI.cmake"; done
 
-          # Fix patch file line endings (Windows git checkout may use CRLF which corrupts patches)
-          Get-ChildItem -Path "$palaceSrc\extern\patch" -Recurse -Filter "*.diff" -Name | ForEach-Object {
-            $f = "$palaceSrc\extern\patch\$_"
-            $content = Get-Content $f -Raw
-            $content = $content -replace "`r`n", "`n"
-            Set-Content -Path $f -Value $content -NoNewline -Encoding ascii
-          }
+          # Fix patch file line endings
+          find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
 
-          cmake -S $palaceSrc -B $palaceBuild -G "MSYS Makefiles" "-DCMAKE_INSTALL_PREFIX=$palaceInstall" "-DCMAKE_BUILD_TYPE=Release" "-DCMAKE_C_COMPILER=gcc" "-DCMAKE_CXX_COMPILER=g++" "-DCMAKE_Fortran_COMPILER=gfortran" "-DBLA_VENDOR=OpenBLAS" "-DBLAS_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a" "-DLAPACK_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a" "-DOpenMP_C_FLAGS=-fopenmp" "-DOpenMP_C_LIB_NAMES=gomp" "-DOpenMP_gomp_LIBRARY=C:/msys64/mingw64/lib/libgomp.dll.a" "-DOpenMP_CXX_FLAGS=-fopenmp" "-DOpenMP_CXX_LIB_NAMES=gomp" "-DOpenMP_Fortran_FLAGS=-fopenmp" "-DOpenMP_Fortran_LIB_NAMES=gomp" "-DBUILD_SHARED_LIBS:BOOL=ON" "-DPALACE_WITH_64BIT_INT:BOOL=OFF" "-DPALACE_WITH_OPENMP:BOOL=ON" "-DPALACE_WITH_CUDA:BOOL=OFF" "-DPALACE_WITH_HIP:BOOL=OFF" "-DPALACE_WITH_SUPERLU:BOOL=ON" "-DPALACE_WITH_STRUMPACK:BOOL=ON" "-DPALACE_WITH_MUMPS:BOOL=ON" "-DPALACE_WITH_SLEPC:BOOL=OFF" "-DPALACE_WITH_ARPACK:BOOL=ON" "-DPALACE_WITH_LIBXSMM:BOOL=ON" "-DPALACE_WITH_MAGMA:BOOL=OFF" "-DPALACE_WITH_GSLIB:BOOL=ON" 2>&1
-          cmake --build $palaceBuild -j1 2>&1
-          # If build fails, patch downloaded sources and retry
-          if ($LASTEXITCODE -ne 0) {
-            # Patch HYPRE utilities header for MinGW (missing ffs)
-            $hypreFile = "$palaceBuild/extern/hypre/src/utilities/_hypre_utilities.h"
-            if (Test-Path $hypreFile) {
-              $content = Get-Content $hypreFile -Raw
-              $content = $content -replace '#define hypre_ffs\(x\) ffs\(x\)', '#define hypre_ffs(x) __builtin_ffs(x)'
-              Set-Content $hypreFile -Value $content -NoNewline -Encoding ascii
-              Write-Output "Patched HYPRE ffs"
-            }
-            # Patch libxsmm Makefile to remove -Werror (overflow error on unused rv64 code)
-            $xsmmMakefile = "$palaceBuild/extern/libxsmm/Makefile"
-            if (Test-Path $xsmmMakefile) {
-              $content = Get-Content $xsmmMakefile -Raw
-              $content = $content -replace '\-Werror', ''
-              Set-Content $xsmmMakefile -Value $content -NoNewline -Encoding ascii
-              Write-Output "Patched libxsmm -Werror"
-            }
-            Write-Output "Retrying build..."
-            cmake --build $palaceBuild -j1 2>&1
+          # Configure
+          cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
+            -G "MSYS Makefiles" \
+            -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_Fortran_COMPILER=gfortran \
+            -DBLA_VENDOR=OpenBLAS \
+            -DBLAS_LIBRARIES="/mingw64/lib/libopenblas.dll.a" \
+            -DLAPACK_LIBRARIES="/mingw64/lib/libopenblas.dll.a" \
+            -DOpenMP_C_FLAGS="-fopenmp" \
+            -DOpenMP_C_LIB_NAMES="gomp" \
+            -DOpenMP_gomp_LIBRARY="/mingw64/lib/libgomp.dll.a" \
+            -DOpenMP_CXX_FLAGS="-fopenmp" \
+            -DOpenMP_CXX_LIB_NAMES="gomp" \
+            -DOpenMP_Fortran_FLAGS="-fopenmp" \
+            -DOpenMP_Fortran_LIB_NAMES="gomp" \
+            -DBUILD_SHARED_LIBS=ON \
+            -DPALACE_WITH_64BIT_INT=OFF \
+            -DPALACE_WITH_OPENMP=ON \
+            -DPALACE_WITH_CUDA=OFF \
+            -DPALACE_WITH_HIP=OFF \
+            -DPALACE_WITH_SUPERLU=ON \
+            -DPALACE_WITH_STRUMPACK=ON \
+            -DPALACE_WITH_MUMPS=ON \
+            -DPALACE_WITH_SLEPC=OFF \
+            -DPALACE_WITH_ARPACK=ON \
+            -DPALACE_WITH_LIBXSMM=ON \
+            -DPALACE_WITH_MAGMA=OFF \
+            -DPALACE_WITH_GSLIB=ON 2>&1 || true
+
+          # Build with retry
+          make -C "$PALACE_BUILD" -j1 2>&1 || {
+            echo "First build failed, patching and retrying..."
+            # Patch HYPRE ffs
+            HYPRE_FILE="$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
+            [ -f "$HYPRE_FILE" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_FILE" && echo "Patched HYPRE ffs"
+            # Patch libxsmm -Werror
+            XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
+            [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
+            make -C "$PALACE_BUILD" -j1 2>&1
           }
 
       - name: Stage Palace payload into binary package
