@@ -165,21 +165,20 @@ jobs:
             Set-Content -Path $f -Value $content -NoNewline -Encoding ascii
           }
 
-          cmake -S $palaceSrc -B $palaceBuild -G "Ninja" "-DCMAKE_INSTALL_PREFIX=$palaceInstall" "-DCMAKE_BUILD_TYPE=Release" "-DCMAKE_C_COMPILER=gcc" "-DCMAKE_CXX_COMPILER=g++" "-DCMAKE_Fortran_COMPILER=gfortran" "-DBLA_VENDOR=OpenBLAS" "-DBLAS_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a" "-DLAPACK_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a" "-DOpenMP_C_FLAGS=-fopenmp" "-DOpenMP_C_LIB_NAMES=gomp" "-DOpenMP_gomp_LIBRARY=C:/msys64/mingw64/lib/libgomp.dll.a" "-DOpenMP_CXX_FLAGS=-fopenmp" "-DOpenMP_CXX_LIB_NAMES=gomp" "-DOpenMP_Fortran_FLAGS=-fopenmp" "-DOpenMP_Fortran_LIB_NAMES=gomp" "-DBUILD_SHARED_LIBS:BOOL=ON" "-DPALACE_WITH_64BIT_INT:BOOL=OFF" "-DPALACE_WITH_OPENMP:BOOL=ON" "-DPALACE_WITH_CUDA:BOOL=OFF" "-DPALACE_WITH_HIP:BOOL=OFF" "-DPALACE_WITH_SUPERLU:BOOL=ON" "-DPALACE_WITH_STRUMPACK:BOOL=ON" "-DPALACE_WITH_MUMPS:BOOL=ON" "-DPALACE_WITH_SLEPC:BOOL=OFF" "-DPALACE_WITH_ARPACK:BOOL=ON" "-DPALACE_WITH_LIBXSMM:BOOL=ON" "-DPALACE_WITH_MAGMA:BOOL=OFF" "-DPALACE_WITH_GSLIB:BOOL=ON" 2>&1
-          # Patch external projects that need make instead of ninja
-          $patched = @{ 'ExternalGSLIB.cmake' = 'INSTALL_COMMAND'; 'ExternalLIBXSMM.cmake' = 'BUILD_COMMAND' }
-          foreach ($cmakeFile in $patched.Keys) {
-            $fp = "$palaceSrc/cmake/$cmakeFile"
-            (Get-Content $fp -Raw) -replace '\${CMAKE_MAKE_PROGRAM}', 'mingw32-make' | Set-Content $fp -NoNewline -Encoding ascii
+          cmake -S $palaceSrc -B $palaceBuild -G "MSYS Makefiles" "-DCMAKE_INSTALL_PREFIX=$palaceInstall" "-DCMAKE_BUILD_TYPE=Release" "-DCMAKE_C_COMPILER=gcc" "-DCMAKE_CXX_COMPILER=g++" "-DCMAKE_Fortran_COMPILER=gfortran" "-DBLA_VENDOR=OpenBLAS" "-DBLAS_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a" "-DLAPACK_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a" "-DOpenMP_C_FLAGS=-fopenmp" "-DOpenMP_C_LIB_NAMES=gomp" "-DOpenMP_gomp_LIBRARY=C:/msys64/mingw64/lib/libgomp.dll.a" "-DOpenMP_CXX_FLAGS=-fopenmp" "-DOpenMP_CXX_LIB_NAMES=gomp" "-DOpenMP_Fortran_FLAGS=-fopenmp" "-DOpenMP_Fortran_LIB_NAMES=gomp" "-DBUILD_SHARED_LIBS:BOOL=ON" "-DPALACE_WITH_64BIT_INT:BOOL=OFF" "-DPALACE_WITH_OPENMP:BOOL=ON" "-DPALACE_WITH_CUDA:BOOL=OFF" "-DPALACE_WITH_HIP:BOOL=OFF" "-DPALACE_WITH_SUPERLU:BOOL=ON" "-DPALACE_WITH_STRUMPACK:BOOL=ON" "-DPALACE_WITH_MUMPS:BOOL=ON" "-DPALACE_WITH_SLEPC:BOOL=OFF" "-DPALACE_WITH_ARPACK:BOOL=ON" "-DPALACE_WITH_LIBXSMM:BOOL=ON" "-DPALACE_WITH_MAGMA:BOOL=OFF" "-DPALACE_WITH_GSLIB:BOOL=ON" 2>&1
+          cmake --build $palaceBuild -j1 2>&1
+          # If build fails, patch downloaded sources and retry
+          if ($LASTEXITCODE -ne 0) {
+            # Patch HYPRE utilities header for MinGW (missing ffs)
+            $hypreFile = "$palaceBuild/extern/hypre/src/utilities/_hypre_utilities.h"
+            if (Test-Path $hypreFile) {
+              $content = Get-Content $hypreFile -Raw
+              $content = $content -replace '#define hypre_ffs\(x\) ffs\(x\)', '#define hypre_ffs(x) __builtin_ffs(x)'
+              Set-Content $hypreFile -Value $content -NoNewline -Encoding ascii
+              Write-Output "Patched HYPRE ffs, retrying build..."
+              cmake --build $palaceBuild -j1 2>&1
+            }
           }
-          # Patch HYPRE utilities header for MinGW (missing ffs)
-          $hypreFile = "$palaceSrc/extern/hypre/src/utilities/_hypre_utilities.h"
-          if (Test-Path $hypreFile) {
-            $content = Get-Content $hypreFile -Raw
-            $content = $content -replace '#define hypre_ffs\(x\) ffs\(x\)', '#define hypre_ffs(x) __builtin_ffs(x)'
-            Set-Content $hypreFile -Value $content -NoNewline -Encoding ascii
-          }
-          cmake --build $palaceBuild 2>&1
 
       - name: Stage Palace payload into binary package
         shell: pwsh
