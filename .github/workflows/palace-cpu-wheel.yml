@@ -157,6 +157,14 @@ jobs:
           # Create a stub FindMPI.cmake to bypass the full MPI detection test
           ('set(MPI_C_FOUND TRUE)', 'set(MPI_CXX_FOUND TRUE)', 'set(MPI_Fortran_FOUND TRUE)', 'set(MPI_FOUND TRUE)', 'set(MPI_C_COMPILER "gcc")', 'set(MPI_CXX_COMPILER "g++")', 'set(MPI_Fortran_COMPILER "gfortran")', 'set(MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe")') -join "`n" | Set-Content -Path "$palaceSrc\cmake\FindMPI.cmake" -NoNewline -Encoding ascii
 
+          # Fix patch file line endings (Windows git checkout may use CRLF which corrupts patches)
+          Get-ChildItem -Path "$palaceSrc\extern\patch" -Recurse -Filter "*.diff" -Name | ForEach-Object {
+            $f = "$palaceSrc\extern\patch\$_"
+            $content = Get-Content $f -Raw
+            $content = $content -replace "`r`n", "`n"
+            Set-Content -Path $f -Value $content -NoNewline -Encoding ascii
+          }
+
           cmake -S $palaceSrc -B $palaceBuild `
             -G "Ninja" `
             -DCMAKE_INSTALL_PREFIX=$palaceInstall `
@@ -188,7 +196,7 @@ jobs:
             -DPALACE_WITH_MAGMA:BOOL=OFF `
             -DPALACE_WITH_GSLIB:BOOL=ON
 
-          cmake --build $palaceBuild -j1 2>&1
+          cmake --build $palaceBuild 2>&1
 
       - name: Stage Palace payload into binary package
         shell: pwsh
