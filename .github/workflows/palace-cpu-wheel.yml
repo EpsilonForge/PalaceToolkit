@@ -124,6 +124,7 @@ jobs:
             "mingw-w64-x86_64-cmake",
             "mingw-w64-x86_64-make",
             "mingw-w64-x86_64-pkg-config",
+            "mingw-w64-x86_64-msmpi",
             "mingw-w64-x86_64-openblas",
             "mingw-w64-x86_64-hdf5",
             "mingw-w64-x86_64-metis"
@@ -137,21 +138,6 @@ jobs:
             Start-Sleep -Seconds 30
           }
           if ($LASTEXITCODE -ne 0) { throw "pacman failed after $maxRetries attempts" }
-
-      - name: Install MPI
-        shell: pwsh
-        run: |
-          $mpiPackages = @(
-            "mingw-w64-x86_64-openmpi",
-            "mingw-w64-x86_64-msmpi",
-            "mingw-w64-x86_64-mpich"
-          )
-          foreach ($pkg in $mpiPackages) {
-            $output = & "C:\msys64\usr\bin\pacman.exe" -S --noconfirm $pkg 2>&1
-            $output | Out-Host
-            if ($LASTEXITCODE -eq 0) { Write-Output "Installed $pkg"; break }
-          }
-          if ($LASTEXITCODE -ne 0) { throw "No MPI package could be installed" }
 
       - name: Build Palace (cpu-default profile)
         env:
@@ -170,6 +156,15 @@ jobs:
             -DCMAKE_C_COMPILER=gcc `
             -DCMAKE_CXX_COMPILER=g++ `
             -DCMAKE_Fortran_COMPILER=gfortran `
+            -DMPI_C_SKIP_GUESSING=TRUE `
+            -DMPI_C_INCLUDE_DIR=C:/msys64/mingw64/include `
+            -DMPI_C_LIBRARIES=C:/msys64/mingw64/lib/libmsmpi.dll.a `
+            -DMPI_CXX_SKIP_GUESSING=TRUE `
+            -DMPI_CXX_INCLUDE_DIR=C:/msys64/mingw64/include `
+            -DMPI_CXX_LIBRARIES=C:/msys64/mingw64/lib/libmsmpi.dll.a `
+            -DMPI_Fortran_SKIP_GUESSING=TRUE `
+            -DMPI_Fortran_INCLUDE_DIR=C:/msys64/mingw64/include `
+            -DMPI_Fortran_LIBRARIES=C:/msys64/mingw64/lib/libmsmpi.dll.a `
             -DBUILD_SHARED_LIBS:BOOL=ON `
             -DPALACE_WITH_64BIT_INT:BOOL=OFF `
             -DPALACE_WITH_OPENMP:BOOL=ON `
