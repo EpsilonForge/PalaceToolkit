@@ -67,6 +67,7 @@ jobs:
           palace-toolkit-install-binary
 
       - name: Run static doc-import checks and unit tests
+        shell: bash
         run: |
           python -m pytest tests/test_doc_imports.py \
             tests/test_postpro.py \
@@ -74,6 +75,7 @@ jobs:
 
       - name: Run simulation + VTU tests (Linux/macOS only)
         if: runner.os != 'Windows'
+        shell: bash
         run: |
           python -m pytest tests/test_simulation_run_palace.py \
             tests/test_postpro_vtu.py -v
