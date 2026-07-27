@@ -101,7 +101,8 @@ jobs:
         shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
           export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
-          BUILD_ROOT="${RUNNER_TEMP:-/tmp}"
+          BUILD_ROOT="${RUNNER_TEMP//\\//}"
+          BUILD_ROOT="${BUILD_ROOT:-/tmp}"
           PALACE_SRC="$BUILD_ROOT/palace-src"
           PALACE_BUILD="$BUILD_ROOT/palace-build"
           PALACE_INSTALL="$BUILD_ROOT/palace-install"
