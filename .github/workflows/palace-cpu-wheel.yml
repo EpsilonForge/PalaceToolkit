@@ -7,6 +7,10 @@ on:
         description: "Palace git ref (branch/tag/sha)"
         required: false
         default: "main"
+  pull_request:
+    paths:
+      - "packages/palacetoolkit-palace-cpu/**"
+      - ".github/workflows/palace-cpu-wheel.yml"
   push:
     tags:
       - "palace-cpu-v*"
@@ -87,6 +91,82 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: palacetoolkit-palace-cpu-linux-x86_64
+          path: packages/palacetoolkit-palace-cpu/dist/*.whl
+
+      - name: Attach wheel to GitHub release
+        if: startsWith(github.ref, 'refs/tags/palace-cpu-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packages/palacetoolkit-palace-cpu/dist/*.whl
+          generate_release_notes: true
+
+  # ------------------------------------------------------------------
+  # 2. Build Windows x86_64 wheel
+  # ------------------------------------------------------------------
+  build-windows-x86_64:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install vcpkg dependencies
+        shell: pwsh
+        run: |
+          vcpkg install openblas hdf5 metis --triplet x64-windows
+
+      - name: Build Palace (cpu-default profile)
+        env:
+          PALACE_REF: ${{ inputs.palace_ref || 'main' }}
+        shell: pwsh
+        run: |
+          git clone https://github.com/awslabs/palace.git /tmp/palace-src
+          git -C /tmp/palace-src fetch --all --tags
+          git -C /tmp/palace-src checkout "$env:PALACE_REF"
+
+          cmake -S /tmp/palace-src -B /tmp/palace-build `
+            -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_SHARED_LIBS:BOOL=ON `
+            -DPALACE_WITH_64BIT_INT:BOOL=OFF `
+            -DPALACE_WITH_OPENMP:BOOL=ON `
+            -DPALACE_WITH_CUDA:BOOL=OFF `
+            -DPALACE_WITH_HIP:BOOL=OFF `
+            -DPALACE_WITH_SUPERLU:BOOL=ON `
+            -DPALACE_WITH_STRUMPACK:BOOL=ON `
+            -DPALACE_WITH_MUMPS:BOOL=ON `
+            -DPALACE_WITH_SLEPC:BOOL=OFF `
+            -DPALACE_WITH_ARPACK:BOOL=ON `
+            -DPALACE_WITH_LIBXSMM:BOOL=ON `
+            -DPALACE_WITH_MAGMA:BOOL=OFF `
+            -DPALACE_WITH_GSLIB:BOOL=ON
+
+          cmake --build /tmp/palace-build --parallel --config Release
+
+      - name: Stage Palace payload into binary package
+        shell: pwsh
+        run: |
+          ls /tmp/palace-install/bin
+          .\packages\palacetoolkit-palace-cpu\tools\stage_palace_binary.ps1 `
+            -BinDir /tmp/palace-install/bin `
+            -LibDirs /tmp/palace-install/lib, /tmp/palace-install/lib64
+
+      - name: Build wheel
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip build wheel
+          python -m build --wheel packages/palacetoolkit-palace-cpu
+          ls packages/palacetoolkit-palace-cpu/dist
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: palacetoolkit-palace-cpu-win-amd64
           path: packages/palacetoolkit-palace-cpu/dist/*.whl
 
       - name: Attach wheel to GitHub release

@@ -20,8 +20,22 @@ _TAG_ENV = "PALACETOOLKIT_PALACE_CPU_TAG"
 _CACHE_ENV = "PALACETOOLKIT_RUNTIME_DIR"
 
 
-def _is_linux_x86_64() -> bool:
-    return platform.system() == "Linux" and platform.machine() == "x86_64"
+def _is_supported_platform() -> bool:
+    sys = platform.system()
+    mach = platform.machine()
+    return (sys == "Linux" and mach == "x86_64") or (sys == "Windows" and mach in ("AMD64", "x86_64"))
+
+
+def _platform_wheel_tag() -> str:
+    if platform.system() == "Windows":
+        return "win_amd64"
+    return "linux_x86_64"
+
+
+def _palace_binary_name() -> str:
+    if platform.system() == "Windows":
+        return "palace.exe"
+    return "palace"
 
 
 def _runtime_cache_dir() -> Path:
@@ -39,7 +53,7 @@ def _binary_wheel_url(tag: str) -> str:
     return (
         "https://github.com/EpsilonForge/PalaceToolkit/releases/download/"
         f"palace-cpu-v{tag}/"
-        f"palacetoolkit_palace_cpu-{tag}-py3-none-linux_x86_64.whl"
+        f"palacetoolkit_palace_cpu-{tag}-py3-none-{_platform_wheel_tag()}.whl"
     )
 
 
@@ -55,7 +69,7 @@ def _binary_wheel_url_from_release(tag: str, timeout: float) -> str | None:
     assets = payload.get("assets", [])
     for asset in assets:
         name = str(asset.get("name", ""))
-        if name.endswith("linux_x86_64.whl") and "palacetoolkit_palace_cpu-" in name:
+        if ("linux_x86_64.whl" in name or "win_amd64.whl" in name) and "palacetoolkit_palace_cpu-" in name:
             url = str(asset.get("browser_download_url", ""))
             if url:
                 return url
@@ -78,12 +92,14 @@ def install_palace_runtime(force: bool = False, timeout: float = 180.0) -> Path:
     Returns:
         Path to the cached ``palace`` launcher executable.
     """
-    if not _is_linux_x86_64():
-        raise RuntimeError("Prebuilt runtime download is only supported on Linux x86_64")
+    if not _is_supported_platform():
+        raise RuntimeError(
+            "Prebuilt runtime download is only supported on Linux x86_64 and Windows x86_64"
+        )
 
     tag = _binary_tag()
     prefix = _cached_runtime_prefix(tag)
-    bin_palace = prefix / "bin" / "palace"
+    bin_palace = prefix / "bin" / _palace_binary_name()
     lib_dir = prefix / "lib"
     if not force and bin_palace.is_file() and lib_dir.is_dir():
         return bin_palace
@@ -91,7 +107,7 @@ def install_palace_runtime(force: bool = False, timeout: float = 180.0) -> Path:
     prefix.mkdir(parents=True, exist_ok=True)
     downloads = _runtime_cache_dir() / "downloads"
     downloads.mkdir(parents=True, exist_ok=True)
-    wheel_name = f"palacetoolkit_palace_cpu-{tag}-py3-none-linux_x86_64.whl"
+    wheel_name = f"palacetoolkit_palace_cpu-{tag}-py3-none-{_platform_wheel_tag()}.whl"
     wheel_path = downloads / wheel_name
 
     if force or not wheel_path.is_file():
@@ -124,16 +140,18 @@ def install_palace_runtime(force: bool = False, timeout: float = 180.0) -> Path:
         shutil.copytree(lib_src, prefix / "lib")
 
     if not bin_palace.is_file():
-        raise RuntimeError("Cached runtime install did not produce bin/palace")
+        raise RuntimeError(f"Cached runtime install did not produce bin/{_palace_binary_name()}")
     _set_executable(bin_palace)
     bin_native = prefix / "bin" / "palace-x86_64.bin"
+    if platform.system() == "Windows":
+        bin_native = prefix / "bin" / "palace-x86_64.exe"
     if bin_native.is_file():
         _set_executable(bin_native)
     return bin_palace
 
 
 def _cached_binary() -> Path | None:
-    candidate = _cached_runtime_prefix() / "bin" / "palace"
+    candidate = _cached_runtime_prefix() / "bin" / _palace_binary_name()
     if candidate.is_file():
         return candidate
     return None
@@ -149,9 +167,9 @@ def _cached_library_dir() -> Path | None:
 def _binary_is_runnable(binary: Path, lib_dir: Path | None, timeout: float = 15.0) -> bool:
     if not binary.is_file():
         return False
-    os_access = os.access(binary, os.X_OK)
-    if not os_access:
-        return False
+    if platform.system() != "Windows":
+        if not os.access(binary, os.X_OK):
+            return False
     return True
 
 
@@ -165,8 +183,8 @@ def resolve_palace_binary() -> Path | None:
 
     Resolution order:
     1. PALACE_BIN environment variable
-    2. Prebuilt CPU package data (palacetoolkit_palace_cpu/bin/palace)
-    3. Cached runtime downloaded from GitHub Releases (Linux x86_64)
+    2. Prebuilt CPU package data (palacetoolkit_palace_cpu/bin/palace[.exe])
+    3. Cached runtime downloaded from GitHub Releases (Linux x86_64 / Windows x86_64)
     """
     env_bin = os.environ.get("PALACE_BIN", "").strip()
     if env_bin:
@@ -176,7 +194,7 @@ def resolve_palace_binary() -> Path | None:
 
     with suppress(ModuleNotFoundError, FileNotFoundError):
         with resources.path("palacetoolkit_palace_cpu", "__init__.py") as init_py:
-            candidate = init_py.parent / "bin" / "palace"
+            candidate = init_py.parent / "bin" / _palace_binary_name()
             lib_dir = init_py.parent / "lib"
             if candidate.is_file() and _binary_is_runnable(candidate, lib_dir):
                 return candidate
@@ -185,7 +203,7 @@ def resolve_palace_binary() -> Path | None:
     if cached is not None and _binary_is_runnable(cached, _cached_library_dir()):
         return cached
 
-    if _is_linux_x86_64() and _auto_download_enabled():
+    if _is_supported_platform() and _auto_download_enabled():
         with suppress(Exception):
             downloaded = install_palace_runtime(force=False)
             if _binary_is_runnable(downloaded, _cached_library_dir()):

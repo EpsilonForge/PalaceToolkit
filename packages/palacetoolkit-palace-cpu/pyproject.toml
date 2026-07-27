@@ -7,6 +7,7 @@ license = {text = "BSD-3-Clause"}
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: POSIX :: Linux",
+  "Operating System :: Microsoft :: Windows",
 ]
 
 [tool.setuptools]
@@ -18,7 +19,7 @@ where = ["src"]
 include = ["palacetoolkit_palace_cpu", "palacetoolkit_palace_cpu.*"]
 
 [tool.setuptools.package-data]
-palacetoolkit_palace_cpu = ["bin/*", "lib/*", "lib/**/*.so", "lib/**/*.so.*", "lib/**/*.dylib"]
+palacetoolkit_palace_cpu = ["bin/*", "lib/*", "lib/**/*.so", "lib/**/*.so.*", "lib/**/*.dylib", "lib/**/*.dll"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]

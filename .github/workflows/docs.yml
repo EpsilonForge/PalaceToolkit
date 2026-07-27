@@ -73,8 +73,7 @@ jobs:
             tests/test_postpro.py \
             --ignore=tests/test_docs_notebooks.py -v
 
-      - name: Run simulation + VTU tests (Linux/macOS only)
-        if: runner.os != 'Windows'
+      - name: Run simulation + VTU tests
         shell: bash
         run: |
           python -m pytest tests/test_simulation_run_palace.py \
