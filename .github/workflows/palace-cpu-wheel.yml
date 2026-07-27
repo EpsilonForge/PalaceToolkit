@@ -164,6 +164,7 @@ jobs:
             -DCMAKE_C_COMPILER=gcc `
             -DCMAKE_CXX_COMPILER=g++ `
             -DCMAKE_Fortran_COMPILER=gfortran `
+            -DCMAKE_MAKE_PROGRAM="C:/msys64/mingw64/bin/gmake.exe" `
             -DBLA_VENDOR=OpenBLAS `
             -DBLAS_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" `
             -DLAPACK_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" `
@@ -189,10 +190,6 @@ jobs:
             -DPALACE_WITH_GSLIB:BOOL=ON
 
           cmake --build $palaceBuild -j1 2>&1
-          if ($LASTEXITCODE -ne 0) {
-            Write-Output "First build attempt failed, retrying..."
-            cmake --build $palaceBuild -j1 2>&1
-          }
 
       - name: Stage Palace payload into binary package
         shell: pwsh
