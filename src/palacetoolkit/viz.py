@@ -41,6 +41,9 @@ def _ensure_pyvista():
     """Import PyVista with off-screen rendering (headless-safe)."""
     import warnings
 
+    os.environ.pop("DISPLAY", None)
+    os.environ.setdefault("VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN", "1")
+
     import pyvista as pv
 
     pv.OFF_SCREEN = True
