@@ -124,7 +124,7 @@ jobs:
             "mingw-w64-x86_64-cmake",
             "mingw-w64-x86_64-make",
             "mingw-w64-x86_64-pkg-config",
-            "mingw-w64-x86_64-mpich",
+            "mingw-w64-x86_64-msmpi",
             "mingw-w64-x86_64-openblas",
             "mingw-w64-x86_64-hdf5",
             "mingw-w64-x86_64-metis"
@@ -138,6 +138,15 @@ jobs:
             Start-Sleep -Seconds 30
           }
           if ($LASTEXITCODE -ne 0) { throw "pacman failed after $maxRetries attempts" }
+
+      - name: Install Microsoft MPI runtime and SDK
+        shell: pwsh
+        run: |
+          $url = "https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe"
+          $exePath = "$env:TEMP\msmpisetup.exe"
+          Invoke-WebRequest -Uri $url -OutFile $exePath
+          Start-Process -FilePath $exePath -ArgumentList "-unattend -force" -Wait -NoNewWindow
+          echo "MSMPI installed"
 
       - name: Build Palace (cpu-default profile)
         env:
