@@ -98,7 +98,7 @@ jobs:
         if: matrix.target == 'windows'
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
-        shell: C:\msys64\usr\bin\bash.exe --login -eo pipefail '{0}'
+        shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
           export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
           BUILD_ROOT="${RUNNER_TEMP:-/tmp}"
@@ -122,10 +122,6 @@ jobs:
 
           # Patch gslib Makefile to use .dll on Windows (it hardcodes .so)
           sed -i 's/\.so/.dll/g' "$PALACE_SRC/extern/gslib/Makefile" 2>/dev/null || true
-
-          # Patch HYPRE ExternalProject to fix ffs + malloc.h on MinGW
-          HYPRE_PATCH='sed -i "s/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/" <SOURCE_DIR>/src/utilities/_hypre_utilities.h && sed -i "/#include <malloc.h>/d" <SOURCE_DIR>/src/utilities/_hypre_utilities.h'
-          sed -i "s|^  GIT_TAG.*|&\n  PATCH_COMMAND     ${HYPRE_PATCH}|" "$PALACE_SRC/cmake/ExternalHYPRE.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
