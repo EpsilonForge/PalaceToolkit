@@ -39,14 +39,33 @@ _IFRAME_STYLE = (
 
 def _ensure_pyvista():
     """Import PyVista with off-screen rendering (headless-safe)."""
+    import os
     import warnings
 
-    os.environ.pop("DISPLAY", None)
     os.environ.setdefault("VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN", "1")
+    os.environ.pop("DISPLAY", None)
 
-    import pyvista as pv
+    # Suppress VTK C-level stderr warnings by redirecting fd 2 during import
+    _stderr_fd = os.dup(2)
+    _devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    os.dup2(_devnull_fd, 2)
+    os.close(_devnull_fd)
+    try:
+        import pyvista as pv
+    finally:
+        os.dup2(_stderr_fd, 2)
+        os.close(_stderr_fd)
 
     pv.OFF_SCREEN = True
+
+    # Permanently silence VTK stderr output (warnings from plotter creation etc.)
+    pv.global_theme.notebook = None
+    try:
+        from vtkmodules.vtkCommonCore import vtkLogger
+        vtkLogger.SetStderrVerbosity(vtkLogger.VERBOSITY_OFF)
+    except Exception:
+        pass
+
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -809,19 +828,28 @@ def view_mesh(
     plotter.show_axes()
     if in_kernel:
         try:
-            import html as html_lib
+            import hashlib
+            from pathlib import Path
 
-            from IPython.display import HTML, Image, display
+            from IPython.display import IFrame, Image, display
 
             html_obj = plotter.export_html(None)
             html_text = html_obj.getvalue() if hasattr(html_obj, "getvalue") else str(html_obj)
-            escaped = html_lib.escape(html_text, quote=True)
-            iframe = (
-                f'<iframe srcdoc="{escaped}" loading="lazy" '
-                f'style="{_IFRAME_STYLE}"></iframe>'
-            )
-            # Wrap iframe to avoid IPython's HTML(...)-with-iframe warning.
-            display(HTML(f"<div>{iframe}</div>"))
+
+            # Write to a file so the iframe can use src= instead of oversized srcdoc
+            viewer_hash = hashlib.sha256(html_text.encode()).hexdigest()[:12]
+            img_dir = Path("img")
+            img_dir.mkdir(parents=True, exist_ok=True)
+            htm_path = img_dir / f"viewer_{viewer_hash}.htm"
+            htm_path.write_text(html_text, encoding="utf-8")
+
+            # Determine the src path depending on context
+            if os.environ.get("DOCS_BUILD") or os.environ.get("PAPERMILL_OUTPUT_PATH"):
+                src = f"../_static/viewer_{viewer_hash}.htm"
+            else:
+                src = f"./img/viewer_{viewer_hash}.htm"
+
+            display(IFrame(src=src, width="100%", height=500))
         except Exception as exc:
             print(
                 "Warning: interactive PyVista HTML export failed; "
