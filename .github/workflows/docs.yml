@@ -30,13 +30,13 @@ env:
 
 jobs:
   # ------------------------------------------------------------------
-  # 1. Fast static checks and unit tests across all supported OS
+  # 1. Lint & unit tests across all supported OS
   # ------------------------------------------------------------------
   lint-and-unit-tests:
     if: github.event_name == 'pull_request'
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-14]
+        os: [ubuntu-24.04, macos-14, windows-2022]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
@@ -71,7 +71,7 @@ jobs:
           python -m pytest tests/test_doc_imports.py \
             tests/test_postpro.py -v
 
-      - name: Run simulation + VTU tests (Linux/macOS only, needs mfem)
+      - name: Run simulation + VTU tests (Linux/macOS only)
         if: runner.os != 'Windows'
         run: |
           python -m pytest tests/test_simulation_run_palace.py \
@@ -79,7 +79,6 @@ jobs:
 
   # ------------------------------------------------------------------
   # 2. Build docs: execute notebooks → build Sphinx → save artifact
-  #    Runs on both PR and push to main.
   # ------------------------------------------------------------------
   build-docs:
     if: github.event_name == 'pull_request' || github.ref_name == 'main'
@@ -117,14 +116,13 @@ jobs:
           set -euo pipefail
           python -m ipykernel install --user --name palacetoolkit --display-name "PalaceToolkit"
 
-      - name: Execute all example notebooks (20 min max per notebook)
+      - name: Execute all example notebooks
         run: |
           set -uo pipefail
           export DOCS_BUILD=1
           export MPLBACKEND=Agg
           export PYVISTA_OFF_SCREEN=true
           export DISPLAY=:99
-          # Start virtual framebuffer for headless rendering
           Xvfb :99 -screen 0 1024x768x24 &
           sleep 1
           failed=0
@@ -134,8 +132,7 @@ jobs:
             echo "--- Running: $name ---"
             python -m papermill "$nb" "$nb" -k palacetoolkit \
               --cwd docs/examples --no-progress-bar \
-              --request-save-on-cell-execute \
-              --execution-timeout 1200 || {
+              --request-save-on-cell-execute || {
               rc=$?
               echo "--- WARNING: $name failed (exit code $rc), continuing ---"
               failed=$((failed + 1))
