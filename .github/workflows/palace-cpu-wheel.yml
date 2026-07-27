@@ -103,8 +103,8 @@ jobs:
   # ------------------------------------------------------------------
   # 2. Build Windows x86_64 wheel
   # ------------------------------------------------------------------
-  build-windows-x86_64:
-    runs-on: windows-2022
+build-windows-x86_64:
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -115,80 +115,45 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install MinGW toolchain and dependencies (MSYS2)
-        shell: pwsh
+      - name: Install cross-compilation toolchain
         run: |
-          $packages = @(
-            "mingw-w64-x86_64-gcc",
-            "mingw-w64-x86_64-gcc-fortran",
-            "mingw-w64-x86_64-cmake",
-            "mingw-w64-x86_64-make",
-            "mingw-w64-x86_64-pkg-config",
-            "mingw-w64-x86_64-msmpi",
-            "mingw-w64-x86_64-openblas",
-            "mingw-w64-x86_64-hdf5",
-            "mingw-w64-x86_64-metis"
-          )
-          $maxRetries = 5
-          for ($i = 0; $i -lt $maxRetries; $i++) {
-            $output = & "C:\msys64\usr\bin\pacman.exe" -S --noconfirm @packages 2>&1
-            $output | Out-Host
-            if ($LASTEXITCODE -eq 0) { Write-Output "pacman succeeded"; break }
-            Write-Output "pacman attempt $($i+1) failed, retrying in 30s..."
-            Start-Sleep -Seconds 30
-          }
-          if ($LASTEXITCODE -ne 0) { throw "pacman failed after $maxRetries attempts" }
+          set -euo pipefail
+          sudo apt update
+          sudo apt install -y \
+            cmake g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 gfortran-mingw-w64-x86-64 \
+            pkg-config-mingw-w64-x86-64
 
-      - name: Build Palace (cpu-default profile)
+      - name: Build Palace (cross-compile for Windows)
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
-        shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
-          export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
-          BUILD_ROOT="${RUNNER_TEMP:-/tmp}"
-          PALACE_SRC="$BUILD_ROOT/palace-src"
-          PALACE_BUILD="$BUILD_ROOT/palace-build"
-          PALACE_INSTALL="$BUILD_ROOT/palace-install"
-          git clone https://github.com/awslabs/palace.git "$PALACE_SRC"
-          cd "$PALACE_SRC" && git fetch --all --tags && git checkout "$PALACE_REF"
+          set -euo pipefail
+          export TOOLCHAIN_PREFIX=x86_64-w64-mingw32
+          export CC=${TOOLCHAIN_PREFIX}-gcc
+          export CXX=${TOOLCHAIN_PREFIX}-g++
+          export FC=${TOOLCHAIN_PREFIX}-gfortran
+          export WINDRES=${TOOLCHAIN_PREFIX}-windres
+          export PKG_CONFIG=${TOOLCHAIN_PREFIX}-pkg-config
 
-          # Create stub FindMPI.cmake
-          cmake -E make_directory "$PALACE_SRC/cmake"
-          for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" 'MPI_C_COMPILER "gcc"' 'MPI_CXX_COMPILER "g++"' 'MPI_Fortran_COMPILER "gfortran"' 'MPI_C_INCLUDE_DIRS "/mingw64/include"' 'MPI_CXX_INCLUDE_DIRS "/mingw64/include"' 'MPI_Fortran_INCLUDE_DIRS "/mingw64/include"' 'MPI_C_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPI_CXX_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPI_Fortran_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPIEXEC_EXECUTABLE "/mingw64/bin/mpiexec.exe"'; do echo "set($var)" >> "$PALACE_SRC/cmake/FindMPI.cmake"; done
+          git clone https://github.com/awslabs/palace.git /tmp/palace-src
+          git -C /tmp/palace-src fetch --all --tags
+          git -C /tmp/palace-src checkout "$PALACE_REF"
+
+          # Create a stub FindMPI.cmake (MSMPI not available for cross-compile)
+          mkdir -p /tmp/palace-src/cmake
+          for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" "MPI_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc" "MPI_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++" "MPI_Fortran_COMPILER ${TOOLCHAIN_PREFIX}-gfortran" "MPI_C_LIBRARIES" "MPI_CXX_LIBRARIES" "MPI_Fortran_LIBRARIES" "MPIEXEC_EXECUTABLE"; do echo "set($var)" >> /tmp/palace-src/cmake/FindMPI.cmake; done
 
           # Fix patch file line endings
-          find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
+          find /tmp/palace-src/extern/patch -name "*.diff" -exec sed -i 's/\r$//' {} \;
 
-          # Pre-patch HYPRE ffs (known MinGW issue)
-          HYPRE_FILE_SRC="$PALACE_SRC/extern/hypre/src/utilities/_hypre_utilities.h"
-          [ -f "$HYPRE_FILE_SRC" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_FILE_SRC" && echo "Pre-patched HYPRE ffs" || true
-
-          # Patch external projects that need mingw32-make (Ninja doesn't work with raw Makefiles)
-          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
-          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
-          # Add WERROR=0 to libxsmm build options to suppress -Werror overflow on rv64
-          sed -i '/STATIC=0/s/$/ WERROR=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
-          # Patch HYPRE ExternalProject to fix ffs on MinGW
-          sed -i 's|GIT_TAG           ${EXTERN_HYPRE_GIT_TAG}|GIT_TAG           ${EXTERN_HYPRE_GIT_TAG}\n  PATCH_COMMAND     sed -i "s/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/" <SOURCE_DIR>/src/utilities/_hypre_utilities.h|' "$PALACE_SRC/cmake/ExternalHYPRE.cmake"
-
-          # Configure
-          cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "Ninja" \
-            -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
+          cmake -S /tmp/palace-src -B /tmp/palace-build \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
+            -DCMAKE_C_COMPILER="${CC}" \
+            -DCMAKE_CXX_COMPILER="${CXX}" \
+            -DCMAKE_Fortran_COMPILER="${FC}" \
+            -DCMAKE_INSTALL_PREFIX=/tmp/palace-install \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=gcc \
-            -DCMAKE_CXX_COMPILER=g++ \
-            -DCMAKE_Fortran_COMPILER=gfortran \
-            -DBLA_VENDOR=OpenBLAS \
-            -DBLAS_LIBRARIES="/mingw64/lib/libopenblas.dll.a" \
-            -DLAPACK_LIBRARIES="/mingw64/lib/libopenblas.dll.a" \
-            -DOpenMP_C_FLAGS="-fopenmp" \
-            -DOpenMP_C_LIB_NAMES="gomp" \
-            -DOpenMP_gomp_LIBRARY="/mingw64/lib/libgomp.dll.a" \
-            -DOpenMP_CXX_FLAGS="-fopenmp" \
-            -DOpenMP_CXX_LIB_NAMES="gomp" \
-            -DOpenMP_Fortran_FLAGS="-fopenmp" \
-            -DOpenMP_Fortran_LIB_NAMES="gomp" \
             -DBUILD_SHARED_LIBS=ON \
             -DPALACE_WITH_64BIT_INT=OFF \
             -DPALACE_WITH_OPENMP=ON \
@@ -201,38 +166,25 @@ jobs:
             -DPALACE_WITH_ARPACK=ON \
             -DPALACE_WITH_LIBXSMM=ON \
             -DPALACE_WITH_MAGMA=OFF \
-            -DPALACE_WITH_GSLIB=ON 2>&1
+            -DPALACE_WITH_GSLIB=ON
 
-          # Build with retry
-          cmake --build "$PALACE_BUILD" 2>&1; first_rc=$?
-          if [ $first_rc -ne 0 ]; then
-            echo "First build failed (rc=$first_rc), patching and retrying..."
-            # Patch HYPRE ffs
-            HYPRE_FILE="$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
-            [ -f "$HYPRE_FILE" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_FILE" && echo "Patched HYPRE ffs"
-            # Patch libxsmm -Werror
-            XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
-            [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
-            cmake --build "$PALACE_BUILD" 2>&1
-          fi
+          cmake --build /tmp/palace-build --parallel "$(nproc)" 2>&1
 
       - name: Stage Palace payload into binary package
-        shell: pwsh
         run: |
-          $buildRoot = $env:RUNNER_TEMP
-          if (-not $buildRoot) { $buildRoot = "C:\msys64\tmp" }
-          $palaceInstall = "$buildRoot\palace-install"
-          ls $palaceInstall/bin
-          .\packages\palacetoolkit-palace-cpu\tools\stage_palace_binary.ps1 `
-            -BinDir "$palaceInstall\bin" `
-            -LibDirs "$palaceInstall\lib", "$palaceInstall\lib64"
+          set -euo pipefail
+          ls -lah /tmp/palace-install/bin
+          ./packages/palacetoolkit-palace-cpu/tools/stage_palace_binary.sh \
+            /tmp/palace-install/bin \
+            /tmp/palace-install/lib \
+            /tmp/palace-install/lib64
 
       - name: Build wheel
-        shell: pwsh
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip build wheel
           python -m build --wheel packages/palacetoolkit-palace-cpu
-          ls packages/palacetoolkit-palace-cpu/dist
+          ls -lah packages/palacetoolkit-palace-cpu/dist
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
