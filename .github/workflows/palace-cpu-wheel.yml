@@ -19,7 +19,11 @@ permissions:
   contents: write
 
 jobs:
-  build-linux-x86_64:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [linux-x86_64, windows-x86_64]
     runs-on: ubuntu-24.04
 
     steps:
@@ -31,14 +35,25 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Linux)
+        if: matrix.target == 'linux-x86_64'
         run: |
           set -euo pipefail
           sudo apt update
           sudo apt install -y \
             cmake gfortran openmpi-bin libopenmpi-dev libopenblas-dev pkg-config git make
 
-      - name: Build Palace (cpu-default profile)
+      - name: Install cross-compilation toolchain (Windows)
+        if: matrix.target == 'windows-x86_64'
+        run: |
+          set -euo pipefail
+          sudo apt update
+          sudo apt install -y \
+            cmake g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 gfortran-mingw-w64-x86-64 \
+            pkg-config-mingw-w64-x86-64
+
+      - name: Build Palace (Linux)
+        if: matrix.target == 'linux-x86_64'
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         run: |
@@ -71,59 +86,8 @@ jobs:
 
           cmake --build /tmp/palace-build --parallel "$(nproc)"
 
-      - name: Stage Palace payload into binary package
-        run: |
-          set -euo pipefail
-          ls -lah /tmp/palace-install/bin
-          ./packages/palacetoolkit-palace-cpu/tools/stage_palace_binary.sh \
-            /tmp/palace-install/bin \
-            /tmp/palace-install/lib \
-            /tmp/palace-install/lib64
-
-      - name: Build wheel
-        run: |
-          set -euo pipefail
-          python -m pip install --upgrade pip build wheel
-          python -m build --wheel packages/palacetoolkit-palace-cpu
-          ls -lah packages/palacetoolkit-palace-cpu/dist
-
-      - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: palacetoolkit-palace-cpu-linux-x86_64
-          path: packages/palacetoolkit-palace-cpu/dist/*.whl
-
-      - name: Attach wheel to GitHub release
-        if: startsWith(github.ref, 'refs/tags/palace-cpu-v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: packages/palacetoolkit-palace-cpu/dist/*.whl
-          generate_release_notes: true
-
-  # ------------------------------------------------------------------
-  # 2. Build Windows x86_64 wheel
-  # ------------------------------------------------------------------
-build-windows-x86_64:
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install cross-compilation toolchain
-        run: |
-          set -euo pipefail
-          sudo apt update
-          sudo apt install -y \
-            cmake g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 gfortran-mingw-w64-x86-64 \
-            pkg-config-mingw-w64-x86-64
-
       - name: Build Palace (cross-compile for Windows)
+        if: matrix.target == 'windows-x86_64'
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         run: |
@@ -132,18 +96,14 @@ build-windows-x86_64:
           export CC=${TOOLCHAIN_PREFIX}-gcc
           export CXX=${TOOLCHAIN_PREFIX}-g++
           export FC=${TOOLCHAIN_PREFIX}-gfortran
-          export WINDRES=${TOOLCHAIN_PREFIX}-windres
-          export PKG_CONFIG=${TOOLCHAIN_PREFIX}-pkg-config
 
           git clone https://github.com/awslabs/palace.git /tmp/palace-src
           git -C /tmp/palace-src fetch --all --tags
           git -C /tmp/palace-src checkout "$PALACE_REF"
 
-          # Create a stub FindMPI.cmake (MSMPI not available for cross-compile)
           mkdir -p /tmp/palace-src/cmake
           for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" "MPI_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc" "MPI_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++" "MPI_Fortran_COMPILER ${TOOLCHAIN_PREFIX}-gfortran" "MPI_C_LIBRARIES" "MPI_CXX_LIBRARIES" "MPI_Fortran_LIBRARIES" "MPIEXEC_EXECUTABLE"; do echo "set($var)" >> /tmp/palace-src/cmake/FindMPI.cmake; done
 
-          # Fix patch file line endings
           find /tmp/palace-src/extern/patch -name "*.diff" -exec sed -i 's/\r$//' {} \;
 
           cmake -S /tmp/palace-src -B /tmp/palace-build \
@@ -189,7 +149,7 @@ build-windows-x86_64:
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
         with:
-          name: palacetoolkit-palace-cpu-win-amd64
+          name: palacetoolkit-palace-cpu-${{ matrix.target }}
           path: packages/palacetoolkit-palace-cpu/dist/*.whl
 
       - name: Attach wheel to GitHub release
