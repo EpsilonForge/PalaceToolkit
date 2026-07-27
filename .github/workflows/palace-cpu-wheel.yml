@@ -120,6 +120,12 @@ jobs:
         run: |
           vcpkg install openblas hdf5 metis --triplet x64-windows
 
+      - name: Install Fortran compiler (MSYS2 gfortran)
+        shell: pwsh
+        run: |
+          C:\msys64\usr\bin\pacman.exe -S --noconfirm mingw-w64-x86_64-gcc-fortran
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build Palace (cpu-default profile)
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
