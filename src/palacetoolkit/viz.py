@@ -72,6 +72,14 @@ def _ensure_pyvista():
             pv.start_xvfb()
     except Exception:
         pass
+
+    # Silence VTK stderr warnings about missing X display connection
+    try:
+        import vtkmodules.vtkCommonCore as vtk_core
+        vtk_core.vtkLogger.SetStderrVerbosity(vtk_core.vtkLogger.VERBOSITY_OFF)
+    except Exception:
+        pass
+
     return pv
 
 
