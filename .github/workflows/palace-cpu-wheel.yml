@@ -184,6 +184,11 @@ jobs:
             -DPALACE_WITH_GSLIB:BOOL=ON
 
           cmake --build /tmp/palace-build -j1 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Output "First build attempt failed, creating missing dirs and retrying..."
+            New-Item -ItemType Directory -Force -Path /tmp/palace-build/extern | Out-Null
+            cmake --build /tmp/palace-build -j1 2>&1
+          }
 
       - name: Stage Palace payload into binary package
         shell: pwsh
