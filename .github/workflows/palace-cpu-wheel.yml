@@ -115,19 +115,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install vcpkg dependencies
+      - name: Install MinGW toolchain and dependencies
         shell: pwsh
         run: |
-          vcpkg install openblas hdf5 metis --triplet x64-windows
-
-      - name: Install Fortran compiler (MSYS2 gfortran)
-        shell: pwsh
-        run: |
-          C:\msys64\usr\bin\pacman.exe -S --noconfirm mingw-w64-x86_64-gcc-fortran
-          echo "gfortran path:"
-          Get-ChildItem C:\msys64\mingw64\bin\gfortran* -ErrorAction SilentlyContinue
-          echo "---"
-          where.exe gfortran 2>&1
+          C:\msys64\usr\bin\pacman.exe -S --noconfirm `
+            mingw-w64-x86_64-gcc `
+            mingw-w64-x86_64-gcc-fortran `
+            mingw-w64-x86_64-cmake `
+            mingw-w64-x86_64-ninja `
+            mingw-w64-x86_64-openblas `
+            mingw-w64-x86_64-hdf5 `
+            mingw-w64-x86_64-metis
 
       - name: Build Palace (cpu-default profile)
         env:
@@ -135,15 +133,17 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
-          echo "PATH check: $(Get-Command gfortran.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)"
           git clone https://github.com/awslabs/palace.git /tmp/palace-src
           git -C /tmp/palace-src fetch --all --tags
           git -C /tmp/palace-src checkout "$env:PALACE_REF"
 
           cmake -S /tmp/palace-src -B /tmp/palace-build `
+            -G "Ninja" `
             -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
             -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_Fortran_COMPILER="C:/msys64/mingw64/bin/gfortran.exe" `
+            -DCMAKE_C_COMPILER=gcc `
+            -DCMAKE_CXX_COMPILER=g++ `
+            -DCMAKE_Fortran_COMPILER=gfortran `
             -DBUILD_SHARED_LIBS:BOOL=ON `
             -DPALACE_WITH_64BIT_INT:BOOL=OFF `
             -DPALACE_WITH_OPENMP:BOOL=ON `
@@ -158,7 +158,7 @@ jobs:
             -DPALACE_WITH_MAGMA:BOOL=OFF `
             -DPALACE_WITH_GSLIB:BOOL=ON
 
-          cmake --build /tmp/palace-build --parallel --config Release
+          cmake --build /tmp/palace-build --parallel
 
       - name: Stage Palace payload into binary package
         shell: pwsh
