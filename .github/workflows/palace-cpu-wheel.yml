@@ -153,7 +153,7 @@ jobs:
           ('set(MPI_C_FOUND TRUE)', 'set(MPI_CXX_FOUND TRUE)', 'set(MPI_Fortran_FOUND TRUE)', 'set(MPI_FOUND TRUE)', 'set(MPI_C_COMPILER "gcc")', 'set(MPI_CXX_COMPILER "g++")', 'set(MPI_Fortran_COMPILER "gfortran")', 'set(MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe")') -join "`n" | Set-Content -Path /tmp/palace-src/cmake/FindMPI.cmake -NoNewline -Encoding ascii
 
           cmake -S /tmp/palace-src -B /tmp/palace-build `
-            -G "MSYS Makefiles" `
+            -G "Unix Makefiles" `
             -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_C_COMPILER=gcc `
