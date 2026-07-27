@@ -9,7 +9,6 @@ dependencies = [
     "pandas",
     "scipy",
     "meshio",
-    "mfem",
     "pyvista[jupyter]",
     "enlighten",
     "pint",
@@ -42,6 +41,19 @@ palace-toolkit-install-binary = "palacetoolkit.cli:palace_toolkit_install_binary
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+norecursedirs = [
+    "System Volume Information",
+    ".git",
+    ".venv",
+    "__pycache__",
+    "*.egg-info",
+    "dist",
+    "build",
+    "site",
+    ".cache",
+    ".pytest_cache",
+    "jupyter_execute",
+]
 markers = [
     "docs: execute documentation notebooks",
 ]

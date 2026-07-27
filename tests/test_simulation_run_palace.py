@@ -8,6 +8,36 @@ from types import SimpleNamespace
 from palacetoolkit import simulation
 
 
+_LAUNCHER_VERSION_OUTPUT = """\
+>> /usr/bin/mpirun -n 1 /path/to/palace-x86_64.bin --version
+
+Palace version: v0.17.0-194-g01f5d9bd1
+Schema version: 1-3-1
+"""
+
+
+def test_check_palace_runtime_parses_version_line(monkeypatch):
+    """check_palace_runtime should return the 'Palace version:' line, not the mpirun echo."""
+    def fake_run(cmd, **kwargs):
+        return SimpleNamespace(
+            returncode=0,
+            stdout=_LAUNCHER_VERSION_OUTPUT,
+            stderr="",
+        )
+
+    monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "resolve_palace_binary", lambda: Path("/fake/palace"))
+    monkeypatch.setattr(simulation, "resolve_palace_library_dir", lambda: None)
+    monkeypatch.setattr(simulation, "_infer_exec_library_dir", lambda _: None)
+    monkeypatch.setattr(simulation.subprocess, "run", fake_run)
+
+    info = simulation.check_palace_runtime()
+    assert "Palace version" in info["version"]
+    assert ">>" not in info["version"]
+    assert "v0.17.0" in info["version"]
+
+
 def test_run_palace_uses_resolved_executable(monkeypatch, tmp_path: Path) -> None:
     """run_palace should invoke the resolved executable when available."""
     config_file = tmp_path / "config.json"

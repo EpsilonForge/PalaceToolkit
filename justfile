@@ -6,8 +6,12 @@ examples := "docs/examples"
 ipykernel:
     {{python}} -m ipykernel install --user --name palacetoolkit --display-name "PalaceToolkit"
 
+# Step 0: Ensure Palace runtime is cached
+ensure-palace:
+    {{python}} -m palacetoolkit.cli palace_toolkit_install_binary
+
 # Step 1: Execute docs examples notebooks in-place with papermill
-nbrun: ipykernel
+nbrun: ipykernel ensure-palace
     export DOCS_BUILD=1 && find {{examples}} -maxdepth 1 -name "*.ipynb" \
         -not -path "*/.ipynb_checkpoints/*" | sort | while read nb; do \
         echo "Running: $nb"; \

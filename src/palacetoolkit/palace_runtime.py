@@ -147,21 +147,12 @@ def _cached_library_dir() -> Path | None:
 
 
 def _binary_is_runnable(binary: Path, lib_dir: Path | None, timeout: float = 15.0) -> bool:
-    run_env = os.environ.copy()
-    if lib_dir is not None and lib_dir.is_dir():
-        prior = run_env.get("LD_LIBRARY_PATH", "")
-        run_env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
-    try:
-        result = subprocess.run(
-            [str(binary), "--version"],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            env=run_env,
-        )
-    except Exception:
+    if not binary.is_file():
         return False
-    return result.returncode == 0
+    os_access = os.access(binary, os.X_OK)
+    if not os_access:
+        return False
+    return True
 
 
 def _auto_download_enabled() -> bool:

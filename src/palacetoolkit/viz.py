@@ -41,6 +41,9 @@ def _ensure_pyvista():
     """Import PyVista with off-screen rendering (headless-safe)."""
     import warnings
 
+    os.environ.pop("DISPLAY", None)
+    os.environ.setdefault("VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN", "1")
+
     import pyvista as pv
 
     pv.OFF_SCREEN = True
@@ -632,7 +635,7 @@ def view_mesh(
     highlight_faces : list[tuple[int, ...]] | None
         Triangular faces to overlay in solid red.  Each entry must be a
         **sorted** 3-tuple of vertex indices (as produced by
-        :func:`palace.verify_topology.analyse_mesh`).
+        :func:`palacetoolkit.verify_topology.verify`).
     """
     import meshio
 
@@ -897,19 +900,16 @@ def run_with_scrollable_output(
 
 
 def preview() -> None:
-    """Generate a mesh (via :func:`palace.mesh.generate_and_save_mesh`) and
-    immediately open it in the interactive viewer."""
-    from palacetoolkit.mesh import generate_and_save_mesh
+    """Generate a mesh and immediately open it in the interactive viewer."""
+    from palacetoolkit.mesh import generate_3d_mesh
 
     print("\nGenerating mesh preview…")
     ts        = int(time.time())
     file_name = f"temp_preview_{ts}"
     try:
-        generated = generate_and_save_mesh(f"meshes/{file_name}")
-        if generated:
-            print(f"✓ Mesh generated: meshes/{file_name}.msh")
-        else:
-            print("✗ Mesh generation failed")
+        generate_3d_mesh([], output_file=f"meshes/{file_name}")
+        print(f"✓ Mesh generated: meshes/{file_name}.msh")
+        generated = True
     except Exception as exc:
         print(f"✗ Mesh generation error: {exc}")
         generated = False

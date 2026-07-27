@@ -67,9 +67,9 @@ gmsh.finalize()
 Before running Palace, verify the mesh is valid:
 
 ```python
-from palacetoolkit.verify_topology import analyse_mesh
+from palacetoolkit.verify_topology import verify
 
-analyse_mesh("my_model.msh")
+verify("my_model.msh")
 ```
 
 This checks that:

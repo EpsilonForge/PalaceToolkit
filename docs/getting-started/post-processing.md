@@ -25,9 +25,9 @@ $$
 ## S-parameter plots
 
 ```python
-from palacetoolkit.s_plot import plot_s_params
+from palacetoolkit.postpro import s_params
 
-plot_s_params("postpro/my_antenna/port-S.csv")
+fig, ax = s_params("postpro/my_antenna/port-S.csv")
 ```
 
 Generates magnitude plots of $|S_{11}|$ (and $|S_{21}|$ when available)
