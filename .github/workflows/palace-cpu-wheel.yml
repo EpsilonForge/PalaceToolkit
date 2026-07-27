@@ -175,8 +175,18 @@ jobs:
               $content = Get-Content $hypreFile -Raw
               $content = $content -replace '#define hypre_ffs\(x\) ffs\(x\)', '#define hypre_ffs(x) __builtin_ffs(x)'
               Set-Content $hypreFile -Value $content -NoNewline -Encoding ascii
-              Write-Output "Patched HYPRE ffs, retrying build..."
-              cmake --build $palaceBuild -j1 2>&1
+              Write-Output "Patched HYPRE ffs"
+            }
+            # Patch libxsmm Makefile to remove -Werror (overflow error on unused rv64 code)
+            $xsmmMakefile = "$palaceBuild/extern/libxsmm/Makefile"
+            if (Test-Path $xsmmMakefile) {
+              $content = Get-Content $xsmmMakefile -Raw
+              $content = $content -replace '\-Werror', ''
+              Set-Content $xsmmMakefile -Value $content -NoNewline -Encoding ascii
+              Write-Output "Patched libxsmm -Werror"
+            }
+            Write-Output "Retrying build..."
+            cmake --build $palaceBuild -j1 2>&1
             }
           }
 
