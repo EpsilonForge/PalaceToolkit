@@ -124,7 +124,7 @@ jobs:
             "mingw-w64-x86_64-cmake",
             "mingw-w64-x86_64-ninja",
             "mingw-w64-x86_64-pkg-config",
-            "mingw-w64-x86_64-openmpi",
+            "mingw-w64-x86_64-msmpi",
             "mingw-w64-x86_64-openblas",
             "mingw-w64-x86_64-hdf5",
             "mingw-w64-x86_64-metis"
