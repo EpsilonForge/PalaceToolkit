@@ -149,23 +149,8 @@ jobs:
           git -C /tmp/palace-src fetch --all --tags
           git -C /tmp/palace-src checkout "$env:PALACE_REF"
 
-          # Inject MPI_FOUND before FindMPI to skip test entirely
-          'set(MPI_C_WORKS TRUE)' | Out-File -FilePath /tmp/palace-src/cmake/MPIOverride.cmake -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_C_FOUND TRUE)' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_CXX_WORKS TRUE)' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_CXX_FOUND TRUE)' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_Fortran_WORKS TRUE)' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_Fortran_FOUND TRUE)' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_FOUND TRUE)' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_C_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_CXX_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_Fortran_INCLUDE_DIR "C:/msys64/mingw64/include")' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding ascii
-          Add-Content -Path /tmp/palace-src/cmake/MPIOverride.cmake -Value 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")' -Encoding ascii
-          $cl = Get-Content /tmp/palace-src/CMakeLists.txt -Raw
-          $cl = $cl.Replace('find_package(MPI REQUIRED)', 'include(cmake/MPIOverride.cmake)' + "`n" + 'find_package(MPI REQUIRED)')
-          Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $cl -Encoding ascii
+          # Create a stub FindMPI.cmake to bypass the full MPI detection test
+          ('set(MPI_C_FOUND TRUE)', 'set(MPI_CXX_FOUND TRUE)', 'set(MPI_Fortran_FOUND TRUE)', 'set(MPI_FOUND TRUE)', 'set(MPI_C_COMPILER "gcc")', 'set(MPI_CXX_COMPILER "g++")', 'set(MPI_Fortran_COMPILER "gfortran")', 'set(MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include")', 'set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")', 'set(MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe")') -join "`n" | Set-Content -Path /tmp/palace-src/cmake/FindMPI.cmake -NoNewline -Encoding ascii
 
           cmake -S /tmp/palace-src -B /tmp/palace-build `
             -G "MSYS Makefiles" `
