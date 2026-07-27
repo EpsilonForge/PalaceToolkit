@@ -187,7 +187,6 @@ jobs:
             }
             Write-Output "Retrying build..."
             cmake --build $palaceBuild -j1 2>&1
-            }
           }
 
       - name: Stage Palace payload into binary package
