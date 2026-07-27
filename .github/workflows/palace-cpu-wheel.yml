@@ -115,17 +115,26 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install MinGW toolchain and dependencies
+      - name: Install MinGW compilers and tools
         shell: pwsh
         run: |
-          C:\msys64\usr\bin\pacman.exe -S --noconfirm `
-            mingw-w64-x86_64-gcc `
-            mingw-w64-x86_64-gcc-fortran `
-            mingw-w64-x86_64-cmake `
-            mingw-w64-x86_64-ninja `
-            mingw-w64-x86_64-openblas `
-            mingw-w64-x86_64-hdf5 `
-            mingw-w64-x86_64-metis
+          $maxRetries = 3
+          for ($i = 0; $i -lt $maxRetries; $i++) {
+            $result = & "C:\msys64\usr\bin\pacman.exe" -S --noconfirm `
+              mingw-w64-x86_64-gcc `
+              mingw-w64-x86_64-gcc-fortran `
+              mingw-w64-x86_64-cmake `
+              mingw-w64-x86_64-ninja
+            if ($LASTEXITCODE -eq 0) { Write-Output "pacman succeeded"; break }
+            Write-Output "pacman attempt $($i+1) failed, retrying..."
+            Start-Sleep -Seconds 10
+          }
+          if ($LASTEXITCODE -ne 0) { throw "pacman failed after $maxRetries attempts" }
+
+      - name: Install library dependencies (vcpkg MinGW)
+        shell: pwsh
+        run: |
+          vcpkg install openblas hdf5 metis --triplet x64-mingw-dynamic
 
       - name: Build Palace (cpu-default profile)
         env:
@@ -144,6 +153,8 @@ jobs:
             -DCMAKE_C_COMPILER=gcc `
             -DCMAKE_CXX_COMPILER=g++ `
             -DCMAKE_Fortran_COMPILER=gfortran `
+            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET="x64-mingw-dynamic" `
             -DBUILD_SHARED_LIBS:BOOL=ON `
             -DPALACE_WITH_64BIT_INT:BOOL=OFF `
             -DPALACE_WITH_OPENMP:BOOL=ON `
