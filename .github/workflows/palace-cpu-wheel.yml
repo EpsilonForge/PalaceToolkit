@@ -159,9 +159,13 @@ jobs:
           # Fix patch file line endings
           find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
 
+          # Patch external projects that need mingw32-make (Ninja doesn't work with raw Makefiles)
+          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
+          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
+
           # Configure
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "MSYS Makefiles" \
+            -G "Ninja" \
             -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc \
