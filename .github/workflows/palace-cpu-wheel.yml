@@ -183,7 +183,7 @@ jobs:
             -DPALACE_WITH_MAGMA:BOOL=OFF `
             -DPALACE_WITH_GSLIB:BOOL=ON
 
-          cmake --build /tmp/palace-build --parallel
+          cmake --build /tmp/palace-build -j1 2>&1
 
       - name: Stage Palace payload into binary package
         shell: pwsh
