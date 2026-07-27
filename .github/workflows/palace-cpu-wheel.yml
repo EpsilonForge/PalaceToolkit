@@ -175,6 +175,12 @@ jobs:
             -DCMAKE_C_COMPILER=gcc `
             -DCMAKE_CXX_COMPILER=g++ `
             -DCMAKE_Fortran_COMPILER=gfortran `
+            -DMPI_C_INCLUDE_DIR="C:/msys64/mingw64/include" `
+            -DMPI_C_LIBRARIES="C:/msys64/mingw64/lib/libmsmpi.dll.a" `
+            -DMPI_CXX_INCLUDE_DIR="C:/msys64/mingw64/include" `
+            -DMPI_CXX_LIBRARIES="C:/msys64/mingw64/lib/libmsmpi.dll.a" `
+            -DMPI_Fortran_INCLUDE_DIR="C:/msys64/mingw64/include" `
+            -DMPI_Fortran_LIBRARIES="C:/msys64/mingw64/lib/libmsmpi.dll.a" `
             -DBUILD_SHARED_LIBS:BOOL=ON `
             -DPALACE_WITH_64BIT_INT:BOOL=OFF `
             -DPALACE_WITH_OPENMP:BOOL=ON `
