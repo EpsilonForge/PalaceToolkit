@@ -111,7 +111,7 @@ jobs:
 
           # Stub FindMPI
           mkdir -p "$PALACE_SRC/cmake"
-          for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" 'MPI_C_COMPILER "gcc"' 'MPI_CXX_COMPILER "g++"' 'MPI_Fortran_COMPILER "gfortran"' 'MPI_C_INCLUDE_DIRS "/mingw64/include"' 'MPI_CXX_INCLUDE_DIRS "/mingw64/include"' 'MPI_Fortran_INCLUDE_DIRS "/mingw64/include"' 'MPI_C_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPI_CXX_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPI_Fortran_LIBRARIES "/mingw64/lib/libmsmpi.dll.a"' 'MPIEXEC_EXECUTABLE "/mingw64/bin/mpiexec.exe"'; do echo "set($var)" >> "$PALACE_SRC/cmake/FindMPI.cmake"; done
+          for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" 'MPI_C_COMPILER "gcc"' 'MPI_CXX_COMPILER "g++"' 'MPI_Fortran_COMPILER "gfortran"' 'MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe"'; do echo "set($var)" >> "$PALACE_SRC/cmake/FindMPI.cmake"; done
 
           # Fix patch file line endings
           find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
@@ -132,11 +132,11 @@ jobs:
             -DCMAKE_CXX_COMPILER=g++ \
             -DCMAKE_Fortran_COMPILER=gfortran \
             -DBLA_VENDOR=OpenBLAS \
-            -DBLAS_LIBRARIES="/mingw64/lib/libopenblas.dll.a" \
-            -DLAPACK_LIBRARIES="/mingw64/lib/libopenblas.dll.a" \
+            -DBLAS_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" \
+            -DLAPACK_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" \
             -DOpenMP_C_FLAGS="-fopenmp" \
             -DOpenMP_C_LIB_NAMES="gomp" \
-            -DOpenMP_gomp_LIBRARY="/mingw64/lib/libgomp.dll.a" \
+            -DOpenMP_gomp_LIBRARY="C:/msys64/mingw64/lib/libgomp.dll.a" \
             -DOpenMP_CXX_FLAGS="-fopenmp" \
             -DOpenMP_CXX_LIB_NAMES="gomp" \
             -DOpenMP_Fortran_FLAGS="-fopenmp" \
@@ -155,8 +155,10 @@ jobs:
             -DPALACE_WITH_MAGMA=OFF \
             -DPALACE_WITH_GSLIB=ON 2>&1
 
-          cmake --build "$PALACE_BUILD" 2>&1; rc=$?
-          if [ $rc -ne 0 ]; then
+          set +e
+          cmake --build "$PALACE_BUILD" 2>&1 || rc=$?
+          set -e
+          if [ "${rc:-0}" -ne 0 ]; then
             HYPRE_UTIL="$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
             [ -f "$HYPRE_UTIL" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_UTIL" && echo "Patched HYPRE ffs"
             [ -f "$HYPRE_UTIL" ] && sed -i '/#include <malloc.h>/d' "$HYPRE_UTIL" && echo "Patched HYPRE malloc.h"
@@ -164,7 +166,9 @@ jobs:
             [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
             GSLIB_MK="$PALACE_BUILD/extern/gslib/Makefile"
             [ -f "$GSLIB_MK" ] && sed -i 's/\.so/.dll/g' "$GSLIB_MK" && echo "Patched gslib .so to .dll"
+            set +e
             cmake --build "$PALACE_BUILD" 2>&1
+            set -e
           fi
 
       - name: Stage Palace payload into binary package (Linux)
