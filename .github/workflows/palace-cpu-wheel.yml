@@ -124,13 +124,13 @@ jobs:
         shell: pwsh
         run: |
           C:\msys64\usr\bin\pacman.exe -S --noconfirm mingw-w64-x86_64-gcc-fortran
-          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Build Palace (cpu-default profile)
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         shell: pwsh
         run: |
+          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
           git clone https://github.com/awslabs/palace.git /tmp/palace-src
           git -C /tmp/palace-src fetch --all --tags
           git -C /tmp/palace-src checkout "$env:PALACE_REF"
@@ -138,6 +138,7 @@ jobs:
           cmake -S /tmp/palace-src -B /tmp/palace-build `
             -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
             -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_Fortran_COMPILER=gfortran `
             -DBUILD_SHARED_LIBS:BOOL=ON `
             -DPALACE_WITH_64BIT_INT:BOOL=OFF `
             -DPALACE_WITH_OPENMP:BOOL=ON `
