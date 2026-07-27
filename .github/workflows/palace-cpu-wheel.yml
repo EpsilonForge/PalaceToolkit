@@ -127,7 +127,8 @@ jobs:
             "mingw-w64-x86_64-msmpi",
             "mingw-w64-x86_64-openblas",
             "mingw-w64-x86_64-hdf5",
-            "mingw-w64-x86_64-metis"
+            "mingw-w64-x86_64-metis",
+            "mingw-w64-x86_64-utils"
           )
           $maxRetries = 5
           for ($i = 0; $i -lt $maxRetries; $i++) {
