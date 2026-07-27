@@ -52,7 +52,7 @@
   white-space: pre;
 }
 
-/* Notebook text outputs: clamp to ~10 lines and scroll vertically. */
+/* Notebook text outputs: clamp to ~20 lines and scroll vertically. */
 .jupyter-wrapper .jp-OutputArea .jp-RenderedText.jp-OutputArea-output > pre,
 .nboutput .output_area .output pre,
 .nboutput .output_area pre,
