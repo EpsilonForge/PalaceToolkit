@@ -158,6 +158,26 @@ jobs:
           git -C /tmp/palace-src fetch --all --tags
           git -C /tmp/palace-src checkout "$env:PALACE_REF"
 
+          # Inject MPI settings before Palace's find_package(MPI) call
+          $mpiInjection = @"
+set(MPI_C_SKIP_GUESSING TRUE)
+set(MPI_C_INCLUDE_DIR "C:/msys64/mingw64/include")
+set(MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")
+set(MPI_CXX_SKIP_GUESSING TRUE)
+set(MPI_CXX_INCLUDE_DIR "C:/msys64/mingw64/include")
+set(MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")
+set(MPI_Fortran_SKIP_GUESSING TRUE)
+set(MPI_Fortran_INCLUDE_DIR "C:/msys64/mingw64/include")
+set(MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a")
+"@
+          $mpiInjection | Out-File -FilePath /tmp/palace-src/cmake/MPIOverrides.cmake -Encoding utf8
+          $cmakeList = Get-Content /tmp/palace-src/CMakeLists.txt -Raw
+          $cmakeList = $cmakeList.Replace(
+            'find_package(MPI REQUIRED)',
+            'include(cmake/MPIOverrides.cmake)' + [Environment]::NewLine + 'find_package(MPI REQUIRED)'
+          )
+          Set-Content -Path /tmp/palace-src/CMakeLists.txt -Value $cmakeList -Encoding utf8
+
           cmake -S /tmp/palace-src -B /tmp/palace-build `
             -G "MSYS Makefiles" `
             -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
