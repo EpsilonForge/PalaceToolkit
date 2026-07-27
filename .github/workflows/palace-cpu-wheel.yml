@@ -127,14 +127,12 @@ jobs:
             "mingw-w64-x86_64-openmpi",
             "mingw-w64-x86_64-openblas",
             "mingw-w64-x86_64-hdf5",
-            "mingw-w64-x86_64-metis",
-            "mingw-w64-x86_64-arpack",
-            "mingw-w64-x86_64-suitesparse",
-            "mingw-w64-x86_64-superlu"
+            "mingw-w64-x86_64-metis"
           )
           $maxRetries = 5
           for ($i = 0; $i -lt $maxRetries; $i++) {
-            $result = & "C:\msys64\usr\bin\pacman.exe" -S --noconfirm @packages 2>&1
+            $output = & "C:\msys64\usr\bin\pacman.exe" -S --noconfirm @packages 2>&1
+            $output | Out-Host
             if ($LASTEXITCODE -eq 0) { Write-Output "pacman succeeded"; break }
             Write-Output "pacman attempt $($i+1) failed, retrying in 30s..."
             Start-Sleep -Seconds 30
