@@ -112,21 +112,17 @@ jobs:
           # Fix patch file line endings
           find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
 
-          # Patch gslib and libxsmm to use mingw32-make instead of ninja
+          # Patch gslib and libxsmm to use mingw32-make
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
           sed -i '/STATIC=0/s/$/ WERROR=0 WCHECK=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
-          # Disable libCEED (posix_memalign missing on MinGW)
+          # Disable libCEED
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
-          # Ensure MFEM waits for all its dependencies to install
+          # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Disable MFEM testing to avoid duplicate ex9.exe rule with Ninja recompact
-          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DMFEM_ENABLE_TESTING=OFF"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Skip reconfigure to avoid Ninja recompact error with MFEM examples
-          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DMFEM_BUILD_EXAMPLES=OFF"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "Ninja" \
+            -G "MSYS Makefiles" \
             -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc \
@@ -164,12 +160,10 @@ jobs:
           if [ "${rc:-0}" -ne 0 ]; then
             # Clean MFEM build dir to avoid stale cache issues
             rm -rf "$PALACE_BUILD/extern/mfem-build" "$PALACE_BUILD/extern/mfem-cmake"
-            # Patch libxsmm -Werror (both Makefile and Makefile.inc)
-            XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
-            [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
+            # Patch libxsmm Makefile.inc WERROR
             XSMM_INC="$PALACE_BUILD/extern/libxsmm/Makefile.inc"
-            [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm Makefile.inc WERROR"
-            # Force rebuild of libxsmm by removing stamp and object files
+            [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm WERROR"
+            # Force rebuild of libxsmm by removing stamp
             rm -f "$PALACE_BUILD/extern/libxsmm-cmake/src/libxsmm-stamp/libxsmm-build"
             rm -f "$PALACE_BUILD/extern/libxsmm/obj/intel64/generator_rv64_instructions.o"
             # Patch HYPRE: find _hypre_utilities.h anywhere in the build tree
