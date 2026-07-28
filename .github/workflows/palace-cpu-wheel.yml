@@ -120,11 +120,12 @@ jobs:
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
           # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Patch PATCH_COMMAND to remove examples subdirectory (avoids Ninja recompact ex9.exe duplicate)
-          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& sed -i /add_subdirectory.*examples/d CMakeLists.txt|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Header-only libraries need no build step with MSYS Makefiles
+          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""/' "$PALACE_SRC/cmake/ExternalEigen.cmake"
+          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""/' "$PALACE_SRC/cmake/ExternalJSON.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "Ninja" \
+            -G "MSYS Makefiles" \
             -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc \
@@ -163,7 +164,6 @@ jobs:
             # Clean MFEM build dir to avoid stale cache issues
             rm -rf "$PALACE_BUILD/extern/mfem-build" "$PALACE_BUILD/extern/mfem-cmake"
             # Patch libxsmm Makefile.inc WERROR
-            # Patch libxsmm Makefile.inc WERROR
             XSMM_INC="$PALACE_BUILD/extern/libxsmm/Makefile.inc"
             [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm WERROR"
             # Force rebuild of libxsmm by removing stamp
@@ -181,6 +181,13 @@ jobs:
             cmake --build "$PALACE_BUILD" 2>&1
             set -e
           fi
+          # Ensure the Palace binary was built
+          echo "Building palace target explicitly..."
+          set +e
+          cmake --build "$PALACE_BUILD" --target palace 2>&1
+          set -e
+          echo "Palace build complete, checking for binary..."
+          ls -la "$PALACE_INSTALL/bin/" 2>&1 || echo "No bin dir yet"
 
       - name: Stage Palace payload into binary package (Linux)
         if: matrix.target == 'linux'
