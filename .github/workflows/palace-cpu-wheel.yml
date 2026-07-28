@@ -196,10 +196,13 @@ jobs:
         if: matrix.target == 'windows'
         shell: pwsh
         run: |
-          ls /tmp/palace-install/bin
+          $buildRoot = $env:RUNNER_TEMP
+          if (-not $buildRoot) { $buildRoot = "C:\msys64\tmp" }
+          $palaceInstall = "$buildRoot\palace-install"
+          ls "$palaceInstall\bin"
           .\packages\palacetoolkit-palace-cpu\tools\stage_palace_binary.ps1 `
-            -BinDir /tmp/palace-install/bin `
-            -LibDirs /tmp/palace-install/lib, /tmp/palace-install/lib64
+            -BinDir "$palaceInstall\bin" `
+            -LibDirs "$palaceInstall\lib", "$palaceInstall\lib64"
 
       - name: Build wheel
         run: |
