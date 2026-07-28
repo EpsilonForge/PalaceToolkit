@@ -120,9 +120,9 @@ jobs:
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
           # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Header-only libraries need no build step with MSYS Makefiles
-          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""/' "$PALACE_SRC/cmake/ExternalEigen.cmake"
-          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""/' "$PALACE_SRC/cmake/ExternalJSON.cmake"
+          # Header-only libraries: skip build, use cmake --install for install step
+          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""\n  INSTALL_COMMAND   "${CMAKE_COMMAND}" --install ./' "$PALACE_SRC/cmake/ExternalEigen.cmake"
+          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""\n  INSTALL_COMMAND   "${CMAKE_COMMAND}" --install ./' "$PALACE_SRC/cmake/ExternalJSON.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "MSYS Makefiles" \
