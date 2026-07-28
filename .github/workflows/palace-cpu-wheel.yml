@@ -145,9 +145,9 @@ jobs:
             -DPALACE_WITH_OPENMP=ON \
             -DPALACE_WITH_CUDA=OFF \
             -DPALACE_WITH_HIP=OFF \
-            -DPALACE_WITH_SUPERLU=ON \
-            -DPALACE_WITH_STRUMPACK=ON \
-            -DPALACE_WITH_MUMPS=ON \
+            -DPALACE_WITH_SUPERLU=OFF \
+            -DPALACE_WITH_STRUMPACK=OFF \
+            -DPALACE_WITH_MUMPS=OFF \
             -DPALACE_WITH_SLEPC=OFF \
             -DPALACE_WITH_ARPACK=ON \
             -DPALACE_WITH_LIBXSMM=ON \
@@ -174,11 +174,7 @@ jobs:
               echo "Touched HYPRE sources for rebuild"
             fi
             set +e
-            cmake --build "$PALACE_BUILD" 2>&1; rc2=$?
-            if [ $rc2 -ne 0 ]; then
-              echo "Retry 1 failed (scalapack/strumpack/mumps still building), retrying once more..."
-              cmake --build "$PALACE_BUILD" 2>&1
-            fi
+            cmake --build "$PALACE_BUILD" 2>&1
             set -e
           fi
 
