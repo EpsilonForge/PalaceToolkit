@@ -122,8 +122,8 @@ jobs:
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
           # Disable MFEM testing to avoid duplicate ex9.exe rule with Ninja recompact
           sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DMFEM_ENABLE_TESTING=OFF"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Add SKIP_RECONFIGURE to avoid Ninja recompact error
-          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DCMAKE_SKIP_RECONFIGURE=ON"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Skip reconfigure to avoid Ninja recompact error with MFEM examples
+          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DMFEM_BUILD_EXAMPLES=OFF"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
