@@ -120,6 +120,8 @@ jobs:
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
           # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Patch PATCH_COMMAND to remove examples subdirectory (avoids Ninja recompact ex9.exe duplicate)
+          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& sed -i /add_subdirectory(examples)/d CMakeLists.txt|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
@@ -160,9 +162,7 @@ jobs:
           if [ "${rc:-0}" -ne 0 ]; then
             # Clean MFEM build dir to avoid stale cache issues
             rm -rf "$PALACE_BUILD/extern/mfem-build" "$PALACE_BUILD/extern/mfem-cmake"
-            # Patch MFEM CMakeLists.txt to skip examples (avoids Ninja recompact duplicate ex9.exe rule)
-            MFEM_CM="$PALACE_BUILD/extern/mfem/CMakeLists.txt"
-            [ -f "$MFEM_CM" ] && sed -i '/add_subdirectory(examples)/d' "$MFEM_CM" && echo "Patched MFEM CMakeLists.txt (removed examples)"
+            # Patch libxsmm Makefile.inc WERROR
             # Patch libxsmm Makefile.inc WERROR
             XSMM_INC="$PALACE_BUILD/extern/libxsmm/Makefile.inc"
             [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm WERROR"
