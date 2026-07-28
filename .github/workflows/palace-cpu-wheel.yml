@@ -52,13 +52,15 @@ jobs:
             mingw-w64-x86_64-gcc-fortran `
             mingw-w64-x86_64-cmake `
             mingw-w64-x86_64-make `
-            mingw-w64-x86_64-ninja `
             mingw-w64-x86_64-pkg-config `
             mingw-w64-x86_64-msmpi `
             mingw-w64-x86_64-openblas `
             mingw-w64-x86_64-hdf5 `
             mingw-w64-x86_64-metis
           if ($LASTEXITCODE -ne 0) { throw "pacman failed" }
+          # Install Ninja 1.11.1 (older version without recompact feature that causes MFEM issues)
+          Invoke-WebRequest -Uri "https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip" -OutFile "$env:TEMP\ninja.zip"
+          Expand-Archive -Path "$env:TEMP\ninja.zip" -DestinationPath "C:\msys64\mingw64\bin" -Force
 
       - name: Build Palace (Linux)
         if: matrix.target == 'linux'
@@ -122,7 +124,7 @@ jobs:
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "MinGW Makefiles" \
+            -G "Ninja" \
             -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc \
