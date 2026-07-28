@@ -121,6 +121,8 @@ jobs:
           sed -i '/STATIC=0/s/$/ WERROR=0 WCHECK=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
           # Disable libCEED (posix_memalign missing on MinGW)
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
+          # Ensure MFEM waits for all its dependencies to install
+          sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
