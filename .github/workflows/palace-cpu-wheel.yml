@@ -174,7 +174,11 @@ jobs:
               echo "Touched HYPRE sources for rebuild"
             fi
             set +e
-            cmake --build "$PALACE_BUILD" 2>&1
+            cmake --build "$PALACE_BUILD" 2>&1; rc2=$?
+            if [ $rc2 -ne 0 ]; then
+              echo "Retry 1 failed (scalapack/strumpack/mumps still building), retrying once more..."
+              cmake --build "$PALACE_BUILD" 2>&1
+            fi
             set -e
           fi
 
