@@ -98,7 +98,7 @@ jobs:
         if: matrix.target == 'windows'
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
-        shell: C:\msys64\usr\bin\bash.exe --login -eo pipefail '{0}'
+        shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
           export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
           BUILD_ROOT="$(echo "${RUNNER_TEMP:-/tmp}" | sed 's|\\|/|g')"
@@ -118,7 +118,7 @@ jobs:
           # Patch gslib and libxsmm to use mingw32-make instead of ninja
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
-          sed -i '/STATIC=0/s/$/ WERROR=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
+          sed -i '/STATIC=0/s/$/ WERROR=0 WCHECK=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
           # Disable libCEED (posix_memalign missing on MinGW)
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
 
@@ -164,6 +164,9 @@ jobs:
             [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
             XSMM_INC="$PALACE_BUILD/extern/libxsmm/Makefile.inc"
             [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm Makefile.inc WERROR"
+            # Force rebuild of libxsmm by removing stamp and object files
+            rm -f "$PALACE_BUILD/extern/libxsmm-cmake/src/libxsmm-stamp/libxsmm-build"
+            rm -f "$PALACE_BUILD/extern/libxsmm/obj/intel64/generator_rv64_instructions.o"
             # Patch HYPRE: find _hypre_utilities.h anywhere in the build tree
             HYPRE_HDR=$(find "$PALACE_BUILD/extern/hypre" -name "_hypre_utilities.h" -print -quit 2>/dev/null)
             if [ -n "$HYPRE_HDR" ]; then
