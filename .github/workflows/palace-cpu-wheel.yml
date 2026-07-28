@@ -98,7 +98,7 @@ jobs:
         if: matrix.target == 'windows'
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
-        shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
+        shell: C:\msys64\usr\bin\bash.exe --login -eo pipefail '{0}'
         run: |
           export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
           BUILD_ROOT="$(echo "${RUNNER_TEMP:-/tmp}" | sed 's|\\|/|g')"
@@ -119,8 +119,8 @@ jobs:
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
           sed -i '/STATIC=0/s/$/ WERROR=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
-          # Patch MFEM to depend on gslib (missing from superbuild's DEPENDS)
-          sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis gslib)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Disable libCEED (posix_memalign missing on MinGW)
+          sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
@@ -151,22 +151,19 @@ jobs:
             -DPALACE_WITH_ARPACK=ON \
             -DPALACE_WITH_LIBXSMM=ON \
             -DPALACE_WITH_MAGMA=OFF \
-            -DPALACE_WITH_GSLIB=ON \
-            -DCMAKE_C_FLAGS="-Dffs=__builtin_ffs" 2>&1
+            -DPALACE_WITH_GSLIB=OFF \
+            -DCMAKE_C_FLAGS="-Dffs=__builtin_ffs" \
+            -DCMAKE_CXX_FLAGS="-Dffs=__builtin_ffs" 2>&1
 
           set +e
-          # Build gslib first (synchronously) to ensure it's installed before MFEM configures
-          cmake --build "$PALACE_BUILD" --target gslib 2>&1
-          # Build everything else (parallel)
           cmake --build "$PALACE_BUILD" 2>&1 || rc=$?
           set -e
           if [ "${rc:-0}" -ne 0 ]; then
-            # Patch libxsmm -Werror
+            # Patch libxsmm -Werror (both Makefile and Makefile.inc)
             XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
             [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
-            # Patch gslib .so to .dll
-            GSLIB_MK="$PALACE_BUILD/extern/gslib/Makefile"
-            [ -f "$GSLIB_MK" ] && sed -i 's/\.so/.dll/g' "$GSLIB_MK" && echo "Patched gslib .so to .dll"
+            XSMM_INC="$PALACE_BUILD/extern/libxsmm/Makefile.inc"
+            [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm Makefile.inc WERROR"
             # Patch HYPRE: find _hypre_utilities.h anywhere in the build tree
             HYPRE_HDR=$(find "$PALACE_BUILD/extern/hypre" -name "_hypre_utilities.h" -print -quit 2>/dev/null)
             if [ -n "$HYPRE_HDR" ]; then
