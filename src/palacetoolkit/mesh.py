@@ -1,6 +1,55 @@
 """Gmsh utilities: boolean pipeline, mesh generation helpers."""
 
+import os
+
 import gmsh
+
+
+# ---------------------------------------------------------------------------
+# Docs-build helper
+# ---------------------------------------------------------------------------
+
+def _gmsh_suppress_terminal() -> float | None:
+    """Save and suppress gmsh terminal output. Returns the previous value."""
+    in_docs = bool(os.environ.get("DOCS_BUILD") or os.environ.get("PAPERMILL_OUTPUT_PATH"))
+    if not in_docs:
+        return None
+    try:
+        prev = gmsh.option.getNumber("General.Terminal")
+        gmsh.option.setNumber("General.Terminal", 0)
+        return prev
+    except Exception:
+        return None
+
+
+def _gmsh_restore_terminal(prev: float | None) -> None:
+    """Restore a previous gmsh terminal value."""
+    if prev is None:
+        return
+    try:
+        gmsh.option.setNumber("General.Terminal", prev)
+    except Exception:
+        pass
+
+
+def run_for_docs(func, *args, title="Mesh generation", **kwargs):
+    """Run *func* inside a scrollable output block during docs builds.
+
+    In docs-build mode (``DOCS_BUILD=1`` or ``PAPERMILL_OUTPUT_PATH`` set):
+    - gmsh C-level terminal output is suppressed via ``_gmsh_terminal_context``
+    - Python-level stdout/stderr is captured in a collapsible ``<details>`` block
+      via :func:`palacetoolkit.viz.run_with_scrollable_output`
+
+    In normal mode the function runs transparently with no wrapping.
+    """
+    in_docs = bool(os.environ.get("DOCS_BUILD") or os.environ.get("PAPERMILL_OUTPUT_PATH"))
+    if not in_docs:
+        return func(*args, **kwargs)
+
+    from palacetoolkit.viz import run_with_scrollable_output
+
+    with _gmsh_terminal_context():
+        return run_with_scrollable_output(func, *args, title=title, **kwargs)
 
 
 # ---------------------------------------------------------------------------
@@ -79,6 +128,7 @@ def run_entity_pipeline(entities: list[Entity]):
        already processed, then update tags via the returned mapping.
     5. Accumulate processed entities for the next (lower) dimension.
     """
+    _gmsh_prev = _gmsh_suppress_terminal()
     gmsh.model.occ.synchronize()
 
     # Group by dimension
@@ -207,6 +257,7 @@ def run_entity_pipeline(entities: list[Entity]):
         if name:
             pg_map[name] = pg_tag
 
+    _gmsh_restore_terminal(_gmsh_prev)
     return pg_map
 
 
@@ -255,6 +306,8 @@ def generate_3d_mesh(
             gmsh.option.setNumber("General.Verbosity", 2)
         except Exception:
             pass
+
+    _gmsh_prev = _gmsh_suppress_terminal()
 
 
     def _apply_point_sizes(*, use_entity_tags: bool = True) -> int:
@@ -332,6 +385,7 @@ def generate_3d_mesh(
             elems = gmsh.model.mesh.getElements()
             print(f"  Elements: {sum(len(e) for e in elems[1])}")
     finally:
+        _gmsh_restore_terminal(_gmsh_prev)
         if previous_verbosity is not None:
             try:
                 gmsh.option.setNumber("General.Verbosity", previous_verbosity)

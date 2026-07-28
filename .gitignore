@@ -126,5 +126,8 @@ postpro/
 # Built wheels
 *.whl
 
+# Generated viewer files
+docs/examples/img/viewer_*.htm
+
 # Project plans
 windows-support-plan.md

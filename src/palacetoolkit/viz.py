@@ -39,20 +39,47 @@ _IFRAME_STYLE = (
 
 def _ensure_pyvista():
     """Import PyVista with off-screen rendering (headless-safe)."""
+    import os
     import warnings
 
-    os.environ.pop("DISPLAY", None)
     os.environ.setdefault("VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN", "1")
+    os.environ.pop("DISPLAY", None)
 
-    import pyvista as pv
+    # Suppress VTK C-level stderr warnings by redirecting fd 2 during import
+    _stderr_fd = os.dup(2)
+    _devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    os.dup2(_devnull_fd, 2)
+    os.close(_devnull_fd)
+    try:
+        import pyvista as pv
+    finally:
+        os.dup2(_stderr_fd, 2)
+        os.close(_stderr_fd)
 
     pv.OFF_SCREEN = True
+
+    # Permanently silence VTK stderr output (warnings from plotter creation etc.)
+    pv.global_theme.notebook = None
+    try:
+        from vtkmodules.vtkCommonCore import vtkLogger
+        vtkLogger.SetStderrVerbosity(vtkLogger.VERBOSITY_OFF)
+    except Exception:
+        pass
+
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             pv.start_xvfb()
     except Exception:
         pass
+
+    # Silence VTK stderr warnings about missing X display connection
+    try:
+        import vtkmodules.vtkCommonCore as vtk_core
+        vtk_core.vtkLogger.SetStderrVerbosity(vtk_core.vtkLogger.VERBOSITY_OFF)
+    except Exception:
+        pass
+
     return pv
 
 
@@ -807,43 +834,56 @@ def view_mesh(
         plotter.add_legend(bcolor="white", face="triangle", size=(0.28, 0.28))
 
     plotter.show_axes()
+
+    in_docs_build = bool(os.environ.get("DOCS_BUILD") or os.environ.get("PAPERMILL_OUTPUT_PATH"))
     if in_kernel:
-        try:
-            import html as html_lib
-
-            from IPython.display import HTML, Image, display
-
-            html_obj = plotter.export_html(None)
-            html_text = html_obj.getvalue() if hasattr(html_obj, "getvalue") else str(html_obj)
-            escaped = html_lib.escape(html_text, quote=True)
-            iframe = (
-                f'<iframe srcdoc="{escaped}" loading="lazy" '
-                f'style="{_IFRAME_STYLE}"></iframe>'
-            )
-            # Wrap iframe to avoid IPython's HTML(...)-with-iframe warning.
-            display(HTML(f"<div>{iframe}</div>"))
-        except Exception as exc:
-            print(
-                "Warning: interactive PyVista HTML export failed; "
-                f"falling back to static PNG renderer ({exc})"
-            )
+        if in_docs_build:
+            # Docs build: use static PNG (reliable, no iframe/file-path issues)
+            _display_png(plotter)
+        else:
+            # Live notebook: try interactive HTML, fall back to PNG
             try:
-                import tempfile
-
-                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-                    png_path = Path(tmp.name)
-                plotter.screenshot(str(png_path))
-                display(Image(data=png_path.read_bytes(), format="png"))
-                png_path.unlink(missing_ok=True)
-            except Exception as png_exc:
-                print(
-                    "Warning: static PyVista PNG fallback failed; "
-                    f"no mesh preview available ({png_exc})"
-                )
-        finally:
-            plotter.close()
+                _display_interactive_html(plotter)
+            except Exception:
+                _display_png(plotter)
+        plotter.close()
     else:
         plotter.show()
+
+
+def _display_png(plotter) -> None:
+    """Display a static PNG screenshot of the plotter in the notebook."""
+    import tempfile
+    from pathlib import Path
+    from IPython.display import Image, display
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            png_path = Path(tmp.name)
+        plotter.screenshot(str(png_path))
+        display(Image(data=png_path.read_bytes(), format="png"))
+        png_path.unlink(missing_ok=True)
+    except Exception as exc:
+        print(f"Warning: could not render mesh preview ({exc})")
+
+
+def _display_interactive_html(plotter) -> None:
+    """Export the plotter as an interactive HTML viewer and display it."""
+    import hashlib
+    from pathlib import Path
+    from IPython.display import IFrame, display
+
+    html_obj = plotter.export_html(None)
+    html_text = html_obj.getvalue() if hasattr(html_obj, "getvalue") else str(html_obj)
+
+    viewer_hash = hashlib.sha256(html_text.encode()).hexdigest()[:12]
+    img_dir = Path("img")
+    img_dir.mkdir(parents=True, exist_ok=True)
+    htm_path = img_dir / f"viewer_{viewer_hash}.htm"
+    htm_path.write_text(html_text, encoding="utf-8")
+
+    src = f"./img/viewer_{viewer_hash}.htm"
+    display(IFrame(src=src, width="100%", height=500))
 
 
 def run_with_scrollable_output(
