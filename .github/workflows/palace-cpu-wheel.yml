@@ -123,6 +123,10 @@ jobs:
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
           # Ensure MFEM waits for all its dependencies to install
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Disable MFEM testing to avoid duplicate ex9.exe rule with Ninja recompact
+          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DMFEM_ENABLE_TESTING=OFF"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Add SKIP_RECONFIGURE to avoid Ninja recompact error
+          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DCMAKE_SKIP_RECONFIGURE=ON"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
