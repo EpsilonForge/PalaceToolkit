@@ -101,8 +101,7 @@ jobs:
         shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
           export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
-          BUILD_ROOT="${RUNNER_TEMP//\\//}"
-          BUILD_ROOT="${BUILD_ROOT:-/tmp}"
+          BUILD_ROOT="$(echo "${RUNNER_TEMP:-/tmp}" | sed 's|\\|/|g')"
           PALACE_SRC="$BUILD_ROOT/palace-src"
           PALACE_BUILD="$BUILD_ROOT/palace-build"
           PALACE_INSTALL="$BUILD_ROOT/palace-install"
@@ -153,22 +152,27 @@ jobs:
             -DPALACE_WITH_ARPACK=ON \
             -DPALACE_WITH_LIBXSMM=ON \
             -DPALACE_WITH_MAGMA=OFF \
-            -DPALACE_WITH_GSLIB=ON 2>&1
+            -DPALACE_WITH_GSLIB=ON \
+            -DCMAKE_C_FLAGS="-Dffs=__builtin_ffs" 2>&1
 
           set +e
           cmake --build "$PALACE_BUILD" 2>&1 || rc=$?
           set -e
           if [ "${rc:-0}" -ne 0 ]; then
-            echo "DEBUG: PALACE_BUILD=$PALACE_BUILD"
-            echo "DEBUG: HYPRE_UTIL=$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
-            echo "DEBUG: listing hypre src: $(ls $PALACE_BUILD/extern/hypre/src/utilities/ 2>&1 | head -5)"
-            HYPRE_UTIL="$PALACE_BUILD/extern/hypre/src/utilities/_hypre_utilities.h"
-            [ -f "$HYPRE_UTIL" ] && sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_UTIL" && echo "Patched HYPRE ffs"
-            [ -f "$HYPRE_UTIL" ] && sed -i '/#include <malloc.h>/d' "$HYPRE_UTIL" && echo "Patched HYPRE malloc.h"
+            # Patch libxsmm -Werror
             XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
             [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
+            # Patch gslib .so to .dll
             GSLIB_MK="$PALACE_BUILD/extern/gslib/Makefile"
             [ -f "$GSLIB_MK" ] && sed -i 's/\.so/.dll/g' "$GSLIB_MK" && echo "Patched gslib .so to .dll"
+            # Patch HYPRE: find _hypre_utilities.h anywhere in the build tree
+            HYPRE_HDR=$(find "$PALACE_BUILD/extern/hypre" -name "_hypre_utilities.h" -print -quit 2>/dev/null)
+            if [ -n "$HYPRE_HDR" ]; then
+              sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_HDR" && echo "Patched HYPRE ffs"
+              sed -i '/#include <malloc.h>/d' "$HYPRE_HDR" && echo "Patched HYPRE malloc.h"
+              find "$PALACE_BUILD/extern/hypre" -name "*.c" -o -name "*.h" 2>/dev/null | xargs touch 2>/dev/null
+              echo "Touched HYPRE sources for rebuild"
+            fi
             set +e
             cmake --build "$PALACE_BUILD" 2>&1
             set -e
