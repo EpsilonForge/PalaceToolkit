@@ -184,3 +184,12 @@ Both are created by the private infrastructure repo stack outputs.
 | Recipe | Description |
 |--------|-------------|
 | `just nbclean` | Strip cell outputs from docs example notebooks for clean commits. |
+
+## Roadmap
+
+- **Interactive 3D viewer for docs** — Currently, mesh visualisations in the
+  documentation are static PNG screenshots. A future enhancement will embed an
+  interactive VTK.js viewer powered by
+  [trame](https://kitware.github.io/trame/) or PyVista's `export_html`, giving
+  readers the ability to rotate, pan, and inspect 3D meshes directly in the
+  browser without leaving the documentation page.
