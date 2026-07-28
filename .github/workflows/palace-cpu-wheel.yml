@@ -159,6 +159,8 @@ jobs:
           cmake --build "$PALACE_BUILD" 2>&1 || rc=$?
           set -e
           if [ "${rc:-0}" -ne 0 ]; then
+            # Clean MFEM build dir to avoid stale cache issues
+            rm -rf "$PALACE_BUILD/extern/mfem-build" "$PALACE_BUILD/extern/mfem-cmake"
             # Patch libxsmm -Werror (both Makefile and Makefile.inc)
             XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
             [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
