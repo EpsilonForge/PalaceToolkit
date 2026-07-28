@@ -98,7 +98,7 @@ jobs:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
-          export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
+          export PATH="/c/Program Files/Microsoft Visual Studio/2022/Enterprise/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin:/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
           BUILD_ROOT="$(echo "${RUNNER_TEMP:-/tmp}" | sed 's|\\|/|g')"
           PALACE_SRC="$BUILD_ROOT/palace-src"
           PALACE_BUILD="$BUILD_ROOT/palace-build"
@@ -120,12 +120,9 @@ jobs:
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
           # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Header-only libraries: skip build, use cmake --install for install step
-          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""\n  INSTALL_COMMAND   "${CMAKE_COMMAND}" --install ./' "$PALACE_SRC/cmake/ExternalEigen.cmake"
-          sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""\n  INSTALL_COMMAND   "${CMAKE_COMMAND}" --install ./' "$PALACE_SRC/cmake/ExternalJSON.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "MSYS Makefiles" \
+            -G "Ninja" \
             -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc \
@@ -181,11 +178,6 @@ jobs:
             cmake --build "$PALACE_BUILD" 2>&1
             set -e
           fi
-          # Ensure the Palace binary was built
-          echo "Building palace target explicitly..."
-          set +e
-          cmake --build "$PALACE_BUILD" --target palace 2>&1
-          set -e
           echo "Palace build complete, checking for binary..."
           ls -la "$PALACE_INSTALL/bin/" 2>&1 || echo "No bin dir yet"
 
