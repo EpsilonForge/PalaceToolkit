@@ -58,9 +58,10 @@ jobs:
             mingw-w64-x86_64-hdf5 `
             mingw-w64-x86_64-metis
           if ($LASTEXITCODE -ne 0) { throw "pacman failed" }
-          # Install Ninja 1.11.1 (older version without recompact feature that causes MFEM issues)
+          # Install Ninja 1.11.1 (no recompact) to a custom path (MSYS2 cmake pulls in ninja 1.13.2 as dep)
           Invoke-WebRequest -Uri "https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip" -OutFile "$env:TEMP\ninja.zip"
-          Expand-Archive -Path "$env:TEMP\ninja.zip" -DestinationPath "C:\msys64\mingw64\bin" -Force
+          New-Item -ItemType Directory -Force -Path "C:\ninja-1111" | Out-Null
+          Expand-Archive -Path "$env:TEMP\ninja.zip" -DestinationPath "C:\ninja-1111" -Force
 
       - name: Build Palace (Linux)
         if: matrix.target == 'linux'
@@ -100,7 +101,8 @@ jobs:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
-          export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
+          export PATH="/c/ninja-1111:/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
+          export NINJA_STATUS="[%f/%t] "
           BUILD_ROOT="$(echo "${RUNNER_TEMP:-/tmp}" | sed 's|\\|/|g')"
           PALACE_SRC="$BUILD_ROOT/palace-src"
           PALACE_BUILD="$BUILD_ROOT/palace-build"
