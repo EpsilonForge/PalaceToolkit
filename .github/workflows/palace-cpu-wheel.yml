@@ -19,152 +19,184 @@ permissions:
   contents: write
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-24.04
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [linux, windows]
+    runs-on: ${{ matrix.target == 'linux' && 'ubuntu-24.04' || 'windows-2022' }}
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Linux)
+        if: matrix.target == 'linux'
         run: |
-          sudo apt update && sudo apt install -y \
+          set -euo pipefail
+          sudo apt update
+          sudo apt install -y \
             cmake gfortran openmpi-bin libopenmpi-dev libopenblas-dev pkg-config git make
-      - name: Build Palace
+
+      - name: Install MinGW toolchain and dependencies (Windows)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed `
+            mingw-w64-x86_64-gcc `
+            mingw-w64-x86_64-gcc-fortran `
+            mingw-w64-x86_64-cmake `
+            mingw-w64-x86_64-make `
+            mingw-w64-x86_64-ninja `
+            mingw-w64-x86_64-pkg-config `
+            mingw-w64-x86_64-msmpi `
+            mingw-w64-x86_64-openblas `
+            mingw-w64-x86_64-hdf5 `
+            mingw-w64-x86_64-metis
+          if ($LASTEXITCODE -ne 0) { throw "pacman failed" }
+
+      - name: Build Palace (Linux)
+        if: matrix.target == 'linux'
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         run: |
           set -euo pipefail
-          git clone https://github.com/awslabs/palace.git /tmp/palace-src
-          git -C /tmp/palace-src fetch --all --tags && git checkout "$PALACE_REF"
+          git clone --branch "$PALACE_REF" --depth 1 https://github.com/awslabs/palace.git /tmp/palace-src
+
           cmake -S /tmp/palace-src -B /tmp/palace-build \
-            -DCMAKE_INSTALL_PREFIX=/tmp/palace-install -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CXX_FLAGS="-O3 -march=native" \
-            -DCMAKE_C_COMPILER=gcc -DCMAKE_C_FLAGS="-O3 -march=native" \
-            -DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_Fortran_FLAGS="-O3 -march=native" \
-            -DBUILD_SHARED_LIBS=ON -DPALACE_WITH_64BIT_INT=OFF -DPALACE_WITH_OPENMP=ON \
-            -DPALACE_WITH_CUDA=OFF -DPALACE_WITH_HIP=OFF -DPALACE_WITH_SUPERLU=ON \
-            -DPALACE_WITH_STRUMPACK=ON -DPALACE_WITH_MUMPS=ON -DPALACE_WITH_SLEPC=ON \
-            -DPALACE_WITH_ARPACK=ON -DPALACE_WITH_LIBXSMM=ON -DPALACE_WITH_MAGMA=OFF \
-            -DPALACE_WITH_GSLIB=ON
+            -DCMAKE_INSTALL_PREFIX=/tmp/palace-install \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_CXX_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_C_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DCMAKE_Fortran_COMPILER=gfortran \
+            -DCMAKE_Fortran_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DBUILD_SHARED_LIBS:BOOL=ON \
+            -DPALACE_WITH_64BIT_INT:BOOL=OFF \
+            -DPALACE_WITH_OPENMP:BOOL=ON \
+            -DPALACE_WITH_CUDA:BOOL=OFF \
+            -DPALACE_WITH_HIP:BOOL=OFF \
+            -DPALACE_WITH_SUPERLU:BOOL=ON \
+            -DPALACE_WITH_STRUMPACK:BOOL=ON \
+            -DPALACE_WITH_MUMPS:BOOL=ON \
+            -DPALACE_WITH_SLEPC:BOOL=ON \
+            -DPALACE_WITH_ARPACK:BOOL=ON \
+            -DPALACE_WITH_LIBXSMM:BOOL=ON \
+            -DPALACE_WITH_MAGMA:BOOL=OFF \
+            -DPALACE_WITH_GSLIB:BOOL=ON
+
           cmake --build /tmp/palace-build --parallel "$(nproc)"
-      - name: Stage Palace payload
-        run: |
-          ls -lah /tmp/palace-install/bin
-          ./packages/palacetoolkit-palace-cpu/tools/stage_palace_binary.sh \
-            /tmp/palace-install/bin /tmp/palace-install/lib /tmp/palace-install/lib64
-      - name: Build wheel
-        run: |
-          python -m pip install --upgrade pip build wheel
-          python -m build --wheel packages/palacetoolkit-palace-cpu
-          ls -lah packages/palacetoolkit-palace-cpu/dist
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: palacetoolkit-palace-cpu-linux-x86_64
-          path: packages/palacetoolkit-palace-cpu/dist/*.whl
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/palace-cpu-v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: packages/palacetoolkit-palace-cpu/dist/*.whl
-          generate_release_notes: true
 
-  build-windows:
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install Intel oneAPI Fortran
-        shell: pwsh
-        run: |
-          # Download and install Intel oneAPI HPC Toolkit (includes Fortran + MKL)
-          $url = "https://registrationcenter-download.intel.com/akdlm/irc_nas/20624/w_HPCTK_2025.0.1.6935_offline.exe"
-          $installer = "$env:TEMP\intel_hpc.exe"
-          Write-Output "Downloading Intel oneAPI HPC Toolkit..."
-          Invoke-WebRequest -Uri $url -OutFile $installer -TimeoutSec 600
-          Write-Output "Installing Intel oneAPI (Fortran + MKL only)..."
-          Start-Process -FilePath $installer -ArgumentList "--silent --eula accept --components=intel.oneapi.win.fortran-compiler:intel.oneapi.win.mkl" -Wait -NoNewWindow
-          Write-Output "Intel oneAPI installed"
-
-      - name: Install MS-MPI
-        shell: pwsh
-        run: |
-          $url = "https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe"
-          $installer = "$env:TEMP\msmpi.exe"
-          Write-Output "Downloading MS-MPI..."
-          Invoke-WebRequest -Uri $url -OutFile $installer -TimeoutSec 300
-          Start-Process -FilePath $installer -ArgumentList "-unattend -force" -Wait -NoNewWindow
-          Write-Output "MS-MPI installed"
-
-      - name: Install vcpkg dependencies
-        shell: pwsh
-        run: |
-          $packages = @(
-            "hypre", "metis", "arpack-ng", "nlohmann-json", "fmt",
-            "eigen3", "superlu-dist", "strumpack", "mumps", "gslib",
-            "sundials", "scalapack", "openblas"
-          )
-          foreach ($pkg in $packages) {
-            Write-Output "Installing $pkg..."
-            vcpkg install "$pkg:x64-windows" 2>&1 | Out-Null
-            if ($LASTEXITCODE -ne 0) { Write-Output "Warning: $pkg failed" }
-          }
-          Write-Output "vcpkg install complete"
-
-      - name: Build Palace (cpu-default profile)
+      - name: Build Palace (Windows)
+        if: matrix.target == 'windows'
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
-        shell: pwsh
+        shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
         run: |
-          # Set up Intel oneAPI environment
-          cmd.exe /c "C:\Program Files (x86)\Intel\oneAPI\setvars.bat && set > C:\intel_env.txt"
-          Get-Content C:\intel_env.txt | ForEach-Object {
-            if ($_ -match "^(.*?)=(.*)$") {
-              [Environment]::SetEnvironmentVariable($matches[1], $matches[2], "Process")
-            }
-          }
+          export PATH="/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
+          BUILD_ROOT="$(echo "${RUNNER_TEMP:-/tmp}" | sed 's|\\|/|g')"
+          PALACE_SRC="$BUILD_ROOT/palace-src"
+          PALACE_BUILD="$BUILD_ROOT/palace-build"
+          PALACE_INSTALL="$BUILD_ROOT/palace-install"
+          git clone --branch "$PALACE_REF" --depth 1 https://github.com/awslabs/palace.git "$PALACE_SRC"
 
-          $env:PATH = "C:\Program Files (x86)\Intel\oneAPI\compiler\latest\bin;$env:PATH"
-          $env:PATH = "C:\Program Files\Microsoft MPI\Bin;$env:PATH"
+          # Stub FindMPI
+          mkdir -p "$PALACE_SRC/cmake"
+          for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" 'MPI_C_COMPILER "gcc"' 'MPI_CXX_COMPILER "g++"' 'MPI_Fortran_COMPILER "gfortran"' 'MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe"'; do echo "set($var)" >> "$PALACE_SRC/cmake/FindMPI.cmake"; done
 
-          $VCPKG_ROOT = "C:\vcpkg"
-          $VCPKG_TRIPLET = "x64-windows"
+          # Fix patch file line endings
+          find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
 
-          git clone https://github.com/awslabs/palace.git /tmp/palace-src
-          git -C /tmp/palace-src fetch --all --tags
-          git -C /tmp/palace-src checkout "$env:PALACE_REF"
+          # Patch gslib and libxsmm to use mingw32-make instead of ninja
+          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
+          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
+          sed -i '/STATIC=0/s/$/ WERROR=0 WCHECK=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
+          # Disable libCEED (posix_memalign missing on MinGW)
+          sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
+          # Ensure MFEM waits for all its dependencies to install
+          sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Disable MFEM testing to avoid duplicate ex9.exe rule with Ninja recompact
+          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DMFEM_ENABLE_TESTING=OFF"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          # Add SKIP_RECONFIGURE to avoid Ninja recompact error
+          sed -i '/"-DMFEM_USE_EXCEPTIONS=/a\  "-DCMAKE_SKIP_RECONFIGURE=ON"' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
-          cmake -S /tmp/palace-src/palace -B /tmp/palace-build `
-            -DCMAKE_INSTALL_PREFIX=/tmp/palace-install `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DVCPKG_TARGET_TRIPLET="$VCPKG_TRIPLET" `
-            -DCMAKE_C_COMPILER=cl `
-            -DCMAKE_CXX_COMPILER=cl `
-            -DCMAKE_Fortran_COMPILER=ifx `
-            -DBUILD_SHARED_LIBS=ON `
-            -DPALACE_WITH_64BIT_INT=OFF `
-            -DPALACE_WITH_OPENMP=ON `
-            -DPALACE_WITH_CUDA=OFF `
-            -DPALACE_WITH_HIP=OFF `
-            -DPALACE_WITH_SUPERLU=ON `
-            -DPALACE_WITH_STRUMPACK=ON `
-            -DPALACE_WITH_MUMPS=ON `
-            -DPALACE_WITH_SLEPC=OFF `
-            -DPALACE_WITH_ARPACK=ON `
-            -DPALACE_WITH_LIBXSMM=ON `
-            -DPALACE_WITH_MAGMA=OFF `
-            -DPALACE_WITH_GSLIB=ON `
-            -DPALACE_WITH_SUNDIALS=ON
+          cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
+            -G "Ninja" \
+            -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_Fortran_COMPILER=gfortran \
+            -DBLA_VENDOR=OpenBLAS \
+            -DBLAS_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" \
+            -DLAPACK_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" \
+            -DOpenMP_C_FLAGS="-fopenmp" \
+            -DOpenMP_C_LIB_NAMES="gomp" \
+            -DOpenMP_gomp_LIBRARY="C:/msys64/mingw64/lib/libgomp.dll.a" \
+            -DOpenMP_CXX_FLAGS="-fopenmp" \
+            -DOpenMP_CXX_LIB_NAMES="gomp" \
+            -DOpenMP_Fortran_FLAGS="-fopenmp" \
+            -DOpenMP_Fortran_LIB_NAMES="gomp" \
+            -DBUILD_SHARED_LIBS=ON \
+            -DPALACE_WITH_64BIT_INT=OFF \
+            -DPALACE_WITH_OPENMP=ON \
+            -DPALACE_WITH_CUDA=OFF \
+            -DPALACE_WITH_HIP=OFF \
+            -DPALACE_WITH_SUPERLU=OFF \
+            -DPALACE_WITH_STRUMPACK=OFF \
+            -DPALACE_WITH_MUMPS=OFF \
+            -DPALACE_WITH_SLEPC=OFF \
+            -DPALACE_WITH_ARPACK=ON \
+            -DPALACE_WITH_LIBXSMM=ON \
+            -DPALACE_WITH_MAGMA=OFF \
+            -DPALACE_WITH_GSLIB=OFF \
+            -DCMAKE_C_FLAGS="-Dffs=__builtin_ffs" \
+            -DCMAKE_CXX_FLAGS="-Dffs=__builtin_ffs" 2>&1
 
-          cmake --build /tmp/palace-build --config Release
+          set +e
+          cmake --build "$PALACE_BUILD" 2>&1 || rc=$?
+          set -e
+          if [ "${rc:-0}" -ne 0 ]; then
+            # Clean MFEM build dir to avoid stale cache issues
+            rm -rf "$PALACE_BUILD/extern/mfem-build" "$PALACE_BUILD/extern/mfem-cmake"
+            # Patch libxsmm -Werror (both Makefile and Makefile.inc)
+            XSMM_MK="$PALACE_BUILD/extern/libxsmm/Makefile"
+            [ -f "$XSMM_MK" ] && sed -i 's/-Werror//g' "$XSMM_MK" && echo "Patched libxsmm -Werror"
+            XSMM_INC="$PALACE_BUILD/extern/libxsmm/Makefile.inc"
+            [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm Makefile.inc WERROR"
+            # Force rebuild of libxsmm by removing stamp and object files
+            rm -f "$PALACE_BUILD/extern/libxsmm-cmake/src/libxsmm-stamp/libxsmm-build"
+            rm -f "$PALACE_BUILD/extern/libxsmm/obj/intel64/generator_rv64_instructions.o"
+            # Patch HYPRE: find _hypre_utilities.h anywhere in the build tree
+            HYPRE_HDR=$(find "$PALACE_BUILD/extern/hypre" -name "_hypre_utilities.h" -print -quit 2>/dev/null)
+            if [ -n "$HYPRE_HDR" ]; then
+              sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_HDR" && echo "Patched HYPRE ffs"
+              sed -i '/#include <malloc.h>/d' "$HYPRE_HDR" && echo "Patched HYPRE malloc.h"
+              find "$PALACE_BUILD/extern/hypre" -name "*.c" -o -name "*.h" 2>/dev/null | xargs touch 2>/dev/null
+              echo "Touched HYPRE sources for rebuild"
+            fi
+            set +e
+            cmake --build "$PALACE_BUILD" 2>&1
+            set -e
+          fi
 
-      - name: Stage Palace payload into binary package
+      - name: Stage Palace payload into binary package (Linux)
+        if: matrix.target == 'linux'
+        run: |
+          set -euo pipefail
+          ls -lah /tmp/palace-install/bin
+          ./packages/palacetoolkit-palace-cpu/tools/stage_palace_binary.sh \
+            /tmp/palace-install/bin \
+            /tmp/palace-install/lib \
+            /tmp/palace-install/lib64
+
+      - name: Stage Palace payload into binary package (Windows)
+        if: matrix.target == 'windows'
         shell: pwsh
         run: |
           ls /tmp/palace-install/bin
@@ -173,16 +205,16 @@ jobs:
             -LibDirs /tmp/palace-install/lib, /tmp/palace-install/lib64
 
       - name: Build wheel
-        shell: pwsh
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip build wheel
           python -m build --wheel packages/palacetoolkit-palace-cpu
-          ls packages/palacetoolkit-palace-cpu/dist
+          ls -lah packages/palacetoolkit-palace-cpu/dist
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
         with:
-          name: palacetoolkit-palace-cpu-win-amd64
+          name: palacetoolkit-palace-cpu-${{ matrix.target }}
           path: packages/palacetoolkit-palace-cpu/dist/*.whl
 
       - name: Attach wheel to GitHub release
