@@ -117,6 +117,7 @@ jobs:
 
           # Patch gslib and libxsmm to use mingw32-make instead of ninja
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
+          sed -i 's/INSTALL_COMMAND   mingw32-make/INSTALL_COMMAND ""\n  BUILD_COMMAND     mingw32-make/' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
           sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
           sed -i '/STATIC=0/s/$/ WERROR=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
           # Patch MFEM to depend on gslib (missing from superbuild's DEPENDS)
