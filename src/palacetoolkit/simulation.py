@@ -248,10 +248,10 @@ class Simulation:
             "Problem": {
                 "Type": "Driven",
                 "Verbose": 2,
-                "Output": "/work/results/",
+                "Output": "output/",
             },
             "Model": {
-                "Mesh": "/work/model.msh",
+                "Mesh": "model.msh",
                 "L0": 1.0,
                 "Refinement": {},
             },
@@ -534,13 +534,28 @@ def generate_palace_config_from_entities(
     pg_map: dict[str, int],
     mesh_file: str,
     output_file: str,
-    freq_min: float,
-    freq_max: float,
-    freq_step: float,
+    sim_type: str = "driven",
     L0: float = 1e-3,
     solver_order: int = 2,
     absorbing_order: int = 2,
-    farfield = True
+    farfield: bool = True,
+    # --- Driven-only params ---
+    freq_min: float = None,
+    freq_max: float = None,
+    freq_step: float = None,
+    # --- Transient-only params ---
+    excitation_type: str = "ModulatedGaussian",
+    excitation_freq: float = None,
+    excitation_width: float = 0.05,
+    max_time: float = 1.0,
+    time_step: float = 0.005,
+    save_step: int = 10,
+    transient_solver_type: str = "GeneralizedAlpha",
+    # --- Linear solver (differs by sim type by default) ---
+    linear_type: str = None,
+    ksp_type: str = None,
+    linear_tol: float = 1e-8,
+    linear_maxits: int = None,
 ) -> dict:
     """Build and write a Palace JSON config from entity definitions.
 
@@ -552,9 +567,12 @@ def generate_palace_config_from_entities(
 
     - ``"pec"``         — perfect electric conductor surface.
     - ``"dielectric"``  — volumetric material.  Extra keys:
-      ``eps_r`` (default 1.0), ``mu_r`` (default 1.0), ``loss_tan`` (default 0.0).
+      ``eps_r`` (default 1.0), ``mu_r`` (default 1.0), ``loss_tan`` (default 0.0),
+      ``conductivity`` (optional — if set, takes precedence over ``loss_tan``,
+      matching Palace's transient-solver convention).
     - ``"lumped_port"`` — lumped port excitation surface.  Extra keys:
-      ``R`` (Ω), ``Direction`` (e.g. "+X"), ``Excitation`` (bool, default True).
+      ``R`` (Ω), ``Direction`` (e.g. "+X" or [0.0, 0.0, 1.0]),
+      ``Excitation`` (bool, default True).
     - ``"waveport"``    — wave-port excitation surface.  Extra keys:
       ``Mode`` (default 1), ``Excitation`` (bool, default True).
 
@@ -562,9 +580,34 @@ def generate_palace_config_from_entities(
     ``entity_defs`` name are treated as absorbing BC surfaces (auto-generated
     outer faces from the boolean pipeline).
 
+    Args:
+        sim_type: ``"driven"`` (frequency sweep, default) or ``"transient"``
+            (time-domain). Determines which Solver sub-section and required
+            params apply.
+        freq_min, freq_max, freq_step: required when ``sim_type="driven"``.
+        excitation_freq: required when ``sim_type="transient"`` — center
+            frequency of the modulated Gaussian excitation.
+        excitation_type, excitation_width, max_time, time_step, save_step,
+            transient_solver_type: only used when ``sim_type="transient"``.
+        linear_type, ksp_type: override the Linear solver block. If not
+            given, sensible defaults are chosen per ``sim_type``
+            (Default/GMRES for driven, AMS/CG for transient).
+        linear_maxits: override MaxIts; defaults to 500 (driven) or 100
+            (transient).
+
     Returns:
         The configuration dictionary that was also written to *output_file*.
     """
+    if sim_type not in ("driven", "transient"):
+        raise ValueError(f"sim_type must be 'driven' or 'transient', got {sim_type!r}")
+
+    if sim_type == "driven":
+        if freq_min is None or freq_max is None or freq_step is None:
+            raise ValueError("freq_min, freq_max, and freq_step are required for sim_type='driven'")
+    else:
+        if excitation_freq is None:
+            raise ValueError("excitation_freq is required for sim_type='transient'")
+
     # Build lookup: entity name → definition
     defs_by_name = {e["name"]: e for e in entity_defs}
 
@@ -590,12 +633,16 @@ def generate_palace_config_from_entities(
             pec_attrs.append(tag)
 
         elif btype == "dielectric":
-            materials.append({
+            material = {
                 "Attributes":   [tag],
                 "Permeability":  edef.get("mu_r", 1.0),
                 "Permittivity":  edef.get("eps_r", 1.0),
-                "LossTan":       edef.get("loss_tan", 0.0),
-            })
+            }
+            if "conductivity" in edef:
+                material["Conductivity"] = edef["conductivity"]
+            else:
+                material["LossTan"] = edef.get("loss_tan", 0.0)
+            materials.append(material)
 
         elif btype == "lumped_port":
             lumped_idx += 1
@@ -642,9 +689,33 @@ def generate_palace_config_from_entities(
     output_stem = Path(output_file).stem
     output_folder = f"postpro/{output_stem}"
 
+    # --- Solver section (differs by sim_type) ---
+    if sim_type == "driven":
+        solver_block = {
+            "MinFreq": freq_min,
+            "MaxFreq": freq_max,
+            "FreqStep": freq_step,
+            "SaveStep": 5,
+            "AdaptiveTol": 1e-3,
+        }
+        solver_key = "Driven"
+        default_linear_type, default_ksp_type, default_maxits = "Default", "GMRES", 500
+    else:
+        solver_block = {
+            "Type": transient_solver_type,
+            "Excitation": excitation_type,
+            "ExcitationFreq": excitation_freq,
+            "ExcitationWidth": excitation_width,
+            "MaxTime": max_time,
+            "TimeStep": time_step,
+            "SaveStep": save_step,
+        }
+        solver_key = "Transient"
+        default_linear_type, default_ksp_type, default_maxits = "AMS", "CG", 100
+
     config = {
         "Problem": {
-            "Type": "Driven",
+            "Type": "Driven" if sim_type == "driven" else "Transient",
             "Verbose": 2,
             "Output": output_folder,
         },
@@ -660,18 +731,12 @@ def generate_palace_config_from_entities(
         "Solver": {
             "Order": solver_order,
             "Device": "CPU",
-            "Driven": {
-                "MinFreq": freq_min,
-                "MaxFreq": freq_max,
-                "FreqStep": freq_step,
-                "SaveStep": 5,
-                "AdaptiveTol": 1e-3,
-            },
+            solver_key: solver_block,
             "Linear": {
-                "Type": "Default",
-                "KSPType": "GMRES",
-                "Tol": 1e-8,
-                "MaxIts": 500,
+                "Type": linear_type or default_linear_type,
+                "KSPType": ksp_type or default_ksp_type,
+                "Tol": linear_tol,
+                "MaxIts": linear_maxits or default_maxits,
             },
         },
     }
@@ -680,7 +745,6 @@ def generate_palace_config_from_entities(
         json.dump(config, f, indent=2)
     print(f"Palace config written to {output_file}")
     return config
-
 
 def generate_palace_config(
     pg_map: dict[str, int],
