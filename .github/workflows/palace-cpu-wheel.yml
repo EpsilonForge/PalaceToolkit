@@ -125,7 +125,7 @@ jobs:
           # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
           # Remove MFEM examples + check deps via PATCH_COMMAND (avoids Ninja duplicate rule + missing deps)
-          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& sed -i /add_subdirectory.*examples/d CMakeLists.txt \&\& sed -i /add_dependencies.*check/d CMakeLists.txt|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& sed -i /add_subdirectory.*examples/d CMakeLists.txt \&\& sed -i /add_dependencies/d CMakeLists.txt|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
