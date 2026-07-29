@@ -100,102 +100,7 @@ jobs:
         env:
           PALACE_REF: ${{ inputs.palace_ref || 'main' }}
         shell: C:\msys64\usr\bin\bash.exe -eo pipefail '{0}'
-        run: |
-          export PATH="/c/ninja-1111:/mingw64/bin:/usr/bin:/c/Program Files/Git/bin:/c/Program Files/Git/cmd:$PATH"
-          BUILD_ROOT="$(echo "${RUNNER_TEMP:-/tmp}" | sed 's|\\|/|g')"
-          PALACE_SRC="$BUILD_ROOT/palace-src"
-          PALACE_BUILD="$BUILD_ROOT/palace-build"
-          PALACE_INSTALL="$BUILD_ROOT/palace-install"
-          git clone --branch "$PALACE_REF" --depth 1 https://github.com/awslabs/palace.git "$PALACE_SRC"
-
-          # Stub FindMPI
-          mkdir -p "$PALACE_SRC/cmake"
-          for var in "MPI_C_FOUND TRUE" "MPI_CXX_FOUND TRUE" "MPI_Fortran_FOUND TRUE" "MPI_FOUND TRUE" 'MPI_C_COMPILER "gcc"' 'MPI_CXX_COMPILER "g++"' 'MPI_Fortran_COMPILER "gfortran"' 'MPI_C_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_CXX_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_Fortran_INCLUDE_DIRS "C:/msys64/mingw64/include"' 'MPI_C_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPI_CXX_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPI_Fortran_LIBRARIES "C:/msys64/mingw64/lib/libmsmpi.dll.a"' 'MPIEXEC_EXECUTABLE "C:/msys64/mingw64/bin/mpiexec.exe"'; do echo "set($var)" >> "$PALACE_SRC/cmake/FindMPI.cmake"; done
-
-          # Fix patch file line endings
-          find "$PALACE_SRC/extern/patch" -name "*.diff" -exec sed -i 's/\r$//' {} \;
-
-          # Patch gslib and libxsmm to use mingw32-make
-          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalGSLIB.cmake"
-          sed -i 's/\${CMAKE_MAKE_PROGRAM}/mingw32-make/g' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
-          sed -i '/STATIC=0/s/$/ WERROR=0 WCHECK=0/' "$PALACE_SRC/cmake/ExternalLIBXSMM.cmake"
-          # Disable libCEED
-          sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
-          # Ensure MFEM waits for sundials
-          sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Create Python script to fix MFEM examples + check deps, run via PATCH_COMMAND
-          mkdir -p "$PALACE_SRC/cmake"
-          python3 -c "
-          import os, re
-          os.makedirs(\"$PALACE_SRC/cmake\", exist_ok=True)
-          with open(\"$PALACE_SRC/cmake/fix_mfem.py\",'w') as f:
-              f.write('import os\n')
-              f.write('os.makedirs(\"examples\", exist_ok=True)\n')
-              f.write('open(\"examples/CMakeLists.txt\",\"w\").write(\"cmake_minimum_required(VERSION 3.16)\\\nreturn()\\\n\")\n')
-              f.write('c=[l for l in open(\"CMakeLists.txt\").readlines() if not (\"add_dependencies\" in l and \"check\" in l)]\n')
-              f.write('open(\"CMakeLists.txt\",\"w\").writelines(c)\n')
-          "
-          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& python "${CMAKE_SOURCE_DIR}/cmake/fix_mfem.py"|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-
-          cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "Ninja" \
-            -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=gcc \
-            -DCMAKE_CXX_COMPILER=g++ \
-            -DCMAKE_Fortran_COMPILER=gfortran \
-            -DBLA_VENDOR=OpenBLAS \
-            -DBLAS_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" \
-            -DLAPACK_LIBRARIES="C:/msys64/mingw64/lib/libopenblas.dll.a" \
-            -DOpenMP_C_FLAGS="-fopenmp" \
-            -DOpenMP_C_LIB_NAMES="gomp" \
-            -DOpenMP_gomp_LIBRARY="C:/msys64/mingw64/lib/libgomp.dll.a" \
-            -DOpenMP_CXX_FLAGS="-fopenmp" \
-            -DOpenMP_CXX_LIB_NAMES="gomp" \
-            -DOpenMP_Fortran_FLAGS="-fopenmp" \
-            -DOpenMP_Fortran_LIB_NAMES="gomp" \
-            -DBUILD_SHARED_LIBS=ON \
-            -DPALACE_WITH_64BIT_INT=OFF \
-            -DPALACE_WITH_OPENMP=ON \
-            -DPALACE_WITH_CUDA=OFF \
-            -DPALACE_WITH_HIP=OFF \
-            -DPALACE_WITH_SUPERLU=OFF \
-            -DPALACE_WITH_STRUMPACK=OFF \
-            -DPALACE_WITH_MUMPS=OFF \
-            -DPALACE_WITH_SLEPC=OFF \
-            -DPALACE_WITH_ARPACK=ON \
-            -DPALACE_WITH_LIBXSMM=ON \
-            -DPALACE_WITH_MAGMA=OFF \
-            -DPALACE_WITH_GSLIB=OFF \
-            -DCMAKE_C_FLAGS="-Dffs=__builtin_ffs" \
-            -DCMAKE_CXX_FLAGS="-Dffs=__builtin_ffs" 2>&1
-
-          set +e
-          cmake --build "$PALACE_BUILD" 2>&1 || rc=$?
-          set -e
-          if [ "${rc:-0}" -ne 0 ]; then
-            # Clean MFEM build dir to avoid stale cache issues
-            rm -rf "$PALACE_BUILD/extern/mfem-build" "$PALACE_BUILD/extern/mfem-cmake"
-            # Patch libxsmm Makefile.inc WERROR
-            XSMM_INC="$PALACE_BUILD/extern/libxsmm/Makefile.inc"
-            [ -f "$XSMM_INC" ] && sed -i 's/WERROR_CFLAG.*:=.*/WERROR_CFLAG :=/' "$XSMM_INC" && echo "Patched libxsmm WERROR"
-            # Force rebuild of libxsmm by removing stamp
-            rm -f "$PALACE_BUILD/extern/libxsmm-cmake/src/libxsmm-stamp/libxsmm-build"
-            rm -f "$PALACE_BUILD/extern/libxsmm/obj/intel64/generator_rv64_instructions.o"
-            # Patch HYPRE: find _hypre_utilities.h anywhere in the build tree
-            HYPRE_HDR=$(find "$PALACE_BUILD/extern/hypre" -name "_hypre_utilities.h" -print -quit 2>/dev/null)
-            if [ -n "$HYPRE_HDR" ]; then
-              sed -i 's/#define hypre_ffs(x) ffs(x)/#define hypre_ffs(x) __builtin_ffs(x)/' "$HYPRE_HDR" && echo "Patched HYPRE ffs"
-              sed -i '/#include <malloc.h>/d' "$HYPRE_HDR" && echo "Patched HYPRE malloc.h"
-              find "$PALACE_BUILD/extern/hypre" -name "*.c" -o -name "*.h" 2>/dev/null | xargs touch 2>/dev/null
-              echo "Touched HYPRE sources for rebuild"
-            fi
-            set +e
-            cmake --build "$PALACE_BUILD" 2>&1
-            set -e
-          fi
-          echo "Palace build complete, checking for binary..."
-          ls -la "$PALACE_INSTALL/bin/" 2>&1 || echo "No bin dir yet"
+        run: bash packages/palacetoolkit-palace-cpu/scripts/build_windows.sh
 
       - name: Stage Palace payload into binary package (Linux)
         if: matrix.target == 'linux'
@@ -214,7 +119,6 @@ jobs:
           $buildRoot = $env:RUNNER_TEMP
           if (-not $buildRoot) { $buildRoot = "C:\msys64\tmp" }
           $palaceInstall = "$buildRoot\palace-install"
-          ls "$palaceInstall\bin"
           .\packages\palacetoolkit-palace-cpu\tools\stage_palace_binary.ps1 `
             -BinDir "$palaceInstall\bin" `
             -LibDirs "$palaceInstall\lib", "$palaceInstall\lib64"

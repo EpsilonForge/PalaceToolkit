@@ -19,7 +19,7 @@ where = ["src"]
 include = ["palacetoolkit_palace_cpu", "palacetoolkit_palace_cpu.*"]
 
 [tool.setuptools.package-data]
-palacetoolkit_palace_cpu = ["bin/*", "lib/*", "lib/**/*.so", "lib/**/*.so.*", "lib/**/*.dylib", "lib/**/*.dll"]
+palacetoolkit_palace_cpu = ["bin/*", "bin/*.exe", "bin/*.bin", "lib/*", "lib/**/*.so", "lib/**/*.so.*", "lib/**/*.dylib", "lib/**/*.dll"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]
