@@ -640,6 +640,12 @@ def generate_palace_config_from_entities(
             }
             if "conductivity" in edef:
                 material["Conductivity"] = edef["conductivity"]
+            elif sim_type == "transient":
+                eps_r_val = edef.get("eps_r", 1.0)
+                loss_tan_val = edef.get("loss_tan", 0.0)
+                freq_hz = excitation_freq * 1e9 if excitation_freq else 1e9
+                eps_0 = 8.8541878128e-12
+                material["Conductivity"] = 2 * 3.141592653589793 * freq_hz * eps_0 * eps_r_val * loss_tan_val
             else:
                 material["LossTan"] = edef.get("loss_tan", 0.0)
             materials.append(material)
@@ -674,13 +680,13 @@ def generate_palace_config_from_entities(
     if absorbing_attrs:
         boundaries["Absorbing"] = {
             "Attributes": sorted(absorbing_attrs),
-            "Order": absorbing_order,
+            "Order": 1 if sim_type == "transient" else  absorbing_order,
         }
     if lumped_ports:
         boundaries["LumpedPort"] = lumped_ports
     if wave_ports:
         boundaries["WavePort"] = wave_ports
-    if farfield and absorbing_attrs:
+    if farfield and absorbing_attrs and sim_type != "transient":
         boundaries["Postprocessing"] = {"FarField": {
                     "Attributes": sorted(absorbing_attrs),
                     "NSample": 16000
