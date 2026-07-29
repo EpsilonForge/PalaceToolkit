@@ -129,7 +129,7 @@ jobs:
           printf '%s\n' 'file(READ "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" MFEM_CONTENT)' >> "$PALACE_SRC/cmake/fix_mfem.cmake"
           printf '%s\n' 'string(REGEX REPLACE "\nadd_dependencies[^)]*check[^)]*" "" MFEM_CONTENT "${MFEM_CONTENT}")' >> "$PALACE_SRC/cmake/fix_mfem.cmake"
           printf '%s\n' 'file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" "${MFEM_CONTENT}")' >> "$PALACE_SRC/cmake/fix_mfem.cmake"
-          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& cmake -P "${CMAKE_SOURCE_DIR}/cmake/fix_mfem.cmake"|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& cmake -Wno-author -P "${CMAKE_SOURCE_DIR}/cmake/fix_mfem.cmake"|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
