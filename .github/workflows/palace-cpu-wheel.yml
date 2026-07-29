@@ -123,13 +123,19 @@ jobs:
           sed -i 's/INSTALL_COMMAND.*/INSTALL_COMMAND ""\n  BUILD_COMMAND     ""\n  CONFIGURE_COMMAND ""/' "$PALACE_SRC/cmake/ExternalLibCEED.cmake"
           # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
-          # Create cmake script to fix MFEM examples + check deps, run via PATCH_COMMAND
+          # Create Python script to fix MFEM examples + check deps, run via PATCH_COMMAND
           mkdir -p "$PALACE_SRC/cmake"
-          printf '%s\n' 'file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/examples/CMakeLists.txt"' '"cmake_minimum_required(VERSION 3.0)"' '"return()"' '")' > "$PALACE_SRC/cmake/fix_mfem.cmake"
-          printf '%s\n' 'file(READ "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" MFEM_CONTENT)' >> "$PALACE_SRC/cmake/fix_mfem.cmake"
-          printf '%s\n' 'string(REGEX REPLACE "\nadd_dependencies[^\n]*check[^\n]*" "" MFEM_CONTENT "${MFEM_CONTENT}")' >> "$PALACE_SRC/cmake/fix_mfem.cmake"
-          printf '%s\n' 'file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt.tmp" "@MFEM_CONTENT@")' >> "$PALACE_SRC/cmake/fix_mfem.cmake" && printf '%s\n' 'configure_file("${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt.tmp" "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" @ONLY)' >> "$PALACE_SRC/cmake/fix_mfem.cmake" && printf '%s\n' 'file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt.tmp")' >> "$PALACE_SRC/cmake/fix_mfem.cmake"
-          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& cmake -Wno-author -P "${CMAKE_SOURCE_DIR}/cmake/fix_mfem.cmake"|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          python3 -c "
+          import os, re
+          os.makedirs(os.path.join('$PALACE_SRC','cmake'), exist_ok=True)
+          with open('$PALACE_SRC/cmake/fix_mfem.py','w') as f:
+              f.write('import os,re\n')
+              f.write('os.makedirs(\"examples\", exist_ok=True)\n')
+              f.write('open(\"examples/CMakeLists.txt\",\"w\").write(\"cmake_minimum_required(VERSION 3.0)\\nreturn()\\n\")\n')
+              f.write('c=open(\"CMakeLists.txt\").read()\n')
+              f.write('open(\"CMakeLists.txt\",\"w\").write(re.sub(r\"\\nadd_dependencies[^)]*check[^)]*\",\"\",c))\n')
+          "
+          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& python "${CMAKE_SOURCE_DIR}/cmake/fix_mfem.py"|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
