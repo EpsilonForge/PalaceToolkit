@@ -124,7 +124,7 @@ jobs:
           sed -i 's/UPDATE_COMMAND    ""/UPDATE_COMMAND    ""\n  BUILD_COMMAND     ""/' "$PALACE_SRC/cmake/ExternalJSON.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
-            -G "MinGW Makefiles" \
+            -G "MSYS Makefiles" \
             -DCMAKE_INSTALL_PREFIX="$PALACE_INSTALL" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc \
