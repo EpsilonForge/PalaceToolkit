@@ -124,7 +124,7 @@ jobs:
           # Ensure MFEM waits for sundials
           sed -i 's/set(MFEM_DEPENDENCIES hypre metis)/set(MFEM_DEPENDENCIES hypre metis sundials)/' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
           # Make MFEM examples a no-op to avoid duplicate ex9.exe rule
-          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& echo return^(^) > examples/CMakeLists.txt \&\& C:/msys64/usr/bin/sed.exe -i /add_dependencies.*check.*ex/d CMakeLists.txt|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
+          sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& echo cmake_minimum_required^(VERSION 3.0^) > examples/CMakeLists.txt \&\& echo return^(^) >> examples/CMakeLists.txt \&\& C:/msys64/usr/bin/sed.exe -i /add_dependencies.*check.*ex/d CMakeLists.txt|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
           cmake -S "$PALACE_SRC" -B "$PALACE_BUILD" \
             -G "Ninja" \
