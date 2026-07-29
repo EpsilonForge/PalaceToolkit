@@ -82,6 +82,7 @@ package-lock.json
 # Palace/Visualization postprocessing output
 postpro/
 **/postpro/
+docs/examples/output/
 *.vtk
 *.vtu
 *.pvtu
