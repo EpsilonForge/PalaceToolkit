@@ -127,8 +127,8 @@ jobs:
           mkdir -p "$PALACE_SRC/cmake"
           python3 -c "
           import os, re
-          os.makedirs(os.path.join('$PALACE_SRC','cmake'), exist_ok=True)
-          with open('$PALACE_SRC/cmake/fix_mfem.py','w') as f:
+          os.makedirs(\"$PALACE_SRC/cmake\", exist_ok=True)
+          with open(\"$PALACE_SRC/cmake/fix_mfem.py\",'w') as f:
               f.write('import os,re\n')
               f.write('os.makedirs(\"examples\", exist_ok=True)\n')
               f.write('open(\"examples/CMakeLists.txt\",\"w\").write(\"cmake_minimum_required(VERSION 3.0)\\nreturn()\\n\")\n')
