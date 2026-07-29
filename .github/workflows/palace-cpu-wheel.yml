@@ -129,11 +129,11 @@ jobs:
           import os, re
           os.makedirs(\"$PALACE_SRC/cmake\", exist_ok=True)
           with open(\"$PALACE_SRC/cmake/fix_mfem.py\",'w') as f:
-              f.write('import os,re\n')
+              f.write('import os\n')
               f.write('os.makedirs(\"examples\", exist_ok=True)\n')
               f.write('open(\"examples/CMakeLists.txt\",\"w\").write(\"cmake_minimum_required(VERSION 3.16)\\\nreturn()\\\n\")\n')
-              f.write('c=open(\"CMakeLists.txt\").read()\n')
-              f.write('open(\"CMakeLists.txt\",\"w\").write(re.sub(r\"\\\r?\\\nadd_dependencies[^)]*check[^)]*\\\)\",\"\",c))\n')
+              f.write('c=[l for l in open(\"CMakeLists.txt\").readlines() if not (\"add_dependencies\" in l and \"check\" in l)]\n')
+              f.write('open(\"CMakeLists.txt\",\"w\").writelines(c)\n')
           "
           sed -i 's|git apply "${MFEM_PATCH_FILES}"|git apply "${MFEM_PATCH_FILES}" \&\& python "${CMAKE_SOURCE_DIR}/cmake/fix_mfem.py"|' "$PALACE_SRC/cmake/ExternalMFEM.cmake"
 
