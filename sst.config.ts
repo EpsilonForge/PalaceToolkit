@@ -33,11 +33,7 @@ export default $config({
     const router = sst.aws.Router.get("EpsilonForgeRouter", routerDistributionId);
 
     const docs = new sst.aws.StaticSite("PalaceToolkitDocs", {
-      path: ".",
-      build: {
-        command: "python -m sphinx -W --keep-going -b html docs site",
-        output: "site",
-      },
+      path: "site",
       router: {
         instance: router,
         path: "/palace-toolkit",

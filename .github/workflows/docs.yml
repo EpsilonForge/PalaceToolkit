@@ -17,6 +17,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: write
 
 concurrency:
   group: docs-${{ github.event.pull_request.number || github.ref_name }}
@@ -85,7 +86,6 @@ jobs:
   # ------------------------------------------------------------------
   build-docs:
     if: github.event_name == 'pull_request' || github.ref_name == 'main'
-    needs: [lint-and-unit-tests]
     runs-on: ubuntu-24.04
 
     steps:
@@ -154,9 +154,12 @@ jobs:
           python -m sphinx -W --keep-going -b html docs site
 
       - name: Save built site as artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: palace-toolkit-site
           path: site
+          if-no-files-found: error
+          retention-days: 7
 
   # ------------------------------------------------------------------
   # 3. Deploy to AWS (main branch only, after successful build-docs)
@@ -196,8 +199,9 @@ jobs:
           npm install --no-fund --no-audit
 
       - name: Download built site
-        uses: actions/download-pages-artifact@v3
+        uses: actions/download-artifact@v4
         with:
+          name: palace-toolkit-site
           path: site
 
       - name: Deploy docs
