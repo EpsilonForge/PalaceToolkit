@@ -124,7 +124,7 @@ def discover_paraview_datasets(postpro_dir: str | Path) -> dict[str, ParaviewDat
         Keys are dataset folder names (for example ``driven`` or ``driven_boundary``).
     """
     postpro = Path(postpro_dir)
-    paraview_dir = postpro / "paraview"
+    paraview_dir = postpro / "paraview" 
     if not paraview_dir.is_dir():
         raise FileNotFoundError(f"Paraview directory not found: {paraview_dir}")
 
@@ -177,6 +177,21 @@ def load_dataset_step(
         raise FileNotFoundError(f"Mesh step file not found: {step.mesh_file}")
 
     mesh = pv.read(str(step.mesh_file))
+    # If the mesh has no point data, it might be a PVTU that pyvista couldn't
+    # resolve. Try reading individual VTU files referenced inside the PVTU.
+    if mesh.n_points == 0 or len(mesh.point_data) == 0:
+        if step.mesh_file.suffix.lower() == ".pvtu":
+            vtu_files = sorted(step.mesh_file.parent.glob("proc*.vtu"))
+            if vtu_files:
+                meshes = [pv.read(str(f)) for f in vtu_files]
+                if len(meshes) > 1:
+                    mesh = meshes[0].merge(meshes[1:])
+                else:
+                    mesh = meshes[0]
+            if mesh.n_points == 0 or len(mesh.point_data) == 0:
+                vtu_files = sorted(step.mesh_file.parent.glob("*.vtu"))
+                if vtu_files:
+                    mesh = pv.read(str(vtu_files[0]))
     return mesh, dataset, step
 
 
@@ -519,7 +534,17 @@ def activate_vector_component(
     """
     if field_name not in mesh.point_data:
         available = ", ".join(mesh.point_data.keys())
-        raise KeyError(f"Point field '{field_name}' not found. Available: {available}")
+        print(f"Field '{field_name}' not found. Available point arrays: {available}")
+        # Try common vector field names as fallback
+        for candidate in ("E", "H", "J", "E_field", "H_field", "efield", "hfield"):
+            if candidate in mesh.point_data:
+                vec = np.asarray(mesh.point_data[candidate])
+                if vec.ndim == 2 and vec.shape[1] >= 3:
+                    print(f"Using '{candidate}' instead.")
+                    field_name = candidate
+                    break
+        else:
+            raise KeyError(f"Point field not found. Available: {available}")
 
     vec = np.asarray(mesh.point_data[field_name])
     if vec.ndim != 2 or vec.shape[1] < 3:
@@ -708,3 +733,204 @@ def plot_volume_contours(
         pl.screenshot(str(screenshot))
 
     return pl
+
+
+def generate_transient_video(
+    postpro_dir: str | Path,
+    output_file: str | Path = "transient.gif",
+    *,
+    field_name: str = "E",
+    hidden_attrs: list[int] | None = None,
+    geometry_attrs: dict[int, dict] | None = None,
+    cmap: str = "turbo",
+    clim_scale: float = 0.6,
+    fps: int = 10,
+    window_size: tuple[int, int] = (1400, 900),
+) -> Path:
+    """Generate a 3D field animation from a transient PALACE simulation.
+
+    Uses boundary surface data, hides the air-box/farfield, and overlays
+    the antenna geometry as wireframe outlines.
+
+    Parameters
+    ----------
+    postpro_dir : str | Path
+        Path to the simulation postprocessing directory
+        (e.g. ``postpro/l_antenna_transient``).
+    output_file : str | Path
+        Output GIF path.
+    field_name : str
+        Field to visualize (``"E"``, ``"B"``, ``"S"``, ``"U_e"``, ``"U_m"``).
+    hidden_attrs : list[int] | None
+        Attribute tags to hide (air-box farfield). Default: ``[8]``.
+    geometry_attrs : dict[int, dict] | None
+        Attribute tags for geometry overlay with ``name``, ``color``, ``opacity``.
+    cmap : str
+        Matplotlib colormap name.
+    clim_scale : float
+        Fraction of global max for colorbar upper limit.
+    fps : int
+        Frames per second.
+    window_size : tuple[int, int]
+        Render window size in pixels.
+
+    Returns
+    -------
+    Path
+        Path to the generated GIF.
+    """
+    import pyvista as pv
+    import numpy as np
+    from pathlib import Path
+
+    if hidden_attrs is None:
+        hidden_attrs = [8]
+    if geometry_attrs is None:
+        geometry_attrs = {
+            3: {"name": "Ground Plane", "color": "#888888", "opacity": 0.3},
+            4: {"name": "Patch",        "color": "#cc0000", "opacity": 0.4},
+            5: {"name": "Port 1",       "color": "#00cc00", "opacity": 0.6},
+            6: {"name": "Port 2",       "color": "#0000cc", "opacity": 0.6},
+        }
+
+    out = Path(output_file)
+    postpro = Path(postpro_dir)
+    paraview_dir = postpro / "paraview"
+
+    # Use boundary dataset (transient_boundary)
+    bound_dirs = [d for d in sorted(paraview_dir.glob("*/")) if "boundary" in d.name.lower()]
+    base_dir = bound_dirs[0] if bound_dirs else sorted(paraview_dir.glob("*/"))[0]
+    cycle_dirs = sorted(base_dir.glob("Cycle*"))
+    if not cycle_dirs:
+        raise FileNotFoundError(f"No Cycle* directories found in {base_dir}")
+
+    def _find_vtus(cycle_dir: Path) -> list[Path]:
+        files = sorted(cycle_dir.glob("proc*.vtu"))
+        if not files:
+            files = sorted(cycle_dir.glob("*.vtu"))
+        if not files:
+            files = sorted(cycle_dir.glob("data.pvtu"))
+        return files
+
+    # Load first mesh to validate field
+    first_files = _find_vtus(cycle_dirs[-1])
+    if not first_files:
+        raise FileNotFoundError(f"No VTU files found in {cycle_dirs[-1]}")
+    ref_mesh = pv.read(str(first_files[0]))
+    if field_name not in ref_mesh.array_names:
+        for candidate in ["E", "B", "S", "U_e", "U_m"]:
+            if candidate in ref_mesh.array_names:
+                print(f"Field '{field_name}' not found, using '{candidate}'")
+                field_name = candidate
+                break
+
+    # Compute global range (sample frames)
+    print("Computing global field range (excluding air box)...")
+    sample_cycles = cycle_dirs[::max(1, len(cycle_dirs) // 20)]
+    if cycle_dirs[-1] not in sample_cycles:
+        sample_cycles.append(cycle_dirs[-1])
+    global_max = 0.0
+    for cdir in sample_cycles:
+        files = _find_vtus(cdir)
+        if not files:
+            continue
+        mesh = pv.read(str(files[0]))
+        attrs = mesh["attribute"]
+        keep = np.ones(mesh.n_cells, dtype=bool)
+        for a in hidden_attrs:
+            keep &= (attrs != a)
+        if not keep.any():
+            continue
+        filt = mesh.extract_cells(keep)
+        fld = filt[field_name]
+        mag = np.linalg.norm(fld, axis=1) if fld.ndim > 1 else np.abs(fld)
+        global_max = max(global_max, float(mag.max()))
+    global_max = global_max or 1.0
+    print(f"Global max |{field_name}|: {global_max:.4e}")
+
+    # Extract reference geometry overlay
+    geo_parts: dict[int, dict] = {}
+    ref_attrs = ref_mesh["attribute"]
+    for attr_val, props in geometry_attrs.items():
+        mask = ref_attrs == attr_val
+        if mask.any():
+            geo = ref_mesh.extract_cells(mask)
+            edges = geo.extract_feature_edges(
+                boundary_edges=True, feature_edges=True, manifold_edges=False
+            )
+            if edges.n_cells > 0:
+                geo_parts[attr_val] = {"mesh": edges, **props}
+
+    # Camera from filtered mesh
+    ref_keep = np.ones(ref_mesh.n_cells, dtype=bool)
+    for a in hidden_attrs:
+        ref_keep &= (ref_mesh["attribute"] != a)
+    ref_filt = ref_mesh.extract_cells(ref_keep) if ref_keep.any() else ref_mesh
+    bounds = ref_filt.bounds
+    cx = (bounds[0] + bounds[1]) / 2
+    cy = (bounds[2] + bounds[3]) / 2
+    cz = (bounds[4] + bounds[5]) / 2
+    dist = max(bounds[1]-bounds[0], bounds[3]-bounds[2], bounds[5]-bounds[4]) * 2.0
+    camera_pos = [(cx + dist*0.6, cy - dist*0.5, cz + dist*0.9), (cx, cy, cz), (0, 0, 1)]
+
+    # Render
+    n_steps = len(cycle_dirs)
+    max_frames = 150
+    step = max(1, n_steps // max_frames)
+    selected = list(range(0, n_steps, step))
+    if selected[-1] != n_steps - 1:
+        selected.append(n_steps - 1)
+
+    print(f"Rendering {len(selected)} frames at {fps} fps...")
+    plotter = pv.Plotter(off_screen=True, window_size=window_size)
+    plotter.set_background("white", top="lightblue")
+    plotter.open_gif(str(out), fps=fps)
+
+    for idx in selected:
+        cdir = cycle_dirs[idx]
+        files = _find_vtus(cdir)
+        if not files:
+            continue
+        mesh = pv.read(str(files[0]))
+        attrs = mesh["attribute"]
+        keep = np.ones(mesh.n_cells, dtype=bool)
+        for a in hidden_attrs:
+            keep &= (attrs != a)
+        if not keep.any():
+            continue
+        filt = mesh.extract_cells(keep)
+        fld = filt[field_name]
+        mag = np.linalg.norm(fld, axis=1) if fld.ndim > 1 else np.abs(fld)
+        filt["mag"] = mag
+
+        plotter.clear()
+        plotter.add_mesh(
+            filt, scalars="mag", cmap=cmap,
+            clim=[0, global_max * clim_scale],
+            show_edges=False, opacity=1.0,
+            scalar_bar_args={
+                "title": f"|{field_name}|",
+                "title_font_size": 16, "label_font_size": 12,
+                "position_x": 0.82, "position_y": 0.15,
+                "width": 0.12, "height": 0.6, "fmt": "%.1e",
+            },
+        )
+        for part in geo_parts.values():
+            plotter.add_mesh(
+                part["mesh"], color="black", line_width=2.0,
+                opacity=1.0, label=part["name"],
+            )
+        plotter.add_text(
+            f"Cycle {idx}", position="upper_left",
+            font_size=16, color="black",
+        )
+        plotter.add_text(
+            f"L-Antenna |{field_name}|", position="upper_edge",
+            font_size=14, color="black",
+        )
+        plotter.camera_position = camera_pos
+        plotter.write_frame()
+
+    plotter.close()
+    print(f"Saved: {out.resolve()}")
+    return out
