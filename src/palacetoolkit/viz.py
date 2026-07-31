@@ -868,22 +868,26 @@ def _display_png(plotter) -> None:
 
 
 def _display_interactive_html(plotter) -> None:
-    """Export the plotter as an interactive HTML viewer and display it."""
-    import hashlib
-    from pathlib import Path
-    from IPython.display import IFrame, display
+    """Export the plotter as an interactive HTML viewer and display it.
+
+    The HTML is inlined via ``srcdoc`` so it renders in any notebook host
+    (JupyterLab, VSCode, classic notebook) without depending on the server
+    serving local ``img/`` files or on Content-Security-Policy iframe rules.
+    """
+    import html as html_lib
+
+    from IPython.display import HTML, display
 
     html_obj = plotter.export_html(None)
     html_text = html_obj.getvalue() if hasattr(html_obj, "getvalue") else str(html_obj)
 
-    viewer_hash = hashlib.sha256(html_text.encode()).hexdigest()[:12]
-    img_dir = Path("img")
-    img_dir.mkdir(parents=True, exist_ok=True)
-    htm_path = img_dir / f"viewer_{viewer_hash}.htm"
-    htm_path.write_text(html_text, encoding="utf-8")
-
-    src = f"./img/viewer_{viewer_hash}.htm"
-    display(IFrame(src=src, width="100%", height=500))
+    escaped = html_lib.escape(html_text, quote=True)
+    iframe = (
+        f'<iframe srcdoc="{escaped}" loading="lazy" '
+        f'style="{_IFRAME_STYLE}"></iframe>'
+    )
+    # Wrap iframe to avoid IPython's HTML(...)-with-iframe warning.
+    display(HTML(f"<div>{iframe}</div>"))
 
 
 def run_with_scrollable_output(
