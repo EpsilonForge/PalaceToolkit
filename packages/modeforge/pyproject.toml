@@ -1,0 +1,20 @@
+[project]
+name = "modeforge"
+version = "0.1.0"
+description = "Standalone 2D waveguide mode solver (MFEM-based) extracted from PalaceToolkit"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "scipy",
+    "mfem",
+]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["modeforge", "modeforge.*"]
