@@ -62,9 +62,17 @@ class WaveguideModeSolver:
 
         ``eps_r`` defaults to 1.0, ``mu_r`` to 1.0, ``loss_tan`` to 0.0.
     omega : float
-        Angular frequency (rad/s).  The Palace config stores
-        ``Freq = omega / (2 * pi)`` in GHz.
+        Normalized free-space wavenumber :math:`k_0 = \\omega / c` in the
+        same (natural) length units as the mesh coordinates, with ``c = 1``.
+        The Palace config ``BoundaryMode.Freq`` is derived from it as
+        ``Freq [GHz] = omega * c_0 / (2 * pi * L0 * 1e9)`` so that the
+        normalized eigenvalue problem matches the SI one Palace solves.
+    L0 : float
+        Model length scale in meters (``Model.L0``).  Defaults to ``1.0``
+        for meshes whose coordinates are already in meters.
     """
+
+    _C0_SI = 3.0e8  # speed of light in m/s
 
     def __init__(
         self,
@@ -73,10 +81,12 @@ class WaveguideModeSolver:
         pec_bdr: list[int] | str | None = None,
         materials: list[dict[str, Any]] | None = None,
         omega: float = 2 * math.pi * 10e9,
+        L0: float = 1.0,
     ):
         self.mesh_file = str(Path(mesh_file).expanduser().resolve())
         self.order = order
         self.omega = omega
+        self.L0 = float(L0)
         self.pec_bdr: list[int] = []
         if pec_bdr == "all":
             try:
@@ -116,7 +126,9 @@ class WaveguideModeSolver:
             If set, only return the single mode at this 1-based index.
         target : float
             Target effective index for the shift-invert spectral
-            transformation (``BoundaryMode.Target``).  0 = auto.
+            transformation (``BoundaryMode.Target``).  Values ``<= 0``
+            leave the key unset so Palace computes the shift from the
+            material properties (0 is not accepted by the config schema).
         output_dir : str or Path, optional
             Output directory for Palace results.  Defaults to a
             subdirectory next to the mesh file.
@@ -163,7 +175,16 @@ class WaveguideModeSolver:
         save: int,
         output_dir: Path,
     ) -> dict[str, Any]:
-        freq_ghz = self.omega / (2 * math.pi) / 1e9
+        freq_ghz = self.omega * self._C0_SI / (2 * math.pi * self.L0 * 1e9)
+        boundary_mode: dict[str, Any] = {
+            "Freq": freq_ghz,
+            "N": num_modes,
+            "Save": save,
+            "Tol": 1e-8,
+            "Type": "Default",
+        }
+        if target is not None and target > 0.0:
+            boundary_mode["Target"] = target
         config: dict[str, Any] = {
             "Problem": {
                 "Type": "BoundaryMode",
@@ -172,7 +193,7 @@ class WaveguideModeSolver:
             },
             "Model": {
                 "Mesh": self.mesh_file,
-                "L0": 1.0,
+                "L0": self.L0,
                 "Refinement": {},
             },
             "Domains": {"Materials": []},
@@ -180,14 +201,7 @@ class WaveguideModeSolver:
             "Solver": {
                 "Order": self.order,
                 "Device": "CPU",
-                "BoundaryMode": {
-                    "Freq": freq_ghz,
-                    "N": num_modes,
-                    "Save": save,
-                    "Target": target,
-                    "Tol": 1e-8,
-                    "Type": "Default",
-                },
+                "BoundaryMode": boundary_mode,
                 "Linear": {
                     "Type": "Default",
                     "KSPType": "GMRES",
@@ -249,10 +263,13 @@ class WaveguideModeSolver:
         with open(kn_csv, newline="") as f:
             reader = csv.DictReader(f)
             for idx, row in enumerate(reader, start=1):
+                # Palace pads CSV column headers with whitespace; strip keys so
+                # the lookups below match regardless of the exact header text.
+                row = {k.strip(): v for k, v in row.items()}
                 kn_re = float(row.get("Re{kn} (1/m)", row.get("Re{kn}", "nan")))
                 kn_im = float(row.get("Im{kn} (1/m)", row.get("Im{kn}", "0")))
-                n_re = float(row.get("Re{n_eff}", row.get("Re{n_eff}", "nan")))
-                n_im = float(row.get("Im{n_eff}", row.get("Im{n_eff}", "0")))
+                n_re = float(row.get("Re{n_eff}", "nan"))
+                n_im = float(row.get("Im{n_eff}", "0"))
 
                 k_n = complex(kn_re, kn_im)
                 n_eff = complex(n_re, n_im)
