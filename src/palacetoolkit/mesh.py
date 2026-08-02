@@ -36,7 +36,7 @@ def run_for_docs(func, *args, title="Mesh generation", **kwargs):
     """Run *func* inside a scrollable output block during docs builds.
 
     In docs-build mode (``DOCS_BUILD=1`` or ``PAPERMILL_OUTPUT_PATH`` set):
-    - gmsh C-level terminal output is suppressed via ``_gmsh_terminal_context``
+    - gmsh C-level terminal output is suppressed via :func:`_gmsh_suppress_terminal`
     - Python-level stdout/stderr is captured in a collapsible ``<details>`` block
       via :func:`palacetoolkit.viz.run_with_scrollable_output`
 
@@ -48,8 +48,11 @@ def run_for_docs(func, *args, title="Mesh generation", **kwargs):
 
     from palacetoolkit.viz import run_with_scrollable_output
 
-    with _gmsh_terminal_context():
+    prev = _gmsh_suppress_terminal()
+    try:
         return run_with_scrollable_output(func, *args, title=title, **kwargs)
+    finally:
+        _gmsh_restore_terminal(prev)
 
 
 # ---------------------------------------------------------------------------
