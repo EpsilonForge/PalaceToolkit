@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
           sudo apt update
           sudo apt install -y \
-            cmake gfortran openmpi-bin libopenmpi-dev libopenblas-dev pkg-config git make
+            cmake gfortran openmpi-bin libopenmpi-dev libopenblas-dev pkg-config git make patchelf
 
       - name: Build Palace (cpu-default profile)
         env:
