@@ -25,6 +25,14 @@ if [[ ! -f "$src_engine" ]]; then
   exit 1
 fi
 
+# Include build-output lib dirs in LD_LIBRARY_PATH so ldd can resolve them
+for src_lib_dir in "$@"; do
+  if [[ -d "$src_lib_dir" ]]; then
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$src_lib_dir"
+  fi
+done
+export LD_LIBRARY_PATH
+
 pkg_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 dst_bin_dir="$pkg_dir/src/palacetoolkit_palace_cpu/bin"
 dst_lib_dir="$pkg_dir/src/palacetoolkit_palace_cpu/lib"
@@ -37,26 +45,29 @@ chmod +x "$dst_bin_dir/palace" "$dst_bin_dir/palace-x86_64.bin"
 rm -rf "$dst_lib_dir"/*
 mkdir -p "$dst_lib_dir"
 
-declare -a valid_lib_dirs=()
-for src_lib_dir in "$@"; do
-  if [[ -d "$src_lib_dir" ]]; then
-    valid_lib_dirs+=("$src_lib_dir")
-  fi
-done
-
-if [[ ${#valid_lib_dirs[@]} -eq 0 ]]; then
-  echo "No valid library directory found in arguments: $*"
-  exit 1
-fi
-
-is_runtime_lib() {
+# Libraries that are universally available on glibc-based Linux systems and
+# should NOT be bundled.  Bundling them would risk ABI conflicts with the
+# host system's versions.
+is_system_lib() {
   local dep="$1"
-  for root in "${valid_lib_dirs[@]}"; do
-    case "$dep" in
-      "$root"/*) return 0 ;;
-    esac
-  done
-  return 1
+  local name
+  name="$(basename "$dep")"
+  case "$name" in
+    linux-vdso*|ld-linux-*|libc.so*|libm.so*|libdl.so*)
+      return 0 ;;
+    libpthread.so*|librt.so*|libutil.so*|libresolv.so*)
+      return 0 ;;
+    libnss_*|libBrokenLocale*|libanl.so*|libcidn.so*)
+      return 0 ;;
+    libcrypt.so*|libkeyutils.so*|libselinux.so*|libcap.so*)
+      return 0 ;;
+    libstdc++.so*|libgcc_s.so*)
+      return 0 ;;
+    libz.so*|libbz2.so*|liblzma.so*|libzstd.so*)
+      return 0 ;;
+    *)
+      return 1 ;;
+  esac
 }
 
 collect_deps() {
@@ -73,6 +84,11 @@ copy_lib_with_links() {
   real="$(readlink -f "$dep")"
   local real_name
   real_name="$(basename "$real")"
+
+  if [[ -e "$dst_lib_dir/$real_name" ]]; then
+    return  # already copied
+  fi
+
   cp -a "$real" "$dst_lib_dir/$real_name"
 
   local dep_name
@@ -91,7 +107,7 @@ while [[ ${#queue[@]} -gt 0 ]]; do
   while IFS= read -r dep; do
     [[ -n "$dep" ]] || continue
     [[ -e "$dep" ]] || continue
-    if ! is_runtime_lib "$dep"; then
+    if is_system_lib "$dep"; then
       continue
     fi
 
@@ -107,10 +123,33 @@ while [[ ${#queue[@]} -gt 0 ]]; do
 done
 
 if [[ ${#queued[@]} -eq 0 ]]; then
-  echo "No runtime libraries were discovered from provided library directories."
+  echo "No runtime libraries were discovered."
   exit 1
 fi
 
+# Set RPATH on the actual ELF binary so the dynamic linker finds bundled
+# libs automatically without needing LD_LIBRARY_PATH.  (The `palace`
+# launcher is a bash script so we skip it.)
+if command -v patchelf >/dev/null 2>&1; then
+  # Strip embedded RUNPATH/RPATH from all bundled .so files so they
+  # don't block the main binary's RPATH propagation.
+  for so in "$dst_lib_dir"/*.so*; do
+    [[ -f "$so" ]] || continue
+    patchelf --remove-rpath "$so" 2>/dev/null || true
+  done
+
+  # Use --force-rpath to set the legacy RPATH (not RUNPATH) on the
+  # main binary so it propagates to transitive dependencies.
+  # RUNPATH does not propagate, so libs loaded by bundled .so files
+  # (e.g. libarpack -> libopenblas) would not find them.
+  patchelf --force-rpath --set-rpath '$ORIGIN/../lib' "$dst_bin_dir/palace-x86_64.bin"
+  echo "RPATH set on palace-x86_64.bin (and stripped from bundled libs)"
+else
+  echo "WARNING: patchelf not found — RPATH not set. The bundled libs will"
+  echo "require LD_LIBRARY_PATH at runtime."
+fi
+
+# Strip debug symbols to shrink the package
 if command -v strip >/dev/null 2>&1; then
   strip --strip-unneeded "$dst_bin_dir/palace-x86_64.bin" || true
   find "$dst_lib_dir" -type f -name '*.so*' -exec strip --strip-unneeded {} + || true
