@@ -155,9 +155,9 @@ def _options_fingerprint() -> str:
 def _cmake_configure(paths: PalaceCachePaths) -> None:
     paths.build_dir.mkdir(parents=True, exist_ok=True)
 
-    cxx_flags = "-O3 -ffp-contract=fast -funroll-loops -march=native"
-    c_flags = "-O3 -ffp-contract=fast -funroll-loops -march=native"
-    fortran_flags = "-O3 -ffp-contract=fast -funroll-loops -march=native"
+    cxx_flags = "-O3 -ffp-contract=fast -funroll-loops -march=x86-64-v3"
+    c_flags = "-O3 -ffp-contract=fast -funroll-loops -march=x86-64-v3"
+    fortran_flags = "-O3 -ffp-contract=fast -funroll-loops -march=x86-64-v3"
 
     cmd = [
         "cmake",
