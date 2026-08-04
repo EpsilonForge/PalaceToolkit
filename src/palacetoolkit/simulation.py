@@ -366,11 +366,28 @@ def run_palace(
     3. Packaged/fetched local binary
     4. ``PALACE_SIF`` environment variable
     """
+    def _classify_exit(code: int) -> str:
+        if code < 0:
+            sig = -code
+        elif code >= 128:
+            sig = code - 128
+        else:
+            return f"exit code {code}"
+        hints = {
+            4: "SIGILL (Illegal instruction) — CPU incompatibility",
+            6: "SIGABRT",
+            8: "SIGFPE",
+            11: "SIGSEGV",
+        }
+        hint = hints.get(sig)
+        return f"signal {sig}{' — ' + hint if hint else ''}"
+
     def _handle_run_failure(returncode: int) -> None:
+        info = _classify_exit(returncode)
         if os.environ.get("DOCS_BUILD") == "1":
-            print(f"Palace run skipped in docs build due to runtime failure: Palace exited with code {returncode}")
+            print(f"Palace simulation skipped: {info}. Using committed postprocessing data.")
             return
-        raise RuntimeError(f"Palace exited with code {returncode}")
+        raise RuntimeError(f"Palace exited with {info}")
 
     if os.environ.get("DOCS_BUILD") == "1" and num_procs > 1:
         num_procs = 1
