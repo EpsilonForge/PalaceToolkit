@@ -46,11 +46,11 @@ jobs:
           cmake -S /tmp/palace-src -B /tmp/palace-build \
             -DCMAKE_INSTALL_PREFIX=/tmp/palace-install \
             -DCMAKE_CXX_COMPILER=g++ \
-            -DCMAKE_CXX_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DCMAKE_CXX_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=x86-64-v3" \
             -DCMAKE_C_COMPILER=gcc \
-            -DCMAKE_C_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DCMAKE_C_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=x86-64-v3" \
             -DCMAKE_Fortran_COMPILER=gfortran \
-            -DCMAKE_Fortran_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=native" \
+            -DCMAKE_Fortran_FLAGS="-O3 -ffp-contract=fast -funroll-loops -march=x86-64-v3" \
             -DBUILD_SHARED_LIBS:BOOL=ON \
             -DPALACE_WITH_64BIT_INT:BOOL=OFF \
             -DPALACE_WITH_OPENMP:BOOL=ON \

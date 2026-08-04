@@ -30,7 +30,7 @@ electromagnetic solving.  In a single Python script you can:
 |:--|:--|
 | [Getting Started](getting-started/index.md) | Installation, meshing, simulation setup, post-processing |
 | [Examples](examples/index.md) | Waveguides, antennas, and planar microwave circuits |
-| [Full Course](full-course.md) | Structured video lectures |
+| [Online Program](full-course.md) | Guided program with expert Q&A, 1:1 sessions, and templates |
 | [Palace docs](https://awslabs.github.io/palace/) | Upstream Palace reference |
 | [Gmsh docs](https://gmsh.info/doc/texinfo/gmsh.html) | Upstream Gmsh reference |
 
