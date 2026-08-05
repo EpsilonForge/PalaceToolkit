@@ -27,6 +27,7 @@ docs = [
     "sphinx-autobuild",
     "linkify-it-py",
     "pyvista[jupyter]",
+    "imageio",
     "nbconvert",
     "ipykernel",
     "papermill",
