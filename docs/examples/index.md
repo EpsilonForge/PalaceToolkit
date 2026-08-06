@@ -96,35 +96,35 @@ Palace configuration, simulation, and post-processing.
 	<a class="ptk-gallery-link" href="hollow_waveguide_modes.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/hollow_waveguide.png" alt="Hollow Rectangular Waveguide Modes preview">
-			<h3>Hollow Rectangular Waveguide Modes</h3>
+			<h3>Hollow Rectangular Waveguide</h3>
 			<p>PEC waveguide eigenmodes compared with analytic TE/TM propagation constants.</p>
 		</article>
 	</a>
 	<a class="ptk-gallery-link" href="dielectric_waveguide_modes.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/dielectric_waveguide.png" alt="Dielectric Waveguide Modes preview">
-			<h3>Dielectric Waveguide Modes</h3>
+			<h3>Dielectric Waveguide</h3>
 			<p>Rectangular dielectric core in cladding with guided-mode classification and field plots.</p>
 		</article>
 	</a>
 	<a class="ptk-gallery-link" href="microstrip_modes.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/microstrip.png" alt="Microstrip Modes preview">
-			<h3>Microstrip Modes</h3>
+			<h3>Microstrip</h3>
 			<p>Boxed 2D microstrip cross-section with PEC strip and outer conductor boundaries for hybrid mode analysis.</p>
 		</article>
 	</a>
 	<a class="ptk-gallery-link" href="slotline_modes.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/slotline.png" alt="Slotline Modes preview">
-			<h3>Slotline Modes</h3>
+			<h3>Slotline</h3>
 			<p>Boxed 2D slotline cross-section with two PEC slot conductors and open outer boundaries.</p>
 		</article>
 	</a>
 	<a class="ptk-gallery-link" href="differential_microstrip_modes.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/differential.png" alt="Differential Microstrip Modes preview">
-			<h3>Differential Microstrip Modes</h3>
+			<h3>Differential Microstrip</h3>
 			<p>Boxed 2D differential microstrip with ground plane and two PEC strips for coupled-mode analysis.</p>
 		</article>
 	</a>
@@ -147,8 +147,6 @@ vivaldi_antenna
 :maxdepth: 1
 :hidden:
 
-coax
-coax_to_waveguide
 open_ended_stub
 step_in_width
 ```
@@ -158,7 +156,9 @@ step_in_width
 :maxdepth: 1
 :hidden:
 
+coax
 waveguide_box
+coax_to_waveguide
 ```
 
 ```{toctree}
