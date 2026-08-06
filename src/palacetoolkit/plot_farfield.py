@@ -219,7 +219,11 @@ def three_d_plot(
     )
 
     # ── 8. Plotting (notebook) ────────────────────────────────────────
-    pl = pv.Plotter(notebook=True)
+    # Render statically during docs builds and interactively in live
+    # notebooks (see palacetoolkit.viz.show_plotter).
+    from palacetoolkit.viz import show_plotter
+
+    pl = pv.Plotter(off_screen=True)
     pl.set_background("white")
     pl.add_title(f"Relative E-field magnitude ({label})", font_size=12)
     pl.add_mesh(
@@ -231,7 +235,7 @@ def three_d_plot(
     )
     pl.add_axes()
     pl.camera_position = "iso"
-    pl.show()
+    show_plotter(pl)
 
 def load_data(filename, freq):
     try:
