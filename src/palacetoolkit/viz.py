@@ -867,6 +867,48 @@ def _display_png(plotter) -> None:
         print(f"Warning: could not render mesh preview ({exc})")
 
 
+def show_plotter(plotter, *, interactive: bool = True) -> None:
+    """Display a PyVista ``Plotter`` in a notebook or docs build.
+
+    During a docs build (``DOCS_BUILD``/``PAPERMILL_OUTPUT_PATH`` set) this
+    renders a static PNG inline, which is the only reliable representation in
+    Sphinx/online docs — interactive backends (trame, client, server) embed
+    iframes that point at a local server and render blank in deployed docs.
+
+    In a live notebook it prefers an interactive backend (trame → client →
+    server) and falls back to a static image when none is available.
+
+    Parameters
+    ----------
+    plotter : pyvista.Plotter
+        The plotter to display. It is closed after rendering.
+    interactive : bool
+        Allow interactive backends in a live notebook. Defaults to True;
+        pass False to always render a static PNG even interactively.
+    """
+    import pyvista as pv
+
+    try:
+        if not _in_ipython_kernel():
+            plotter.show()
+            return
+
+        if not _in_interactive_notebook() or not interactive:
+            _display_png(plotter)
+            return
+
+        for candidate in ("trame", "client", "server"):
+            try:
+                pv.set_jupyter_backend(candidate)
+                plotter.show(jupyter_backend=candidate)
+                return
+            except Exception:
+                continue
+        _display_png(plotter)
+    finally:
+        plotter.close()
+
+
 def _display_interactive_html(plotter) -> None:
     """Export the plotter as an interactive HTML viewer and display it.
 
