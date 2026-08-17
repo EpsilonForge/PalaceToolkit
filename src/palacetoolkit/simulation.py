@@ -389,6 +389,44 @@ def run_palace(
             return
         raise RuntimeError(f"Palace exited with {info}")
 
+    def _stream(cmd, env=None) -> tuple[str, int]:
+        """Run ``cmd`` streaming output line-by-line while capturing it.
+
+        Returns ``(full_output, returncode)``.  Output is printed to stdout as
+        it is produced so long-running simulations show live progress.
+        """
+        proc = subprocess.Popen(
+            cmd,
+            cwd=work_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            env=env,
+            errors="replace",
+        )
+        chunks: list[str] = []
+        for line in proc.stdout:
+            chunks.append(line)
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        proc.wait()
+        return "".join(chunks), proc.returncode
+
+    def _show_output(full_output: str) -> None:
+        """Show captured output as a scrollable block in notebooks."""
+        if not _in_notebook():
+            sys.stdout.write(full_output + "\n")
+            sys.stdout.flush()
+            return
+        from IPython.display import HTML, display
+        display(HTML(
+            '<details open class="ptk-scroll-output">'
+            "<summary><strong>Palace simulation output</strong></summary>"
+            f'<pre style="--ptk-output-visible-lines:20; --ptk-output-line-height:1.35;">'
+            f"{html.escape(full_output)}</pre></details>"
+        ))
+
     if os.environ.get("DOCS_BUILD") == "1" and num_procs > 1:
         num_procs = 1
 
@@ -441,26 +479,14 @@ def run_palace(
                 cmd = ["mpirun", "-np", str(num_procs), str(selected_exec), str(config_path)]
             else:
                 cmd = [str(selected_exec), str(config_path)]
-        output = [f"  Running: {' '.join(cmd)}"]
-        result = subprocess.run(cmd, cwd=work_dir, capture_output=True, text=True, env=run_env)
-        if result.stdout:
-            output.append(result.stdout)
-        if result.stderr:
-            output.append(result.stderr)
-        full_output = "\n".join(output).rstrip("\n")
-        if _in_notebook():
-            from IPython.display import HTML, display
-            display(HTML(
-                '<details open class="ptk-scroll-output">'
-                "<summary><strong>Palace simulation output</strong></summary>"
-                f'<pre style="--ptk-output-visible-lines:20; --ptk-output-line-height:1.35;">'
-                f"{html.escape(full_output)}</pre></details>"
-            ))
-        else:
-            sys.stdout.write(full_output + "\n")
-            sys.stdout.flush()
-        if result.returncode != 0:
-            _handle_run_failure(result.returncode)
+        print(f"  Running: {' '.join(cmd)}")
+        full_output, returncode = _stream(cmd, env=run_env)
+        if not full_output.strip():
+            full_output = f"  Running: {' '.join(cmd)}"
+        if _in_notebook() and os.environ.get("PAPERMILL_OUTPUT_PATH"):
+            _show_output(full_output)
+        if returncode != 0:
+            _handle_run_failure(returncode)
         return
 
     if palace_sif_path is None:
@@ -492,26 +518,14 @@ def run_palace(
             "palace", f"/work/{config_name}",
         ]
 
-    output = [f"  Running: {' '.join(cmd)}"]
-    result = subprocess.run(cmd, cwd=work_dir, capture_output=True, text=True)
-    if result.stdout:
-        output.append(result.stdout)
-    if result.stderr:
-        output.append(result.stderr)
-    full_output = "\n".join(output).rstrip("\n")
-    if _in_notebook():
-        from IPython.display import HTML, display
-        display(HTML(
-            '<details open class="ptk-scroll-output">'
-            "<summary><strong>Palace simulation output</strong></summary>"
-            f'<pre style="--ptk-output-visible-lines:20; --ptk-output-line-height:1.35;">'
-            f"{html.escape(full_output)}</pre></details>"
-        ))
-    else:
-        sys.stdout.write(full_output + "\n")
-        sys.stdout.flush()
-    if result.returncode != 0:
-        _handle_run_failure(result.returncode)
+    print(f"  Running: {' '.join(cmd)}")
+    full_output, returncode = _stream(cmd)
+    if not full_output.strip():
+        full_output = f"  Running: {' '.join(cmd)}"
+    if _in_notebook() and os.environ.get("PAPERMILL_OUTPUT_PATH"):
+        _show_output(full_output)
+    if returncode != 0:
+        _handle_run_failure(returncode)
 
 
 def extract_impedance(postpro_dir: str | Path) -> tuple[np.ndarray, np.ndarray]:
