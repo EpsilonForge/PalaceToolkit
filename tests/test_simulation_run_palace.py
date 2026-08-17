@@ -38,28 +38,47 @@ def test_check_palace_runtime_parses_version_line(monkeypatch):
     assert "v0.17.0" in info["version"]
 
 
+class FakePopen:
+    """Minimal stand-in for ``subprocess.Popen`` used by run_palace streaming."""
+
+    def __init__(self, cmd, returncode=0, output=""):
+        self.cmd = cmd
+        self.returncode = returncode
+        self.stdout = iter(output.splitlines(keepends=True))
+
+    def wait(self):
+        return self.returncode
+
+
+def monkeypatch_popen(monkeypatch, *, returncode=0, output=""):
+    """Patch ``subprocess.Popen`` and return the list of launched commands."""
+    calls: list[tuple] = []
+
+    def fake_popen(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return FakePopen(cmd, returncode=returncode, output=output)
+
+    monkeypatch.setattr(simulation.subprocess, "Popen", fake_popen)
+    return calls
+
+
 def test_run_palace_uses_resolved_executable(monkeypatch, tmp_path: Path) -> None:
     """run_palace should invoke the resolved executable when available."""
     config_file = tmp_path / "config.json"
     config_file.write_text("{}", encoding="utf-8")
 
     fake_exec = tmp_path / "palace"
-    calls: list[dict] = []
-
-    def fake_run(cmd, **kwargs):
-        calls.append({"cmd": cmd, "kwargs": kwargs})
-        return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
     monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
     monkeypatch.setattr(simulation, "resolve_palace_binary", lambda: fake_exec)
     monkeypatch.setattr(simulation, "resolve_palace_library_dir", lambda: None)
-    monkeypatch.setattr(simulation.subprocess, "run", fake_run)
+    calls = monkeypatch_popen(monkeypatch)
 
     simulation.run_palace(config_file=config_file, num_procs=1)
 
     assert len(calls) == 1
-    launched = calls[0]["cmd"]
+    launched = calls[0][0]
     assert launched[0] == str(fake_exec)
     assert launched[1] == "--serial"
     assert launched[2] == str(config_file.resolve())
@@ -71,22 +90,17 @@ def test_run_palace_uses_launcher_np_flag_for_parallel(monkeypatch, tmp_path: Pa
     config_file.write_text("{}", encoding="utf-8")
 
     fake_exec = tmp_path / "palace"
-    calls: list[dict] = []
-
-    def fake_run(cmd, **kwargs):
-        calls.append({"cmd": cmd, "kwargs": kwargs})
-        return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
     monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
     monkeypatch.setattr(simulation, "resolve_palace_binary", lambda: fake_exec)
     monkeypatch.setattr(simulation, "resolve_palace_library_dir", lambda: None)
-    monkeypatch.setattr(simulation.subprocess, "run", fake_run)
+    calls = monkeypatch_popen(monkeypatch)
 
     simulation.run_palace(config_file=config_file, num_procs=4)
 
     assert len(calls) == 1
-    launched = calls[0]["cmd"]
+    launched = calls[0][0]
     assert launched[0] == str(fake_exec)
     assert launched[1] == "-np"
     assert launched[2] == "4"
@@ -176,14 +190,11 @@ def test_run_palace_suppresses_runtime_error_in_docs_build(monkeypatch, tmp_path
     config_file.write_text("{}", encoding="utf-8")
     fake_exec = tmp_path / "palace"
 
-    def fake_run(cmd, **kwargs):
-        return SimpleNamespace(returncode=1, stdout="", stderr="")
-
     monkeypatch.setenv("DOCS_BUILD", "1")
     monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
     monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
     monkeypatch.setattr(simulation, "resolve_palace_binary", lambda: fake_exec)
     monkeypatch.setattr(simulation, "resolve_palace_library_dir", lambda: None)
-    monkeypatch.setattr(simulation.subprocess, "run", fake_run)
+    monkeypatch_popen(monkeypatch, returncode=1)
 
     simulation.run_palace(config_file=config_file, num_procs=1)
