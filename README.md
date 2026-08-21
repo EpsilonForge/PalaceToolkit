@@ -126,59 +126,39 @@ just docs       # build the Sphinx static site (strict mode)
 just serve      # starts a dev server on http://localhost:8080
 ```
 
-## Deploying docs to epsilonforge.com/palace-toolkit
+## Deploying docs to GitHub Pages
 
-This repository can deploy its docs independently and attach them to the shared
-Router managed by the private website infrastructure.
+The documentation site is deployed to GitHub Pages. On every push to `main`,
+the `.github/workflows/docs.yml` workflow builds the Sphinx site and publishes
+it automatically.
 
 ### One-time setup
 
-1. Install deploy dependencies:
+1. In the GitHub repository settings:
+   **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+2. The docs site will be available at
+   `https://<owner>.github.io/<repository>/`.
 
-```bash
-npm install
-python -m pip install sphinx pydata-sphinx-theme myst-parser myst-nb sphinx-copybutton sphinx-design linkify-it-py
-```
+### Manual deploy
 
-2. Set environment variables:
+1. Build the site locally:
 
-```bash
-export EPSILON_FORGE_ROUTER_DISTRIBUTION_ID="<router-distribution-id>"
-export AWS_REGION="us-east-2"
-```
+   ```bash
+   pip install -e ".[docs]"
+   just ipykernel
+   just docs-full
+   ```
 
-The `EPSILON_FORGE_ROUTER_DISTRIBUTION_ID` value comes from the private repo
-stack output `routerDistributionId`.
+2. Push the built `site/` contents (or just push to `main` — the workflow
+   rebuilds and deploys from the source).
 
-### Deploy
+You can also trigger a deploy manually from the **Actions** tab using the
+**PalaceToolkit Docs** workflow (`workflow_dispatch`).
 
-```bash
-npx sst deploy --stage production
-```
+> The previous EpsilonForge.com deploy setup (SST + AWS CloudFront Router) has
+> been removed from this repository. See `DEPLOYING-DOCS.md` if you need to
+> reproduce that setup in another package.
 
-### GitHub Actions assumptions
-
-The workflow assumes a deterministic IAM role name and reads the shared Router
-distribution ID from AWS SSM Parameter Store.
-
-- Role name pattern: `epsilon-forge-palace-toolkit-docs-deploy-<stage>`
-- SSM parameter pattern: `/epsilon-forge/<stage>/router-distribution-id`
-- AWS account has an IAM OIDC provider for `https://token.actions.githubusercontent.com`
-
-For account `527097962874`, the provider ARN is expected to be:
-
-```text
-arn:aws:iam::527097962874:oidc-provider/token.actions.githubusercontent.com
-```
-
-The deploy role trust policy must allow `sts:AssumeRoleWithWebIdentity` for this
-repository. For pushes to `main`, the subject should match:
-
-```text
-repo:EpsilonForge/PalaceToolkit:ref:refs/heads/main
-```
-
-Both are created by the private infrastructure repo stack outputs.
 ### Other useful recipes
 
 | Recipe | Description |

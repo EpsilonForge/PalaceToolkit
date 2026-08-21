@@ -13,21 +13,16 @@ on:
       - "tests/**"
       - "pyproject.toml"
       - ".github/workflows/docs.yml"
+  workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
-  actions: write
+  pages: write
+  id-token: write
 
 concurrency:
-  group: docs-${{ github.event.pull_request.number || github.ref_name }}
+  group: pages-${{ github.event.pull_request.number || github.ref_name }}
   cancel-in-progress: true
-
-env:
-  DEBIAN_FRONTEND: noninteractive
-  SST_STAGE: ${{ github.ref_name == 'main' && 'production' || format('pr-{0}', github.event.pull_request.number || 'local') }}
-  AWS_ACCOUNT_ID: ${{ vars['EPSILON_FORGE_AWS_ACCOUNT_ID'] || '527097962874' }}
-  AWS_REGION: us-east-2
 
 jobs:
   # ------------------------------------------------------------------
@@ -82,7 +77,7 @@ jobs:
             tests/test_postpro_vtu.py -v
 
   # ------------------------------------------------------------------
-  # 2. Build docs: execute notebooks → build Sphinx → save artifact
+  # 2. Build docs: execute notebooks → build Sphinx → upload artifact
   # ------------------------------------------------------------------
   build-docs:
     if: github.event_name == 'pull_request' || github.ref_name == 'main'
@@ -153,60 +148,29 @@ jobs:
           rm -rf site
           python -m sphinx -W --keep-going -b html docs site
 
-      - name: Save built site as artifact
-        uses: actions/upload-artifact@v4
+      - name: Configure Pages
+        if: github.ref_name == 'main'
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        if: github.ref_name == 'main'
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: palace-toolkit-site
+          name: github-pages
           path: site
-          if-no-files-found: error
-          retention-days: 7
 
   # ------------------------------------------------------------------
-  # 3. Deploy to AWS (main branch only, after successful build-docs)
+  # 3. Deploy to GitHub Pages (main branch only, after successful build)
   # ------------------------------------------------------------------
   deploy-docs:
     if: github.ref_name == 'main'
     needs: [build-docs]
     runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/epsilon-forge-palace-toolkit-docs-deploy-${{ env.SST_STAGE }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-session-name: palacetoolkit-docs-deploy
-
-      - name: Resolve shared router distribution ID
-        id: router
-        run: |
-          set -euo pipefail
-          PARAMETER_NAME="/epsilon-forge/$SST_STAGE/router-distribution-id"
-          ROUTER_DISTRIBUTION_ID="$(aws ssm get-parameter --name "$PARAMETER_NAME" --query 'Parameter.Value' --output text)"
-          echo "router_distribution_id=$ROUTER_DISTRIBUTION_ID" >> "$GITHUB_OUTPUT"
-
-      - name: Install deploy dependencies
-        run: |
-          set -euo pipefail
-          npm install --no-fund --no-audit
-
-      - name: Download built site
-        uses: actions/download-artifact@v4
-        with:
-          name: palace-toolkit-site
-          path: site
-
-      - name: Deploy docs
-        env:
-          EPSILON_FORGE_ROUTER_DISTRIBUTION_ID: ${{ steps.router.outputs.router_distribution_id }}
-        run: |
-          set -euo pipefail
-          npx sst deploy --stage "$SST_STAGE"
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

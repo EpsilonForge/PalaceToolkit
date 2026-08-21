@@ -70,12 +70,6 @@ venv.bak/
 .vscode/
 .idea/
 
-# Node/SST deploy tooling
-node_modules/
-.sst/
-sst-env.d.ts
-package-lock.json
-
 # Gmsh files
 *.msh
 
@@ -94,7 +88,6 @@ docs/examples/output/
 *.h5
 *.log
 *.json
-!package.json
 
 
 # Latex
