@@ -1,9 +1,9 @@
-# Online Program
+# Professional Support
 
 ## Master Open-Source Electromagnetic Simulation with Expert Support
 
-A hands-on program structured around real EM applications, combining
-guided content with direct access to expert support — Q&A, 1:1
+Hands-on support structured around real EM applications, combining
+guided content with direct access to expert help — Q&A, 1:1
 diagnostic sessions, and customized templates.
 
 ---
@@ -17,7 +17,7 @@ diagnostic sessions, and customized templates.
 - **Customized templates** — pre-built simulation templates tailored
   to your application: antennas, waveguides, filters, and more.
 
-### Program modules
+### Support modules
 
 | Module | Topics |
 |:-------|:-------|
@@ -36,10 +36,10 @@ diagnostic sessions, and customized templates.
 
 ---
 
-Enrollment is invite-only. Join the waiting list to be notified when it opens.
+Support is invite-only. Join the waiting list to be notified when it opens.
 
 <div style="text-align: center; margin: 2em 0;">
-<a href="https://www.epsilonforge.com/#course" class="ptk-cta-button" style="font-size: 1.2em; padding: 0.8em 2em;">
-    Join the Waiting List →
+<a href="https://www.epsilonforge.com" class="ptk-cta-button" style="font-size: 1.2em; padding: 0.8em 2em;">
+    Get Professional Support →
 </a>
 </div>
