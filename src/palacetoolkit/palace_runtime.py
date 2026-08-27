@@ -72,11 +72,27 @@ def _set_executable(path: Path) -> None:
     path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
-def install_palace_runtime(force: bool = False, timeout: float = 180.0) -> Path:
+def install_palace_runtime(
+    force: bool = False,
+    timeout: float = 180.0,
+    verify: bool = True,
+) -> Path:
     """Download and cache the prebuilt Palace CPU runtime.
+
+    Args:
+        force: Re-download and overwrite an existing cached runtime.
+        timeout: Network timeout for the wheel download, in seconds.
+        verify: Launch the installed runtime before reporting success.  A
+            runtime whose bundled MPI is incomplete unpacks perfectly and then
+            fails at the user's first simulation, so "the files are in place" is
+            not the same thing as "the install worked".
 
     Returns:
         Path to the cached ``palace`` launcher executable.
+
+    Raises:
+        RuntimeError: If the runtime cannot be installed, or if ``verify`` is set
+            and the installed runtime does not start.
     """
     if not _is_linux_x86_64():
         raise RuntimeError("Prebuilt runtime download is only supported on Linux x86_64")
@@ -86,6 +102,8 @@ def install_palace_runtime(force: bool = False, timeout: float = 180.0) -> Path:
     bin_palace = prefix / "bin" / "palace"
     lib_dir = prefix / "lib"
     if not force and bin_palace.is_file() and lib_dir.is_dir():
+        if verify:
+            _verify_runtime(bin_palace, lib_dir)
         return bin_palace
 
     prefix.mkdir(parents=True, exist_ok=True)
@@ -123,13 +141,30 @@ def install_palace_runtime(force: bool = False, timeout: float = 180.0) -> Path:
         shutil.copytree(bin_src, prefix / "bin")
         shutil.copytree(lib_src, prefix / "lib")
 
+        # Open MPI help text, when the wheel bundles its own MPI runtime.
+        share_src = payload_root / "share"
+        if share_src.is_dir():
+            shutil.copytree(share_src, prefix / "share")
+
     if not bin_palace.is_file():
         raise RuntimeError("Cached runtime install did not produce bin/palace")
-    _set_executable(bin_palace)
-    bin_native = prefix / "bin" / "palace-x86_64.bin"
-    if bin_native.is_file():
-        _set_executable(bin_native)
+    # Zip extraction drops the executable bit, so restore it for everything in
+    # bin/: the launcher, the Palace binary, and the bundled MPI runtime
+    # (orted/orterun) that Open MPI execs to start even a single rank.
+    for entry in sorted((prefix / "bin").iterdir()):
+        if entry.is_file():
+            _set_executable(entry)
+    if verify:
+        _verify_runtime(bin_palace, prefix / "lib")
     return bin_palace
+
+
+def _verify_runtime(binary: Path, lib_dir: Path | None) -> None:
+    """Raise unless ``binary`` actually starts, quoting why it did not."""
+    if _binary_is_runnable(binary, lib_dir):
+        return
+    detail = last_runtime_failure() or f"{binary} did not start"
+    raise RuntimeError(f"Installed Palace runtime is not usable: {detail}")
 
 
 def _cached_binary() -> Path | None:
@@ -146,13 +181,92 @@ def _cached_library_dir() -> Path | None:
     return None
 
 
+_RUNNABLE_CACHE: dict[tuple[str, int, int], bool] = {}
+_LAST_RUNTIME_FAILURE: str | None = None
+
+
 def _binary_is_runnable(binary: Path, lib_dir: Path | None, timeout: float = 15.0) -> bool:
-    if not binary.is_file():
+    """Return True when ``binary`` actually starts, not merely when it exists.
+
+    A Palace runtime can be present and executable yet unable to run at all --
+    most often because its bundled MPI runtime is incomplete, which aborts the
+    process during MPI_Init long before Palace itself is reached.  Checking only
+    the file mode reports such a runtime as usable, so resolution hands back a
+    binary that fails at the user's first simulation instead of falling through
+    to the next candidate.  Run ``--version`` and require a clean exit.
+
+    The result is cached per binary (keyed by path, mtime and size) so repeated
+    resolution within a process does not pay for the launch each time.
+    """
+    if not binary.is_file() or not os.access(binary, os.X_OK):
         return False
-    os_access = os.access(binary, os.X_OK)
-    if not os_access:
+
+    try:
+        stamp = binary.stat()
+    except OSError:
         return False
-    return True
+    key = (str(binary), stamp.st_mtime_ns, stamp.st_size)
+    cached = _RUNNABLE_CACHE.get(key)
+    if cached is not None:
+        return cached
+
+    run_env = os.environ.copy()
+    if lib_dir is not None and lib_dir.is_dir():
+        prior = run_env.get("LD_LIBRARY_PATH", "")
+        run_env["LD_LIBRARY_PATH"] = f"{lib_dir}:{prior}" if prior else str(lib_dir)
+
+    global _LAST_RUNTIME_FAILURE
+    try:
+        result = subprocess.run(
+            [str(binary), "--version"],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=run_env,
+            # The launcher writes a node file into the working directory under a
+            # batch scheduler; keep that out of the caller's directory.
+            cwd=tempfile.gettempdir(),
+        )
+        runnable = result.returncode == 0
+        if not runnable:
+            _LAST_RUNTIME_FAILURE = _summarise_failure(
+                binary, result.returncode, result.stderr or result.stdout or ""
+            )
+    except (OSError, subprocess.SubprocessError) as exc:
+        runnable = False
+        _LAST_RUNTIME_FAILURE = f"{binary} could not be launched: {exc}"
+
+    _RUNNABLE_CACHE[key] = runnable
+    return runnable
+
+
+_FAILURE_OUTPUT_LIMIT = 1500
+
+
+def _summarise_failure(binary: Path, returncode: int, output: str) -> str:
+    """Record a failed launch, keeping the output that names the cause.
+
+    Open MPI wraps its diagnostics in banners of generic prose with the decisive
+    line ("opal_shmem_base_select failed") buried among them, and no cheap
+    heuristic reliably picks it out -- so keep the whole thing, minus the rules,
+    and truncate only if it is unreasonably long.
+    """
+    lines = [line.rstrip() for line in output.splitlines() if line.strip()]
+    lines = [line for line in lines if set(line.strip()) != {"-"}]
+    detail = "\n".join(lines) if lines else "(no output)"
+    if len(detail) > _FAILURE_OUTPUT_LIMIT:
+        detail = detail[:_FAILURE_OUTPUT_LIMIT] + "\n... (output truncated)"
+    return f"{binary} exited with code {returncode}:\n{detail}"
+
+
+def last_runtime_failure() -> str | None:
+    """Return why the most recent runtime candidate was rejected, if any.
+
+    Resolution silently skips a Palace binary that cannot start, so callers that
+    end up with no runtime at all use this to report the underlying cause rather
+    than a bare "no executable found".
+    """
+    return _LAST_RUNTIME_FAILURE
 
 
 def _auto_download_enabled() -> bool:

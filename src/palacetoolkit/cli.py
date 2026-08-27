@@ -25,10 +25,15 @@ def palace_toolkit_install_binary() -> int:
     """CLI entrypoint to download/cache the Palace runtime binary."""
     parser = argparse.ArgumentParser(prog="palace-toolkit-install-binary")
     parser.add_argument("--force", action="store_true", help="Re-download and overwrite cached runtime")
+    parser.add_argument(
+        "--skip-verify",
+        action="store_true",
+        help="Do not launch the runtime after installing it (reports success on unpack alone)",
+    )
     args = parser.parse_args()
 
     try:
-        binary_path = install_palace_runtime(force=args.force)
+        binary_path = install_palace_runtime(force=args.force, verify=not args.skip_verify)
     except Exception as exc:
         print(f"Palace runtime install: FAIL - {exc}")
         return 1
