@@ -11,7 +11,7 @@ from palacetoolkit import simulation
 _LAUNCHER_VERSION_OUTPUT = """\
 >> /usr/bin/mpirun -n 1 /path/to/palace-x86_64.bin --version
 
-Palace version: v0.17.0-194-g01f5d9bd1
+Palace version: v0.18.0-194-g01f5d9bd1
 Schema version: 1-3-1
 """
 
@@ -35,7 +35,7 @@ def test_check_palace_runtime_parses_version_line(monkeypatch):
     info = simulation.check_palace_runtime()
     assert "Palace version" in info["version"]
     assert ">>" not in info["version"]
-    assert "v0.17.0" in info["version"]
+    assert "v0.18.0" in info["version"]
 
 
 class FakePopen:
