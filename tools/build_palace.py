@@ -79,7 +79,7 @@ def _resolve_source_dir(cache_root: Path) -> tuple[Path, str]:
     nightly_dir = cache_root / "_sources" / "palace-nightly"
     nightly_dir.parent.mkdir(parents=True, exist_ok=True)
 
-    version = os.environ.get("PALACETOOLKIT_PALACE_VERSION", "v0.17.0").strip()
+    version = os.environ.get("PALACETOOLKIT_PALACE_VERSION", "v0.18.0").strip()
     if not nightly_dir.exists():
         _run(["git", "clone", "--depth", "1", "--branch", version, "https://github.com/awslabs/palace.git", str(nightly_dir)])
     else:

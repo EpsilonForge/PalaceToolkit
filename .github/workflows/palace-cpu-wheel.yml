@@ -36,12 +36,17 @@ jobs:
 
       - name: Build Palace (cpu-default profile)
         env:
-          PALACE_REF: ${{ inputs.palace_ref || 'main' }}
+          INPUT_REF: ${{ inputs.palace_ref }}
         run: |
           set -euo pipefail
+          palace_ref="${INPUT_REF:-main}"
+          if [[ "${GITHUB_REF}" == refs/tags/palace-cpu-v* ]]; then
+            palace_ref="v${GITHUB_REF_NAME#palace-cpu-v}"
+          fi
+          echo "Building Palace ref: $palace_ref"
           git clone https://github.com/awslabs/palace.git /tmp/palace-src
           git -C /tmp/palace-src fetch --all --tags
-          git -C /tmp/palace-src checkout "$PALACE_REF"
+          git -C /tmp/palace-src checkout "$palace_ref"
 
           cmake -S /tmp/palace-src -B /tmp/palace-build \
             -DCMAKE_INSTALL_PREFIX=/tmp/palace-install \
