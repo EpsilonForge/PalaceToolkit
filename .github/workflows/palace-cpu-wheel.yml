@@ -83,6 +83,44 @@ jobs:
           python -m build --wheel packages/palacetoolkit-palace-cpu
           ls -lah packages/palacetoolkit-palace-cpu/dist
 
+      - name: Smoke-test wheel with the host MPI hidden
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/palace-smoke
+          /tmp/palace-smoke/bin/pip install --quiet packages/palacetoolkit-palace-cpu/dist/*.whl
+          palace_bin=$(/tmp/palace-smoke/bin/python -c \
+            'from palacetoolkit_palace_cpu import palace_binary_path; print(palace_binary_path())')
+
+          # Wheel extraction drops the executable bit.  palacetoolkit's runtime
+          # installer restores it; do the same before running the binary here.
+          chmod +x "$(dirname "$palace_bin")"/*
+
+          # Hide the host Open MPI.  A wheel whose bundled MPI runtime is
+          # incomplete would otherwise pass by borrowing the runner's Open MPI
+          # and fail on the first user machine that has none.
+          hidden=()
+          for exe in /usr/bin/mpirun /usr/bin/mpiexec /usr/bin/orted /usr/bin/orterun; do
+            if [[ -e "$exe" ]]; then
+              sudo mv "$exe" "$exe.hidden"
+              hidden+=("$exe")
+            fi
+          done
+
+          set +e
+          out=$(cd /tmp && "$palace_bin" --version 2>&1)
+          rc=$?
+          set -e
+
+          for exe in "${hidden[@]}"; do
+            sudo mv "$exe.hidden" "$exe"
+          done
+
+          echo "$out"
+          if [[ $rc -ne 0 ]] || ! grep -q "Palace version" <<< "$out"; then
+            echo "::error::palace --version failed using only the bundled MPI runtime"
+            exit 1
+          fi
+
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
         with:

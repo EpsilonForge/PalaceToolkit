@@ -11,6 +11,7 @@ import gmsh
 from palacetoolkit.mesh import create_graded_mesh as _create_graded_mesh
 from palacetoolkit.palace_runtime import (
     install_palace_runtime,
+    last_runtime_failure,
     resolve_palace_binary,
     resolve_palace_library_dir,
 )
@@ -97,8 +98,9 @@ def get_palace_executable(
             raise RuntimeError(f"Unable to install Palace runtime: {exc}") from exc
 
     raise RuntimeError(
-        "No Palace executable found. Set one with set_palace_path(...), "
-        "configure PALACE_BIN, or enable install_if_missing."
+        _no_executable_message(
+            "Set one with set_palace_path(...), configure PALACE_BIN, or enable install_if_missing."
+        )
     )
 
 
@@ -140,6 +142,15 @@ def run_env(
         install_if_missing=install_if_missing,
         force_install=force_install,
     )
+
+
+def _no_executable_message(remedies: str) -> str:
+    """Build the "no runtime" error, naming the rejected candidate when there was one."""
+    message = f"No Palace executable found. {remedies}"
+    failure = last_runtime_failure()
+    if failure:
+        message += f" A Palace runtime was present but did not start: {failure}"
+    return message
 
 
 def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
@@ -202,8 +213,9 @@ def check_palace_runtime(timeout: float = 20.0) -> dict[str, str]:
         palace_sif = os.environ.get("PALACE_SIF")
         if not palace_sif:
             raise RuntimeError(
-                "No Palace executable found. Set one with set_palace_path(...), "
-                "install a packaged binary, or set PALACE_SIF."
+                _no_executable_message(
+                    "Set one with set_palace_path(...), install a packaged binary, or set PALACE_SIF."
+                )
             )
         palace_sif_path = Path(palace_sif).expanduser().resolve()
 
@@ -493,8 +505,9 @@ def run_palace(
         palace_sif = os.environ.get("PALACE_SIF")
         if not palace_sif:
             raise RuntimeError(
-                "No Palace executable found. Set one with set_palace_path(...), "
-                "pass run_palace(..., sif_path=...), or set PALACE_SIF."
+                _no_executable_message(
+                    "Set one with set_palace_path(...), pass run_palace(..., sif_path=...), or set PALACE_SIF."
+                )
             )
         palace_sif_path = Path(palace_sif).expanduser().resolve()
 
