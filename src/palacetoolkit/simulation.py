@@ -396,7 +396,12 @@ def run_palace(
 
     def _handle_run_failure(returncode: int) -> None:
         info = _classify_exit(returncode)
-        if os.environ.get("DOCS_BUILD") == "1":
+        # DOCS_FAIL_ON_SIMULATION_ERROR is set by scripts/deploy-docs.sh so a
+        # failed run can never publish previously committed postprocessing data.
+        if (
+            os.environ.get("DOCS_BUILD") == "1"
+            and os.environ.get("DOCS_FAIL_ON_SIMULATION_ERROR") != "1"
+        ):
             print(f"Palace simulation skipped: {info}. Using committed postprocessing data.")
             return
         raise RuntimeError(f"Palace exited with {info}")

@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from palacetoolkit import simulation
 
 
@@ -198,3 +200,22 @@ def test_run_palace_suppresses_runtime_error_in_docs_build(monkeypatch, tmp_path
     monkeypatch_popen(monkeypatch, returncode=1)
 
     simulation.run_palace(config_file=config_file, num_procs=1)
+
+
+def test_run_palace_raises_on_runtime_error_in_strict_docs_build(monkeypatch, tmp_path: Path) -> None:
+    """Strict docs deploys must fail instead of reusing stale postprocessing data."""
+    config_file = tmp_path / "config.json"
+    config_file.write_text("{}", encoding="utf-8")
+    fake_exec = tmp_path / "palace"
+
+    monkeypatch.setenv("DOCS_BUILD", "1")
+    monkeypatch.setenv("DOCS_FAIL_ON_SIMULATION_ERROR", "1")
+    monkeypatch.setattr(simulation, "_PALACE_EXEC_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "_PALACE_SIF_OVERRIDE", None)
+    monkeypatch.setattr(simulation, "resolve_palace_binary", lambda: fake_exec)
+    monkeypatch.setattr(simulation, "resolve_palace_library_dir", lambda: None)
+    monkeypatch_popen(monkeypatch, returncode=1)
+
+    with pytest.raises(RuntimeError, match="Palace exited with exit code 1"):
+        simulation.run_palace(config_file=config_file, num_procs=1)
+

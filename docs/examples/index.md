@@ -48,13 +48,20 @@ Palace configuration, simulation, and post-processing.
 			<p>Open-ended microstrip stub component with geometry and simulation setup.</p>
 		</article>
 	</a>
-	<a class="ptk-gallery-link" href="l_antenna.html">
+	<a class="ptk-gallery-link" href="l_antenna_time_domain.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/bend.png" alt="L Antenna preview">
-			<h3>L Antenna</h3>
-			<p>Bent-wire L-shaped antenna workflow including geometry and driven simulation setup.</p>
+			<h3>L Antenna (Time Domain)</h3>
+			<p>L-shaped antenna with a transient Palace simulation and propagating-pulse visualisation.</p>
 		</article>
-	</a>	
+	</a>
+	<a class="ptk-gallery-link" href="signal_integrity.html">
+		<article class="ptk-gallery-card">
+			<img src="../_static/bend.png" alt="Signal Integrity preview">
+			<h3>Signal Integrity</h3>
+			<p>Standard vs. chamfered microstrip bend: S-parameters, eye diagram, and BER estimate.</p>
+		</article>
+	</a>
 	<a class="ptk-gallery-link" href="step_in_width.html">
 		<article class="ptk-gallery-card">
 			<img src="../_static/step.png" alt="Step in Width preview">
@@ -137,7 +144,7 @@ Palace configuration, simulation, and post-processing.
 
 horn_antenna
 dipole_antenna
-l_antenna
+l_antenna_time_domain
 patch_antenna
 vivaldi_antenna
 ```
@@ -150,6 +157,7 @@ vivaldi_antenna
 coax
 coax_to_waveguide
 open_ended_stub
+signal_integrity
 step_in_width
 ```
 

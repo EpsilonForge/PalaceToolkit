@@ -1,201 +1,134 @@
 # Deploying Docs
 
-This document records two ways to publish the built documentation site:
+The PalaceToolkit documentation is built and published entirely from a local
+checkout. There is no CI workflow that executes the notebooks or deploys the
+site.
 
-1. **EpsilonForge.com (SST + AWS CloudFront Router)** — the original setup,
-   removed from this repo but kept here so it can be reproduced in another
-   package.
-2. **GitHub Pages** — the current deployment used by this repo.
-
-## 1. EpsilonForge.com / PalaceToolkit (removed from this repo)
-
-> Note: This section is a historical record. The files described below have
-> been deleted from this repository and the docs are now deployed to GitHub
-> Pages instead. The steps are documented here so they can be reproduced in a
-> different package that still targets the shared EpsilonForge site.
-
-### Architecture
-
-The docs site is built with Sphinx into a static `site/` directory, then
-deployed with [SST](https://sst.dev) (Ion) to an `sst.aws.StaticSite` that is
-attached to the shared EpsilonForge CloudFront distribution ("Router") served
-by the private website infrastructure repo. The site is mounted at the path
-`/palace-toolkit`.
-
-### Files involved
-
-| File | Purpose |
-|------|---------|
-| `sst.config.ts` | SST app definition: app config, AWS provider, Router lookup, StaticSite definition. |
-| `package.json` | Declares `sst` devDependency and `deploy:docs` / `diff:docs` scripts. |
-| `sst-env.d.ts` | Auto-generated SST type declarations (gitignored). |
-| `sst.pyi`, `packages/.../sst.pyi` | Auto-generated SST Python type stubs. |
-| `.sst/` | SST local state (gitignored). |
-| `.github/workflows/docs.yml` | CI: builds docs, then deploys on `main`. |
-| `.gitignore` | Ignores Node/SST tooling (`node_modules/`, `.sst/`, `sst-env.d.ts`, `package-lock.json`). |
-
-### One-time setup
-
-1. Install deploy dependencies:
-
-   ```bash
-   npm install
-   python -m pip install sphinx pydata-sphinx-theme myst-parser myst-nb sphinx-copybutton sphinx-design linkify-it-py
-   ```
-
-2. Set environment variables:
-
-   ```bash
-   export EPSILON_FORGE_ROUTER_DISTRIBUTION_ID="<router-distribution-id>"
-   export AWS_REGION="us-east-2"
-   ```
-
-   The `EPSILON_FORGE_ROUTER_DISTRIBUTION_ID` value comes from the private repo
-   stack output `routerDistributionId`.
-
-### sst.config.ts
-
-```ts
-/// <reference path="./.sst/platform/config.d.ts" />
-
-export default $config({
-  app(input) {
-    const awsRegion = process.env.AWS_REGION ?? "us-east-2";
-    const awsProfile = process.env.AWS_PROFILE;
-
-    return {
-      name: "palace-toolkit-docs",
-      removal: input?.stage === "production" ? "retain" : "remove",
-      home: "aws",
-      providers: {
-        aws: awsProfile
-          ? { region: awsRegion, profile: awsProfile }
-          : { region: awsRegion },
-      },
-    };
-  },
-  async run() {
-    const routerDistributionId = process.env.EPSILON_FORGE_ROUTER_DISTRIBUTION_ID;
-
-    if (!routerDistributionId) {
-      throw new Error(
-        "Missing EPSILON_FORGE_ROUTER_DISTRIBUTION_ID. Set it to the Router distribution ID output by epsilon-forge-website.",
-      );
-    }
-
-    const router = sst.aws.Router.get("EpsilonForgeRouter", routerDistributionId);
-
-    const docs = new sst.aws.StaticSite("PalaceToolkitDocs", {
-      path: "site",
-      router: {
-        instance: router,
-        path: "/palace-toolkit",
-      },
-    });
-
-    return {
-      docs: docs.url,
-      routerDistributionId,
-    };
-  },
-});
-```
-
-### Local deploy
+Deployment means one command:
 
 ```bash
-npx sst deploy --stage production
+just deploy-docs
+# or directly:
+./scripts/deploy-docs.sh
 ```
 
-Use `npx sst diff --stage production` to preview changes before deploying.
+The published site lives on the `gh-pages` branch of the repository and is
+served by GitHub Pages.
 
-### GitHub Actions deploy (docs.yml)
+## What the script does
 
-The `deploy-docs` job assumed an IAM role via OIDC, read the shared Router
-distribution ID from AWS SSM Parameter Store, then ran `sst deploy`.
+`scripts/deploy-docs.sh` performs these steps:
 
-Environment variables used:
+1. Checks the Python environment (`sphinx`, `papermill`, `ipykernel`, and
+   `palacetoolkit` must be importable).
+2. Copies `docs/` into a temporary directory. The source tree, including the
+   notebooks in `docs/examples/`, is never modified.
+3. Registers the `palacetoolkit` Jupyter kernel and checks the Palace runtime.
+   If no runtime is available, the prebuilt Palace CPU runtime is installed.
+4. Executes **every** notebook in `docs/examples/` with papermill, with
+   `DOCS_BUILD=1`, a non-interactive matplotlib backend, and off-screen
+   PyVista rendering. This is the simulation step: the built pages contain the
+   outputs from the run that just finished. A failing Palace run is a hard
+   error rather than a fallback to previously committed postprocessing data.
+5. Builds the static site with Sphinx in strict mode.
+6. Adds `.nojekyll` so GitHub Pages serves Sphinx's `_static` and `_sources`
+   directories.
+7. Replaces the contents of `gh-pages` with the new site and pushes it to
+   `origin`. The first deploy creates the branch as an orphan; later deploys
+   replace its contents.
 
-- `SST_STAGE`: `production` on `main`, otherwise `pr-<number>`.
-- `AWS_ACCOUNT_ID`: from `vars['EPSILON_FORGE_AWS_ACCOUNT_ID']`, default `527097962874`.
-- `AWS_REGION`: `us-east-2`.
+If any notebook fails, the script stops and nothing is published.
 
-Deploy steps (condensed):
+## Prerequisites
 
-```yaml
-- name: Configure AWS credentials via OIDC
-  uses: aws-actions/configure-aws-credentials@v4
-  with:
-    role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/epsilon-forge-palace-toolkit-docs-deploy-${{ env.SST_STAGE }}
-    aws-region: ${{ env.AWS_REGION }}
-
-- name: Resolve shared router distribution ID
-  run: |
-    PARAMETER_NAME="/epsilon-forge/$SST_STAGE/router-distribution-id"
-    ROUTER_DISTRIBUTION_ID="$(aws ssm get-parameter --name "$PARAMETER_NAME" --query 'Parameter.Value' --output text)"
-
-- name: Install deploy dependencies
-  run: npm install --no-fund --no-audit
-
-- name: Deploy docs
-  env:
-    EPSILON_FORGE_ROUTER_DISTRIBUTION_ID: ${{ steps.router.outputs.router_distribution_id }}
-  run: npx sst deploy --stage "$SST_STAGE"
-```
-
-### Infrastructure assumptions
-
-To reproduce this in another package you need the private EpsilonForge website
-infrastructure to provide:
-
-- A CloudFront **Router** distribution; its ID is exported as
-  `routerDistributionId` in the stack outputs.
-- A deterministic deploy IAM role per stage:
-  - Role name pattern: `epsilon-forge-<project>-docs-deploy-<stage>`
-- The Router distribution ID published to AWS SSM Parameter Store:
-  - SSM parameter pattern: `/epsilon-forge/<stage>/router-distribution-id`
-- AWS account has an IAM OIDC provider for
-  `https://token.actions.githubusercontent.com`.
-  - For account `527097962874`, provider ARN:
-    `arn:aws:iam::527097962874:oidc-provider/token.actions.githubusercontent.com`
-- The deploy role trust policy allows `sts:AssumeRoleWithWebIdentity` for this
-  repository. For pushes to `main`, the subject should match:
-  `repo:EpsilonForge/PalaceToolkit:ref:refs/heads/main`
-
-## 2. GitHub Pages
-
-The docs are now deployed to GitHub Pages. On every push to `main` (and
-manually via `workflow_dispatch`), the `docs.yml` workflow builds the Sphinx
-site and publishes `site/` with the `actions/deploy-pages` action.
-
-### One-time setup
-
-1. Build the site locally to confirm it works:
-
-   ```bash
-   pip install -e ".[docs]"
-   just ipykernel
-   just docs-full
-   ```
-
-2. In the GitHub repository settings:
-   **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-
-3. Push the updated workflow to `main` (or trigger it manually from the
-   Actions tab). The site appears at
-   `https://<owner>.github.io/<repository>/`.
-
-### Workflow
-
-See `.github/workflows/docs.yml`. Key points:
-
-- `permissions.pages: write` and `permissions.id-token: write` are required.
-- The `build-docs` job uploads `site/` with `actions/upload-pages-artifact`.
-- The `deploy-docs` job runs `actions/deploy-pages` in the `github-pages`
-  environment, gated on `main`.
-
-### Local preview
+Install the docs dependencies in your virtual environment:
 
 ```bash
-just serve   # http://localhost:8080
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[docs]"
 ```
+
+The script uses `.venv/bin/python` when it exists. Set `PYTHON=/path/to/python`
+to use a different interpreter.
+
+The notebooks execute Palace simulations locally, so the machine must be able
+to run Palace. On Linux x86_64 the script installs the prebuilt CPU runtime on
+first use when none is configured. See the main README for the WSL system
+packages needed by Gmsh, MPI, and headless rendering.
+
+## One-time GitHub Pages setup
+
+In the GitHub repository:
+
+1. Open **Settings → Pages**.
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**.
+3. Choose branch **`gh-pages`** and folder **`/ (root)`**.
+4. Save.
+
+The site is served at:
+
+```text
+https://<owner>.github.io/<repository>/
+```
+
+For this repository that is `https://epsilonforge.github.io/PalaceToolkit/`.
+
+Do not use the "GitHub Actions" Pages source: this repository intentionally has
+no docs deploy workflow.
+
+## Usage
+
+```bash
+# Execute all simulations, build, and publish to origin/gh-pages
+just deploy-docs
+
+# Publish using the notebook outputs already stored in docs/examples/*.ipynb
+# (useful for the first deploy or documentation-only changes)
+SKIP_SIMULATIONS=1 just deploy-docs
+./scripts/deploy-docs.sh --skip-simulations
+
+# Directly, with optional overrides
+PYTHON=.venv/bin/python ./scripts/deploy-docs.sh
+GIT_REMOTE=upstream GH_PAGES_BRANCH=gh-pages ./scripts/deploy-docs.sh
+```
+
+With `--skip-simulations` (or `SKIP_SIMULATIONS=1`), the script neither
+registers the Jupyter kernel nor checks the Palace runtime; it builds the site
+from the outputs already present in the committed notebooks.
+
+The deploy script publishes the current checkout. Commit or stash source
+changes first if you want the published `gh-pages` history to point at a clean
+source revision; the script records the current branch and commit in its commit
+message.
+
+If the generated site is identical to the previous deployment, the script
+reports that there are no changes and does not create an empty commit.
+
+## Local preview
+
+To inspect the staged site without publishing, run the normal docs build and
+serve it:
+
+```bash
+just docs-full   # execute notebooks in-place, then build site/
+just serve       # http://localhost:8080
+```
+
+Note that `just docs-full` executes notebooks in your working tree, whereas
+`just deploy-docs` works from a temporary copy.
+
+## Troubleshooting
+
+- **A notebook fails:** the script exits before building or pushing. Fix the
+  notebook or the local Palace runtime and run the script again.
+- **`missing Python dependencies`:** install them with
+  `pip install -e ".[docs]"`.
+- **Palace runtime cannot start:** run `palace-toolkit-check` and, if needed,
+  `palace-toolkit-install-binary --force`.
+- **Pages shows a 404:** confirm the Pages source is the `gh-pages` branch and
+  `/ (root)` folder, and that the branch was pushed successfully.
+- **Assets are missing or unstyled:** make sure `.nojekyll` is present at the
+  root of `gh-pages`; the deploy script adds it automatically.
+- **Push rejected:** someone else updated `gh-pages` after your fetch. Re-run
+  the deploy so it starts from the latest remote branch.

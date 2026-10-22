@@ -89,9 +89,8 @@ See `docs/getting-started/compatibility-policy.md` for the full policy and relea
 
 ### Release Tags and CI Publishing
 
-- `palace-cpu-vX.Y.Z` triggers binary build/publish workflow for `palacetoolkit-palace-cpu`.
-- `vX.Y.Z` triggers main package build/publish workflow for `palace-toolkit`.
-- Both workflows also support manual dispatch from GitHub Actions.
+- `palace-cpu-vX.Y.Z` triggers the binary build/release workflow for `palacetoolkit-palace-cpu`.
+- The workflow also supports manual dispatch from GitHub Actions.
 
 ## Quick start
 
@@ -124,45 +123,60 @@ just docs       # build the Sphinx static site (strict mode)
 
 # Serve locally for development
 just serve      # starts a dev server on http://localhost:8080
+
+# Execute all simulations and publish the site to the gh-pages branch
+just deploy-docs
 ```
 
-## Deploying docs to GitHub Pages
+## Deploying docs
 
-The documentation site is deployed to GitHub Pages. On every push to `main`,
-the `.github/workflows/docs.yml` workflow builds the Sphinx site and publishes
-it automatically.
+The documentation site is executed, built, and published locally. There is no
+CI workflow that runs the simulations or deploys the site.
 
-### One-time setup
+```bash
+pip install -e ".[docs]"
+just deploy-docs
+# or: ./scripts/deploy-docs.sh
+```
 
-1. In the GitHub repository settings:
-   **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. The docs site will be available at
-   `https://<owner>.github.io/<repository>/`.
+The deploy script:
 
-### Manual deploy
+1. copies `docs/` to a temporary directory (the working tree is left untouched),
+2. executes every notebook in `docs/examples/` with papermill, including the
+   Palace simulations,
+3. builds the static site with Sphinx in strict mode,
+4. replaces the contents of the `gh-pages` branch with the new site and pushes
+   it to `origin`.
 
-1. Build the site locally:
+Every deploy therefore re-runs all simulations and publishes their latest
+outputs. The first deploy creates `gh-pages` as an orphan branch; later deploys
+update it.
 
-   ```bash
-   pip install -e ".[docs]"
-   just ipykernel
-   just docs-full
-   ```
+To publish using the notebook outputs already stored in the committed
+`.ipynb` files instead (for example for the very first deploy), run:
 
-2. Push the built `site/` contents (or just push to `main` — the workflow
-   rebuilds and deploys from the source).
+```bash
+SKIP_SIMULATIONS=1 just deploy-docs
+# or: ./scripts/deploy-docs.sh --skip-simulations
+```
 
-You can also trigger a deploy manually from the **Actions** tab using the
-**PalaceToolkit Docs** workflow (`workflow_dispatch`).
+### One-time GitHub Pages setup
 
-> The previous EpsilonForge.com deploy setup (SST + AWS CloudFront Router) has
-> been removed from this repository. See `DEPLOYING-DOCS.md` if you need to
-> reproduce that setup in another package.
+In the repository settings, open **Settings → Pages → Build and deployment**
+and select:
+
+- **Source:** Deploy from a branch
+- **Branch:** `gh-pages`, folder `/ (root)`
+
+The site is then served at `https://<owner>.github.io/<repository>/`.
+
+See `DEPLOYING-DOCS.md` for the full deploy workflow and troubleshooting notes.
 
 ### Other useful recipes
 
 | Recipe | Description |
 |--------|-------------|
+| `just deploy-docs` | Execute all simulations, build the site, and publish it to `gh-pages`. |
 | `just nbclean` | Strip cell outputs from docs example notebooks for clean commits. |
 
 ## Roadmap
