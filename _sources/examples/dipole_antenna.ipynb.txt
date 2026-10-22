@@ -1,0 +1,256 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "a42e7807",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Dipole Antenna Mesh with PalaceToolkit\n",
+    "\n",
+    "This notebook uses PalaceToolkit utilities with a robust workflow:\n",
+    "- build primitives\n",
+    "- fragment once for conformal topology\n",
+    "- define `Entity` objects from fragmented geometry\n",
+    "- run `run_entity_pipeline`, refine with `refine_near_surfaces`, then `generate_3d_mesh`\n",
+    "- visualize with `palacetoolkit.viz`\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "906648bd",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from pathlib import Path\n",
+    "import math\n",
+    "import gmsh\n",
+    "\n",
+    "from palacetoolkit.geometry import xmin, xmax, ymin, ymax, zmin, zmax, extract_tag\n",
+    "from palacetoolkit.mesh import Entity, run_entity_pipeline, generate_3d_mesh, create_graded_mesh\n",
+    "from palacetoolkit.viz import view_mesh\n",
+    "from palacetoolkit.simulation import generate_palace_config_from_entities, run_palace\n",
+    "from palacetoolkit.verify_topology import verify, print_report, visualise_problems"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5b1a7aa6",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "wavelength = 4.0\n",
+    "arm_length = wavelength / 4\n",
+    "arm_radius = arm_length / 20\n",
+    "gap_size = arm_length / 50\n",
+    "outer_boundary_radius = 1.5 * wavelength\n",
+    "mesh_file = \"dipole.msh\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f66556ad",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "if gmsh.isInitialized():\n",
+    "    gmsh.finalize()\n",
+    "gmsh.initialize()\n",
+    "gmsh.option.setNumber(\"General.Verbosity\", 2)\n",
+    "gmsh.model.add(\"dipole_entity_pipeline\")\n",
+    "occ = gmsh.model.occ\n",
+    "\n",
+    "air = occ.addSphere(0, 0, 0, outer_boundary_radius)\n",
+    "top_arm = occ.addBox(-arm_radius, -arm_radius, gap_size / 2, 2 * arm_radius, 2 * arm_radius, arm_length)\n",
+    "bot_arm = occ.addBox(-arm_radius, -arm_radius, -gap_size / 2 - arm_length, 2 * arm_radius, 2 * arm_radius, arm_length)\n",
+    "port_sheet = occ.addRectangle(-arm_radius, -gap_size / 2, 0, 2 * arm_radius, gap_size)\n",
+    "occ.rotate([(2, port_sheet)], 0, 0, 0, 1, 0, 0, math.pi / 2)\n",
+    "occ.synchronize()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bc7e7def",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Entity + boolean pipeline for named physical groups.\n",
+    "entities = [\n",
+    "    Entity(\"air\", dim=3, mesh_order=2, btype=\"dielectric\", tags=[air], loss_tan=0.0, eps_r=1.0, mu_r=1.0),\n",
+    "    Entity(\"top_arm\", dim=3, mesh_order=1, btype=\"pec\", tags=[top_arm]),\n",
+    "    Entity(\"bot_arm\", dim=3, mesh_order=1, btype=\"pec\", tags=[bot_arm]),\n",
+    "    Entity(\"port\", dim=2, mesh_order=0, btype=\"lumped_port\", tags=[port_sheet], R=50.0, direction=\"+Z\", excitation=True),\n",
+    "]\n",
+    "pg_map = run_entity_pipeline(entities)\n",
+    "\n",
+    "create_graded_mesh(\n",
+    "    wavelength,\n",
+    "    ppw_near=30,\n",
+    "    ppw_far=5,\n",
+    "    transition_distance=wavelength / 4,\n",
+    "    set_as_background=True\n",
+    ")\n",
+    "\n",
+    "generate_3d_mesh(entities, output_file=mesh_file, optimize=True)\n",
+    "gmsh.finalize()\n",
+    "pg_map"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "91c6664f",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "view_mesh(mesh_file, transparent_groups=[\"air__None\"])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d89f65e1",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "config_file: str = \"dipole_antenna.json\"\n",
+    "mesh_file = \"dipole.msh\"\n",
+    "\n",
+    "# Frequency sweep centered around the dipole resonance.\n",
+    "# Each arm is lambda/4, so total dipole length is lambda/2 and\n",
+    "# the resonant frequency is approximately f0 = c / lambda.\n",
+    "c0 = 299_792_458.0\n",
+    "f0_hz = c0 / wavelength\n",
+    "f0_ghz = f0_hz / 1e9\n",
+    "\n",
+    "freq_min: float = 0.75 * f0_ghz\n",
+    "freq_max: float = 1.25 * f0_ghz\n",
+    "freq_step: float = (freq_max-freq_min)/20\n",
+    "solver_order: int = 2\n",
+    "\n",
+    "print(f\"Estimated f0 = {f0_ghz:.6f} GHz\")\n",
+    "print(f\"Sweep: {freq_min:.6f} to {freq_max:.6f} GHz (step {freq_step:.6f} GHz)\")\n",
+    "\n",
+    "generate_palace_config_from_entities(entity_defs = [e.to_dict() for e in entities],\n",
+    "    pg_map = pg_map,\n",
+    "    mesh_file = mesh_file,\n",
+    "    output_file = config_file,\n",
+    "    sim_type=\"driven\",\n",
+    "    freq_min = freq_min,\n",
+    "    freq_max = freq_max,\n",
+    "    freq_step = freq_step ,\n",
+    "    L0 = 1.0,\n",
+    "    solver_order = solver_order,\n",
+    "    absorbing_order = 2,\n",
+    "    farfield=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0ee29358",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Validate topology before launching Palace.\n",
+    "topology_result = verify(mesh_file, config_file)\n",
+    "topology_ok = print_report(topology_result)\n",
+    "\n",
+    "if not topology_ok:\n",
+    "    print(\"Topology validation failed; opening mesh viewer in debug mode (problem faces highlighted).\")\n",
+    "    visualise_problems(\n",
+    "        mesh_file,\n",
+    "        topology_result,\n",
+    "        transparent_groups=[\"air__None\"],\n",
+    "        exclude_expected_periodic=False,\n",
+    "        only_nonmanifold=False,\n",
+    "    )\n",
+    "    raise RuntimeError(\"Mesh topology validation failed. Fix mesh/topology issues before running Palace.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "875f4bf6",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "run_palace(config_file=config_file, num_procs=16)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f1205290",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# S parameters. Return the frequency where the minimum is reached.\n",
+    "from pathlib import Path\n",
+    "from palacetoolkit.postpro import s_params\n",
+    "\n",
+    "notebook_dir = Path().resolve()\n",
+    "postpro_dir = notebook_dir / \"postpro\" / \"dipole_antenna\"\n",
+    "    \n",
+    "fig, ax = s_params(str(postpro_dir / \"port-S.csv\"))"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": null,
+   "end_time": null,
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "docs/examples/dipole_antenna.ipynb",
+   "output_path": "docs/examples/dipole_antenna.ipynb",
+   "parameters": {},
+   "start_time": "2026-08-04T05:38:58.378171+00:00",
+   "version": "2.7.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

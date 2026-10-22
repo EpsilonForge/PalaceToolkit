@@ -1,0 +1,918 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "5ed63800",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Patch Antenna\n",
+    "We now apply a refined mesh for the patch antenna. Because the electromagnetic fields change rapidly near the metallic patch and the substrate edges, we increase the mesh density in these areas to ensure high simulation accuracy for resonance and radiation patterns."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9437354e",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import gmsh\n",
+    "import math\n",
+    "\n",
+    "from palacetoolkit.plot_farfield import load_data, polar_plots, three_d_plot\n",
+    "from palacetoolkit.postpro import s_params, resonant_frequency\n",
+    "from palacetoolkit.simulation import generate_palace_config_from_entities\n",
+    "from palacetoolkit.viz import view_mesh\n",
+    "from palacetoolkit.mesh import (\n",
+    "    Entity, \n",
+    "    run_entity_pipeline, \n",
+    "    generate_3d_mesh, \n",
+    "    create_graded_mesh\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "1d956d7d",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "\n",
+    "### Parameters:\n",
+    "- l : Patch length along x-axis, specified as a scalar in meters.\n",
+    "- w : Patch width along y-axis, specified as a scalar in meters.\n",
+    "- h : Patch height along z-axis, specified as a scalar in meters. \n",
+    "- l1 : Ground plane length along x-axis, specified as a scalar in meters\n",
+    "- w1 : Ground plane width along y-axis, specified as a scalar in meters\n",
+    "- l2 : Notch length along x-axis, specified as a scalar in meters. \n",
+    "- w2 : Notch width along x-axis, specified as a scalar in meters. \n",
+    "- w3 : Strip line width along y-axis, specified as a scalar in meters.\n",
+    "- airsphere_radius : Air sphere radius, specified as a scalar in meters.\n",
+    "- freq  : Simulation frequency in GHz, specified as a scalar.\n",
+    "- filename : Output mesh filename, specified as a string.\n",
+    "- eps_r: relative permittivity of the substrate\n",
+    "- loss_tan: loss tangent of the substrate\n",
+    "- port_impedance: characteristic impedance of the lumped port (Ohms)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4049c4db",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Patch\n",
+    "l: float = 0.030\n",
+    "w: float = 0.029\n",
+    "\n",
+    "# Ground plane\n",
+    "l1: float = 0.06\n",
+    "w1: float = 0.06\n",
+    "\n",
+    "# Notch\n",
+    "l2: float = 0.008\n",
+    "w2: float = 0.003\n",
+    "\n",
+    "# Feed line\n",
+    "w3: float = 0.002\n",
+    "\n",
+    "# Substrate\n",
+    "h: float = 0.0013\n",
+    "\n",
+    "freq: float = 3.3\n",
+    "eps_r: float = 2.2\n",
+    "loss_tan: float = 0.0009\n",
+    "mu_r = 1.0\n",
+    "port_impedance: float = 50.0\n",
+    "wavelength = 3e8 / (freq * 1e9)\n",
+    "\n",
+    "# Air sphere\n",
+    "airsphere_radius: float = wavelength\n",
+    "\n",
+    "# Filename where the mesh is loadeds\n",
+    "filename = \"patch_antenna.msh\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "6d496609",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Initialize the model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e6a08089",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "gmsh.initialize()\n",
+    "gmsh.model.add(\"patch_antenna\")\n",
+    "kernel = gmsh.model.occ"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "783686ab",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Geometry Construction\n",
+    "In this step, we build the physical structure of the patch antenna. We define the substrate, the metallic ground plane, and the antenna patch itself.\n",
+    "\n",
+    "Patch Design: We combine the main patch and the feed line, including an inset to help with impedance matching.\n",
+    "Excitation: A lumped port is created and positioned to feed the antenna.\n",
+    "Domain Setup: We enclose the entire structure in an \"air sphere,\" which defines the simulation region (the radiation space).\n",
+    "Finalizing: We use boolean operations (fragmenting) to ensure all components are properly connected and recognized as a single cohesive model by the solver."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "474cc986",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "substrate = kernel.addBox(-l1/2, -w1/2, 0, l1, w1, h)\n",
+    "\n",
+    "# Ground plane\n",
+    "ground_plane = kernel.addRectangle(-l1/2, -w1/2, 0, l1, w1)\n",
+    "\n",
+    "# Patch definition\n",
+    "main_patch = kernel.addRectangle(-l/2, -w/2, h, l, w)\n",
+    "inset = kernel.addRectangle(-l/2, -w2/2, h, l2, w2)\n",
+    "\n",
+    "patch_dimtags, _ = kernel.cut(\n",
+    "    [(2, main_patch)], \n",
+    "    [(2, inset)], \n",
+    "    removeObject=True, removeTool=True\n",
+    ")\n",
+    "kernel.synchronize()\n",
+    "\n",
+    "feed_length = (l1 - l)/2 + l2\n",
+    "feed_line = kernel.addRectangle(-l1/2, -w3/2, h, feed_length, w3)\n",
+    "\n",
+    "# Our patch\n",
+    "top_conductor, _ = kernel.fuse(\n",
+    "    patch_dimtags, [(2, feed_line)],\n",
+    "    removeObject=True, removeTool=True\n",
+    ")\n",
+    "kernel.synchronize()\n",
+    "\n",
+    "# Gap bewteen the gropund plane and the bottom of the lumped port.\n",
+    "lumped_port = kernel.addRectangle(-l1/2, -w3/2, 0, h, w3)\n",
+    "kernel.rotate([(2, lumped_port)], -l1/2, 0, 0, 0, 1, 0, -math.pi/2)\n",
+    "kernel.synchronize()\n",
+    "\n",
+    "def create_air_sphere(airsphere_radius: float) -> int:\n",
+    "    return kernel.addSphere(0.0, 0.0, 0.0, airsphere_radius)\n",
+    "\n",
+    "air_sphere = create_air_sphere(airsphere_radius)\n",
+    "kernel.synchronize()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "12cb1ff3",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Entities definition and mesh refinement."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fdbadb7b",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Define the entities which later will become the physical groups.\n",
+    "entities = [\n",
+    "    Entity(\"air_sphere\", dim = 3, mesh_order = 2, btype = \"dielectric\", tags = [air_sphere], loss_tan = 0.0, eps_r = 1.0, mu_r = 1.0),\n",
+    "    Entity(\"substrate\", dim = 3, mesh_order = 1, btype = \"dielectric\", tags = [substrate], loss_tan = loss_tan, eps_r = eps_r, mu_r = mu_r),\n",
+    "    Entity(\"top_conductor\", dim = 2, mesh_order= 1, btype = \"pec\", tags = [top_conductor[0][1]]),\n",
+    "    Entity(\"ground_plane\", dim = 2, mesh_order = 1, btype = \"pec\", tags = [ground_plane]),\n",
+    "    Entity(\"lumped_port\", dim = 2, mesh_order = 0, btype = \"lumped_port\", tags = [lumped_port], R = port_impedance, direction = '+Z', excitation = True)\n",
+    "]\n",
+    "\n",
+    "# Boolean operations to guarantee a nice mesh, algo it returns the\n",
+    "# physical group map.\n",
+    "pg_map = run_entity_pipeline(entities)\n",
+    "\n",
+    "# Refine near the top conductor and locally the lumped port\n",
+    "create_graded_mesh(  wavelength, \n",
+    "                     ppw_near=100, \n",
+    "                     ppw_far=5, \n",
+    "                     transition_distance=wavelength/4,\n",
+    "                     set_as_background=True)\n",
+    "\n",
+    "generate_3d_mesh(entities, output_file=filename, optimize=True)\n",
+    "gmsh.option.setNumber(\"Mesh.MshFileVersion\", 2.2)\n",
+    "gmsh.write(filename)\n",
+    "gmsh.finalize()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "a77751bc",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Mesh visualization"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3c212d13",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "view_mesh(filename, transparent_groups= \"air_sphere__None\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "cde1861e",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Simulation Configuration\n",
+    "We define the key parameters for the electromagnetic simulation here. These settings control the frequency sweep range, material properties (dielectric constant and loss tangent for the substrate), and solver-specific configurations like port impedance and mesh order.\n",
+    "\n",
+    "- output_file  : output filename for the configuration JSON file\n",
+    "- freq_min : minimum frequency for the simulation (GHz)  \n",
+    "- freq_max: maximum frequency for the simulation (GHz)\n",
+    "- freq_step: frequency step for the simulation (GHz)\n",
+    "- solver_order: order of the finite element basis functions for the simulation (e.g., 1 for linear, 2 for quadratic)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8a378602",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "output_file: str = \"patch_antenna.json\"\n",
+    "# Sweep de simulación \n",
+    "freq_min: float = 2.5\n",
+    "freq_max: float = 4\n",
+    "freq_step: float = 0.025\n",
+    "\n",
+    "solver_order: int = 2"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "a0161718",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Generating the Palace Configuration File\n",
+    "Finally, we assemble the simulation parameters into a JSON configuration ."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9d7b7f83",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "generate_palace_config_from_entities(entity_defs = [e.to_dict() for e in entities],\n",
+    "    pg_map = pg_map,\n",
+    "    mesh_file = filename,\n",
+    "    output_file = 'patch.config',\n",
+    "    freq_min = freq_min,\n",
+    "    freq_max = freq_max,\n",
+    "    freq_step = freq_step ,\n",
+    "    L0 = 1.0,\n",
+    "    solver_order = solver_order,\n",
+    "    absorbing_order = 2,\n",
+    "    farfield=True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "baa4c3b0",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Running Palace"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b60b1c59",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from palacetoolkit.simulation import set_palace_path, run_palace\n",
+    "run_palace(config_file=\"patch.config\", num_procs=16)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "125db9c5",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Post processing.\n",
+    "\n",
+    "We want to see the S parameters, H plane, E plane and the radiation pattern."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "17031e58",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# S parameters, plus the resonant frequency f where |S11| reaches its minimum.\n",
+    "from pathlib import Path\n",
+    "\n",
+    "notebook_dir = Path().resolve()\n",
+    "postpro_dir = notebook_dir / \"postpro\" / \"patch\"\n",
+    "\n",
+    "fig, ax = s_params(str(postpro_dir / \"port-S.csv\"))\n",
+    "f = resonant_frequency(str(postpro_dir / \"port-S.csv\"))\n",
+"print(f\"Resonant frequency: {f:.4f} GHz\")\n",
+    "fig\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1a31fe60",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Additional Field Visualizations at Resonant Frequency f\n",
+    "\n",
+    "The next two views use the new VTU workflow:\n",
+    "\n",
+    "- Surface-current-oriented view over antenna conductors.\n",
+    "- A z-slice in the air region above the patch to inspect forward propagation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0568918b",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import importlib\n",
+    "\n",
+    "import pyvista as pv\n",
+    "import palacetoolkit.postpro_vtu as postpro_vtu\n",
+    "\n",
+    "postpro_vtu = importlib.reload(postpro_vtu)\n",
+    "\n",
+    "# Prefer interactive backends in notebooks.\n",
+    "pv_backend = \"static\"\n",
+    "for candidate in (\"trame\", \"client\", \"server\"):\n",
+    "    try:\n",
+    "        pv.set_jupyter_backend(candidate)\n",
+    "        pv_backend = candidate\n",
+    "        break\n",
+    "    except Exception:\n",
+    "        pass\n",
+    "\n",
+    "# Synchronize boundary/volume steps to the solved frequency f.\n",
+    "boundary_step, volume_step = postpro_vtu.resolve_synced_step_indices(\n",
+    "    postpro_dir,\n",
+    "    boundary_dataset=\"driven_boundary\",\n",
+    "    volume_dataset=\"driven\",\n",
+    "    timestep=float(f),\n",
+    ")\n",
+    "\n",
+    "selector_ctx = postpro_vtu.build_selector_context(\"patch.config\", pg_map)\n",
+    "conductors = [\"top_conductor\", \"ground_plane\"]\n",
+    "boundary_fields = postpro_vtu.load_boundary_field_data(\n",
+    "    postpro_dir,\n",
+    "    selector_ctx,\n",
+    "    entity_names=conductors,\n",
+    "    dataset_name=\"driven_boundary\",\n",
+    "    step_index=boundary_step,\n",
+    ")\n",
+    "\n",
+    "# Prefer explicit current-like vectors when present.\n",
+    "surface_vector_candidates = [\"Jsurf_real\", \"J_real\", \"Jsurf\", \"J\", \"K_real\", \"K\", \"H_real\", \"E_real\", \"S\"]\n",
+    "available_boundary = set(boundary_fields.point_arrays)\n",
+    "surface_vector = next((name for name in surface_vector_candidates if name in available_boundary), None)\n",
+    "if surface_vector is None:\n",
+    "    raise KeyError(f\"No suitable surface vector field found. Available: {sorted(available_boundary)}\")\n",
+    "\n",
+    "pl_surface = postpro_vtu.plot_boundary_field(\n",
+    "    boundary_fields,\n",
+    "    vector_field=surface_vector,\n",
+    "    component=\"mag\",\n",
+    "    cmap=\"plasma\",\n",
+    "    log_scale=True,\n",
+    "    opacity=0.82,\n",
+    "    scalar_bar_title=f\"|{surface_vector}| on conductors @ {float(f):.3f} GHz\",\n",
+    "    show_edges=False,\n",
+    "    off_screen=True,\n",
+    ")\n",
+    "\n",
+    "# Improve transparency sorting when available.\n",
+    "try:\n",
+    "    pl_surface.enable_depth_peeling()\n",
+    "except Exception:\n",
+    "    pass\n",
+    "\n",
+    "# Keep a subtle wireframe so the surface crowding remains visible.\n",
+    "# pl_surface.add_mesh(\n",
+    "#     boundary_fields.mesh,\n",
+    "#     style=\"wireframe\",\n",
+    "#     color=\"white\",\n",
+    "#     line_width=1.0,\n",
+    "#     opacity=0.40,\n",
+    "#     lighting=True,\n",
+    "# )\n",
+    "\n",
+    "# Orthographic top view with axis alignment.\n",
+    "top_view = True\n",
+    "if top_view:\n",
+    "    bounds = boundary_fields.mesh.bounds\n",
+    "    cx = 0.5 * (bounds[0] + bounds[1])\n",
+    "    cy = 0.5 * (bounds[2] + bounds[3])\n",
+    "    cz = 0.5 * (bounds[4] + bounds[5])\n",
+    "    span_xy = max(bounds[1] - bounds[0], bounds[3] - bounds[2])\n",
+    "    cam_dist = max(span_xy, 1e-9) * 3.0\n",
+    "\n",
+    "    pl_surface.camera.position = (cx, cy, cz + cam_dist)\n",
+    "    pl_surface.camera.focal_point = (cx, cy, cz)\n",
+    "    pl_surface.camera.up = (0.0, 1.0, 0.0)\n",
+    "    pl_surface.enable_parallel_projection()\n",
+    "    pl_surface.camera.parallel_scale = 0.6 * span_xy\n",
+    "    pl_surface.add_bounding_box(color=\"black\", line_width=1.0)\n",
+    "\n",
+    "pl_surface.show(jupyter_backend=pv_backend)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c7f885fb",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from palacetoolkit.postpro_vtu import (\n",
+    "    activate_vector_component,\n",
+    "    extract_axis_slice,\n",
+    "    load_volume_field_data,\n",
+    ")\n",
+    "\n",
+    "# Load volume data at the synchronized frequency step.\n",
+    "volume_fields = load_volume_field_data(\n",
+    "    postpro_dir,\n",
+    "    dataset_name=\"driven\",\n",
+    "    step_index=volume_step,\n",
+    ")\n",
+    "\n",
+    "# Slice slightly above the patch into the air region, along forward radiation direction (+z).\n",
+    "z_air_slice = h + 0.10 * wavelength\n",
+    "slice_mesh = extract_axis_slice(volume_fields, axis=\"z\", value=float(z_air_slice))\n",
+    "scalar_name = activate_vector_component(slice_mesh, field_name=\"S\", component=\"z\", output_name=\"S_z\")\n",
+    "\n",
+    "# Combine mesh geometry + semi-transparent volume slice in one scene.\n",
+    "mesh_geom = pv.read(filename)\n",
+    "pl_air_slice = pv.Plotter(off_screen=True)\n",
+    "pl_air_slice.set_background(\"white\")\n",
+    "\n",
+    "# Keep a subtle wireframe so the surface crowding remains visible.\n",
+    "pl_air_slice.add_mesh(\n",
+    "    boundary_fields.mesh,\n",
+    "    style=\"wireframe\",\n",
+    "    color=\"black\",\n",
+    "    line_width=1.0,\n",
+    "    opacity=0.25,\n",
+    "    lighting=True,\n",
+    ")\n",
+    "\n",
+    "# Overlay the slice with alpha transparency.\n",
+    "pl_air_slice.add_mesh(\n",
+    "    slice_mesh,\n",
+    "    scalars=scalar_name,\n",
+    "    cmap=\"viridis\",\n",
+    "    opacity=0.62,\n",
+    "    show_edges=False,\n",
+    "    scalar_bar_args={\"title\": f\"S_z in air slice @ z={z_air_slice:.4f} m, f={float(f):.3f} GHz\"},\n",
+    ")\n",
+    "\n",
+    "pl_air_slice.add_axes()\n",
+    "pl_air_slice.camera_position = \"iso\"\n",
+    "pl_air_slice.show(jupyter_backend=pv_backend)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "66fc97b6",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "data, label = load_data(str(postpro_dir / \"farfield-rE.csv\"), f)\n",
+    "polar_plots(data, label)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8d6ae149",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Radiation pattern.\n",
+    "three_d_plot(\n",
+    "        data, \n",
+    "        label,\n",
+    "        n_theta           = 360,\n",
+    "        n_phi             = 720,\n",
+    "        n_smooth          = 100,\n",
+    "        taubin_pass_band  = 0.1,\n",
+    "    )"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  },
+  "widgets": {
+   "application/vnd.jupyter.widget-state+json": {
+    "state": {
+     "0b70d6dbee9743a7b2c0bad50d8a5c67": {
+      "model_module": "@jupyter-widgets/base",
+      "model_module_version": "2.0.0",
+      "model_name": "LayoutModel",
+      "state": {
+       "_model_module": "@jupyter-widgets/base",
+       "_model_module_version": "2.0.0",
+       "_model_name": "LayoutModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/base",
+       "_view_module_version": "2.0.0",
+       "_view_name": "LayoutView",
+       "align_content": null,
+       "align_items": null,
+       "align_self": null,
+       "border_bottom": null,
+       "border_left": null,
+       "border_right": null,
+       "border_top": null,
+       "bottom": null,
+       "display": null,
+       "flex": null,
+       "flex_flow": null,
+       "grid_area": null,
+       "grid_auto_columns": null,
+       "grid_auto_flow": null,
+       "grid_auto_rows": null,
+       "grid_column": null,
+       "grid_gap": null,
+       "grid_row": null,
+       "grid_template_areas": null,
+       "grid_template_columns": null,
+       "grid_template_rows": null,
+       "height": null,
+       "justify_content": null,
+       "justify_items": null,
+       "left": null,
+       "margin": null,
+       "max_height": null,
+       "max_width": null,
+       "min_height": null,
+       "min_width": null,
+       "object_fit": null,
+       "object_position": null,
+       "order": null,
+       "overflow": null,
+       "padding": null,
+       "right": null,
+       "top": null,
+       "visibility": null,
+       "width": null
+      }
+     },
+     "187abbf34f9940398bb6a3eb62a3cb0e": {
+      "model_module": "@jupyter-widgets/controls",
+      "model_module_version": "2.0.0",
+      "model_name": "HTMLModel",
+      "state": {
+       "_dom_classes": [],
+       "_model_module": "@jupyter-widgets/controls",
+       "_model_module_version": "2.0.0",
+       "_model_name": "HTMLModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/controls",
+       "_view_module_version": "2.0.0",
+       "_view_name": "HTMLView",
+       "description": "",
+       "description_allow_html": false,
+       "layout": "IPY_MODEL_501c8cb35d1c43bf800c8cef932312ea",
+       "placeholder": "​",
+       "style": "IPY_MODEL_b39ca59f6a5244a0b11d7e3e8aeb60c8",
+       "tabbable": null,
+       "tooltip": null,
+       "value": "<iframe src=\"http://localhost:38701/index.html?ui=P_0x78abbc80d880_2&reconnect=auto\" class=\"pyvista\" style=\"width: 100%; height: 600px; border: 1px solid rgb(221,221,221);\" scrolling=\"no\"></iframe>"
+      }
+     },
+     "501c8cb35d1c43bf800c8cef932312ea": {
+      "model_module": "@jupyter-widgets/base",
+      "model_module_version": "2.0.0",
+      "model_name": "LayoutModel",
+      "state": {
+       "_model_module": "@jupyter-widgets/base",
+       "_model_module_version": "2.0.0",
+       "_model_name": "LayoutModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/base",
+       "_view_module_version": "2.0.0",
+       "_view_name": "LayoutView",
+       "align_content": null,
+       "align_items": null,
+       "align_self": null,
+       "border_bottom": null,
+       "border_left": null,
+       "border_right": null,
+       "border_top": null,
+       "bottom": null,
+       "display": null,
+       "flex": null,
+       "flex_flow": null,
+       "grid_area": null,
+       "grid_auto_columns": null,
+       "grid_auto_flow": null,
+       "grid_auto_rows": null,
+       "grid_column": null,
+       "grid_gap": null,
+       "grid_row": null,
+       "grid_template_areas": null,
+       "grid_template_columns": null,
+       "grid_template_rows": null,
+       "height": null,
+       "justify_content": null,
+       "justify_items": null,
+       "left": null,
+       "margin": null,
+       "max_height": null,
+       "max_width": null,
+       "min_height": null,
+       "min_width": null,
+       "object_fit": null,
+       "object_position": null,
+       "order": null,
+       "overflow": null,
+       "padding": null,
+       "right": null,
+       "top": null,
+       "visibility": null,
+       "width": null
+      }
+     },
+     "5a69276345304334a7e1603940e79105": {
+      "model_module": "@jupyter-widgets/base",
+      "model_module_version": "2.0.0",
+      "model_name": "LayoutModel",
+      "state": {
+       "_model_module": "@jupyter-widgets/base",
+       "_model_module_version": "2.0.0",
+       "_model_name": "LayoutModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/base",
+       "_view_module_version": "2.0.0",
+       "_view_name": "LayoutView",
+       "align_content": null,
+       "align_items": null,
+       "align_self": null,
+       "border_bottom": null,
+       "border_left": null,
+       "border_right": null,
+       "border_top": null,
+       "bottom": null,
+       "display": null,
+       "flex": null,
+       "flex_flow": null,
+       "grid_area": null,
+       "grid_auto_columns": null,
+       "grid_auto_flow": null,
+       "grid_auto_rows": null,
+       "grid_column": null,
+       "grid_gap": null,
+       "grid_row": null,
+       "grid_template_areas": null,
+       "grid_template_columns": null,
+       "grid_template_rows": null,
+       "height": null,
+       "justify_content": null,
+       "justify_items": null,
+       "left": null,
+       "margin": null,
+       "max_height": null,
+       "max_width": null,
+       "min_height": null,
+       "min_width": null,
+       "object_fit": null,
+       "object_position": null,
+       "order": null,
+       "overflow": null,
+       "padding": null,
+       "right": null,
+       "top": null,
+       "visibility": null,
+       "width": null
+      }
+     },
+     "a3159f5cb280435b99f95c8d31787f7b": {
+      "model_module": "@jupyter-widgets/controls",
+      "model_module_version": "2.0.0",
+      "model_name": "HTMLModel",
+      "state": {
+       "_dom_classes": [],
+       "_model_module": "@jupyter-widgets/controls",
+       "_model_module_version": "2.0.0",
+       "_model_name": "HTMLModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/controls",
+       "_view_module_version": "2.0.0",
+       "_view_name": "HTMLView",
+       "description": "",
+       "description_allow_html": false,
+       "layout": "IPY_MODEL_0b70d6dbee9743a7b2c0bad50d8a5c67",
+       "placeholder": "​",
+       "style": "IPY_MODEL_dfe58ac805384470a0c9bc6963bbd994",
+       "tabbable": null,
+       "tooltip": null,
+       "value": "<iframe src=\"http://localhost:38701/index.html?ui=P_0x78aba2227200_1&reconnect=auto\" class=\"pyvista\" style=\"width: 100%; height: 600px; border: 1px solid rgb(221,221,221);\" scrolling=\"no\"></iframe>"
+      }
+     },
+     "b39ca59f6a5244a0b11d7e3e8aeb60c8": {
+      "model_module": "@jupyter-widgets/controls",
+      "model_module_version": "2.0.0",
+      "model_name": "HTMLStyleModel",
+      "state": {
+       "_model_module": "@jupyter-widgets/controls",
+       "_model_module_version": "2.0.0",
+       "_model_name": "HTMLStyleModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/base",
+       "_view_module_version": "2.0.0",
+       "_view_name": "StyleView",
+       "background": null,
+       "description_width": "",
+       "font_size": null,
+       "text_color": null
+      }
+     },
+     "c97052ff15754c0f91c66afb91e198fe": {
+      "model_module": "@jupyter-widgets/controls",
+      "model_module_version": "2.0.0",
+      "model_name": "HTMLStyleModel",
+      "state": {
+       "_model_module": "@jupyter-widgets/controls",
+       "_model_module_version": "2.0.0",
+       "_model_name": "HTMLStyleModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/base",
+       "_view_module_version": "2.0.0",
+       "_view_name": "StyleView",
+       "background": null,
+       "description_width": "",
+       "font_size": null,
+       "text_color": null
+      }
+     },
+     "dfe58ac805384470a0c9bc6963bbd994": {
+      "model_module": "@jupyter-widgets/controls",
+      "model_module_version": "2.0.0",
+      "model_name": "HTMLStyleModel",
+      "state": {
+       "_model_module": "@jupyter-widgets/controls",
+       "_model_module_version": "2.0.0",
+       "_model_name": "HTMLStyleModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/base",
+       "_view_module_version": "2.0.0",
+       "_view_name": "StyleView",
+       "background": null,
+       "description_width": "",
+       "font_size": null,
+       "text_color": null
+      }
+     },
+     "e47afe95a823473a9a886c294f64ee95": {
+      "model_module": "@jupyter-widgets/controls",
+      "model_module_version": "2.0.0",
+      "model_name": "HTMLModel",
+      "state": {
+       "_dom_classes": [],
+       "_model_module": "@jupyter-widgets/controls",
+       "_model_module_version": "2.0.0",
+       "_model_name": "HTMLModel",
+       "_view_count": null,
+       "_view_module": "@jupyter-widgets/controls",
+       "_view_module_version": "2.0.0",
+       "_view_name": "HTMLView",
+       "description": "",
+       "description_allow_html": false,
+       "layout": "IPY_MODEL_5a69276345304334a7e1603940e79105",
+       "placeholder": "​",
+       "style": "IPY_MODEL_c97052ff15754c0f91c66afb91e198fe",
+       "tabbable": null,
+       "tooltip": null,
+       "value": "<iframe src=\"http://localhost:38701/index.html?ui=P_0x78aba2376630_0&reconnect=auto\" class=\"pyvista\" style=\"width: 100%; height: 600px; border: 1px solid rgb(221,221,221);\" scrolling=\"no\"></iframe>"
+      }
+     }
+    },
+    "version_major": 2,
+    "version_minor": 0
+   }
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

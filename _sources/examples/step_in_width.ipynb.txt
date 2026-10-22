@@ -1,0 +1,361 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "05790cce",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Step in depth antenna\n",
+    "\n",
+    "A step in width microstrip antenna is a design variation where the radiating patch element has a non-uniform width that changes along its length. Instead of a simple rectangular patch, the conducting strip gradually narrows or widens at specific points."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3588684c",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import gmsh\n",
+    "import math\n",
+    "import os\n",
+    "from pathlib import Path\n",
+    "\n",
+    "from palacetoolkit.viz import view_mesh\n",
+    "from palacetoolkit.mesh import (\n",
+    "    Entity,\n",
+    "    run_entity_pipeline,\n",
+    "    generate_3d_mesh,\n",
+    "    create_graded_mesh,\n",
+    "    )\n",
+    "from palacetoolkit.simulation import Simulation, run_palace"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "35e745ba",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Parameters:\n",
+    "\n",
+    "- l1 : Ground plane length along x-axis, specified as a scalar in meters\n",
+    "- w1 : Ground plane width along y-axis, specified as a scalar in meters\n",
+    "- h : Patch height along z-axis, specified as a scalar in meters.\n",
+    "\n",
+    "- strip_line_length : Notch length along x-axis, specified as a scalar in meters. \n",
+    "- strip_lined_width_near_port: Notch width along x-axis near the port, specified as a scalar in meters. \n",
+    "- strip_lined_width_far: Strip line width along y-axis far from the port, specified as a scalar in meters.\n",
+    "- air_height : Air box height along z-axis, specified as a scalar in meters.  \n",
+    "- air_margin : Air box margin along x and y axes, specified as a scalar in meters.\n",
+    "- freq  : Simulation frequency in GHz, specified as a scalar.\n",
+    "- filename : Output mesh filename, specified as a string."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "31e252bf",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "l1: float = 0.06\n",
+    "w1: float = 0.06\n",
+    "strip_line_length: float = 0.06\n",
+    "strip_line_width_near_port: float = 0.001\n",
+    "strip_line_width_far: float = 0.003\n",
+    "h: float = 0.0013\n",
+    "air_height: float = 0.025    \n",
+    "air_margin: float = 0.025    \n",
+    "freq: float = 3.3\n",
+    "filename: str = \"sw_antenna.msh\"\n",
+    "\n",
+    "wavelength = 3e8 / (freq * 1e9)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "9f0c809a",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Initialize the model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "20a8fc36",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "gmsh.initialize()\n",
+    "gmsh.model.add(\"patch_antenna\")\n",
+    "kernel = gmsh.model.occ"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "e39ac1fa",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Geometry generation\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f07ee82e",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Total domain bounds\n",
+    "total_xmin = -l1/2 - air_margin\n",
+    "total_xmax = l1/2 + air_margin\n",
+    "total_ymin = -w1/2 - air_margin\n",
+    "total_ymax = w1/2 + air_margin\n",
+    "total_zmax = h + air_height\n",
+    "\n",
+    "substrate = kernel.addBox(-l1/2, -w1/2, 0, l1, w1, h)\n",
+    "\n",
+    "ground_plane = kernel.addRectangle(-l1/2, -w1/2, 0, l1, w1)\n",
+    "\n",
+    "strip_line_1 = kernel.addRectangle(-l1/2, -strip_line_width_near_port/2, h, strip_line_length/2, strip_line_width_near_port)\n",
+    "strip_line_2 = kernel.addRectangle(0, -strip_line_width_far/2, h, strip_line_length/2, strip_line_width_far)\n",
+    "\n",
+    "top_conductor, _ = kernel.fuse(\n",
+    "    [(2, strip_line_1)], [(2, strip_line_2)],\n",
+    "    removeObject=True, removeTool=True\n",
+    ")\n",
+    "kernel.synchronize()\n",
+    "\n",
+    "gap = 0\n",
+    "lumped_port = kernel.addRectangle(-l1/2 + gap, -strip_line_width_near_port/2, 0, h - gap, strip_line_width_near_port)\n",
+    "kernel.rotate([(2, lumped_port)], -l1/2, 0, 0, 0, 1, 0, -math.pi/2)\n",
+    "kernel.synchronize()\n",
+    "\n",
+    "# Replace box with an enclosing air sphere, following the patch_antenna pattern.\n",
+    "airsphere_radius = max(abs(total_xmin), abs(total_xmax), abs(total_ymin), abs(total_ymax), total_zmax)\n",
+    "air_sphere = kernel.addSphere(0.0, 0.0, 0.0, airsphere_radius)\n",
+    "kernel.synchronize()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "4103d2c6",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Entities definition"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "83500869",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Material and port constants reused in meshing/config sections.\n",
+    "eps_r: float = 2.2\n",
+    "loss_tan: float = 0.0009\n",
+    "port_impedance: float = 50.0\n",
+    "\n",
+    "entities = [\n",
+    "    Entity(\"air_sphere\", dim=3, btype=\"dielectric\", mesh_order=2, tags=[air_sphere], eps_r=1.0, mu_r=1.0, loss_tan=0.0),\n",
+    "    Entity(\"substrate\", dim=3, btype=\"dielectric\", mesh_order=1, tags=[substrate], eps_r=eps_r, mu_r=1.0, loss_tan=loss_tan),\n",
+    "    Entity(\"top_conductor\", dim=2, btype=\"pec\", mesh_order=1, tags=[top_conductor[0][1]]),\n",
+    "    Entity(\"ground_plane\", dim=2, btype=\"pec\", mesh_order=1, tags=[ground_plane]),\n",
+    "    Entity(\"lumped_port\", dim=2, btype=\"lumped_port\", mesh_order=0, tags=[lumped_port], R=port_impedance, direction=\"+Z\", excitation=True),\n",
+    "]\n",
+    "\n",
+    "pg_map = run_entity_pipeline(entities)\n",
+    "\n",
+    "# Refine near the top conductor and locally the lumped port\n",
+    "create_graded_mesh(  wavelength, \n",
+    "                     ppw_near=50, \n",
+    "                     ppw_far=30, \n",
+    "                     set_as_background=True)\n",
+    "\n",
+    "print(entities)\n",
+    "\n",
+    "# Mesh sizes\n",
+    "mesh_sizes = {\n",
+    "    \"substrate\": wavelength / 12,\n",
+    "    \"air_sphere\": wavelength / 4,\n",
+    "    \"lumped_port\": wavelength / 150,\n",
+    "    \"ground_plane\": wavelength / 10,\n",
+    "    \"top_conductor\": wavelength / 50,\n",
+    "}\n",
+    "\n",
+    "generate_3d_mesh(entities, mesh_sizes, filename, optimize=True, verbose=False)\n",
+    "\n",
+    "view_mesh(filename, transparent_groups=\"air_sphere__None\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "c57f3dcf",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Generate JSON config\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "770fd071",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "output_file: str = \"sw_antenna.json\"\n",
+    "freq_min: float = 3.0\n",
+    "freq_max: float = 3.5\n",
+    "freq_step: float = 0.005\n",
+    "solver_order: int = 2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c7e87f93",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def attr(name):\n",
+    "        return [pg_map[name]] if name in pg_map else []\n",
+    "\n",
+    "sim = Simulation(output_dir=os.getcwd(), apply_mesh_options=False)\n",
+    "sim.config = {\n",
+    "    \"Problem\": {\n",
+    "        \"Type\": \"Driven\",\n",
+    "        \"Verbose\": 2,\n",
+    "        \"Output\": \"postpro/sw_antenna\"\n",
+    "    },\n",
+    "\n",
+    "    \"Model\": {\n",
+    "        \"Mesh\": filename,\n",
+    "        \"L0\": 1.0,\n",
+    "        \"Refinement\": {}\n",
+    "    },\n",
+    "\n",
+    "    \"Domains\": {\n",
+    "        \"Materials\": [\n",
+    "            {\n",
+    "                \"Attributes\": attr(\"substrate\"),\n",
+    "                \"Permittivity\": eps_r,\n",
+    "                \"Permeability\": 1.0,\n",
+    "                \"LossTan\": loss_tan\n",
+    "            },\n",
+    "            {\n",
+    "                \"Attributes\": attr(\"air_sphere\"),\n",
+    "                \"Permittivity\": 1.0,\n",
+    "                \"Permeability\": 1.0\n",
+    "            }\n",
+    "        ]\n",
+    "    },\n",
+    "\n",
+    "    \"Boundaries\": {\n",
+    "        \"PEC\": {\n",
+    "            \"Attributes\": attr(\"ground_plane\") + attr(\"top_conductor\")\n",
+    "        },\n",
+    "\n",
+    "        \"LumpedPort\": [\n",
+    "            {\n",
+    "                \"Index\": 1,\n",
+    "                \"Attributes\": attr(\"lumped_port\"),\n",
+    "                \"R\": port_impedance,\n",
+    "                \"Excitation\": True,\n",
+    "                \"Direction\": \"+Z\"\n",
+    "            }\n",
+    "        ],\n",
+    "\n",
+    "        \"Absorbing\": {\n",
+    "            \"Attributes\": attr(\"air_sphere__None\"),\n",
+    "            \"Order\": 1\n",
+    "        }\n",
+    "    },\n",
+    "\n",
+    "    \"Solver\": {\n",
+    "        \"Order\": solver_order,\n",
+    "        \"Device\": \"CPU\",\n",
+    "\n",
+    "        \"Driven\": {\n",
+    "            \"MinFreq\": freq_min,\n",
+    "            \"MaxFreq\": freq_max,\n",
+    "            \"FreqStep\": freq_step,\n",
+    "            \"AdaptiveTol\": 0.001\n",
+    "        },\n",
+    "\n",
+    "        \"Linear\": {\n",
+    "            \"Type\": \"Default\",\n",
+    "            \"KSPType\": \"GMRES\",\n",
+    "            \"Tol\": 1.0e-8,\n",
+    "            \"MaxIts\": 200,\n",
+    "            \"ComplexCoarseSolve\": True\n",
+    "        }\n",
+    "    }\n",
+    "}\n",
+    "\n",
+    "config_path = str(sim.write_config(output_file))\n",
+    "run_palace(config_path, num_procs=8, work_dir=os.getcwd())"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

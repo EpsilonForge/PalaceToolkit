@@ -1,0 +1,399 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "59b1501f",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## Horn Antenna\n",
+    "\n",
+    "This notebook explores the design and discretization of a horn antenna. As part of our coursework, we will focus on generating a high-quality mesh that captures the geometry of the flared aperture, which is critical for accurate signal radiation. We will implement mesh refinement techniques to ensure the model effectively resolves the electromagnetic fields near the transition. The process concludes by exporting the finalized mesh, formatted for use in the Palace solver, where we will ultimately evaluate the antenna’s performance."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b9705325",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import gmsh\n",
+    "import math\n",
+    "import os\n",
+    "import json\n",
+    "from pathlib import Path\n",
+    "\n",
+    "from palacetoolkit.geometry import xmin, xmax, ymin, ymax, zmin, zmax, extract_tag\n",
+    "from palacetoolkit.viz import view_mesh\n",
+    "from palacetoolkit.mesh import (\n",
+    "    Entity,\n",
+    "    run_entity_pipeline,\n",
+    "    generate_3d_mesh,\n",
+    "    create_graded_mesh\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "a40118ac",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Parameters:\n",
+    " - filename : name of the mesh file to generate (e.g., \"horn_antenna.msh\")\n",
+    " - waveguide_length : length of the waveguide section\n",
+    " - waveguide_width : width of the waveguide section\n",
+    " - waveguide_height : height of the waveguide section\n",
+    " - flare_length : length of the flare section\n",
+    " - flare_width : width of the flare section at the aperture\n",
+    " - flare_height : height of the flare section at the aperture\n",
+    " - freq_ghz : frequency of operation in GHz\n",
+    " - gui : whether to launch the Gmsh GUI for visualization (True/False)\n",
+    " - mesh_order : The order of interpolation for the finite element basis functions."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e8f7de9a",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "filename = \"horn_antenna.msh\"\n",
+    "waveguide_length = 0.3\n",
+    "waveguide_width = 9.373e-2\n",
+    "waveguide_height = 4.166e-2\n",
+    "flare_length = 0.84\n",
+    "flare_width = 30.0 * 0.0254\n",
+    "flare_height = 23.8 * 0.0254\n",
+    "freq_ghz = 1.8\n",
+    "gui = False\n",
+    "mesh_order = 1 \n",
+    "\n",
+    "# Wavelength in free space (lambda_0 = c / f).\n",
+    "c0 = 3e8 \n",
+    "wavelength = c0 / (freq_ghz * 1e9)\n",
+    "\n",
+    "lc = wavelength / 4"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "b845f6ba",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Initializing the Modeling Environment"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bdd5c359",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "gmsh.initialize()\n",
+    "gmsh.option.setNumber(\"General.Verbosity\", 5)\n",
+    "gmsh.model.add(\"horn_antenna\")\n",
+    "kernel = gmsh.model.occ"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "26f4ab52",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Geometry Construction and Domain Definition\n",
+    "In this step, we build the horn antenna geometry using the OpenCASCADE kernel. We define the waveguide input and the flared aperture as separate surface loops, connect them to form the solid volume, and finally define a surrounding spherical air domain. The geometry is fragmented to ensure consistent meshing across the waveguide and the radiation domain."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cd138222",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Waveguide internal face\n",
+    "kernel.addPoint(-waveguide_width/2, -waveguide_height/2, 0, lc, 1)\n",
+    "kernel.addPoint(waveguide_width/2, -waveguide_height/2, 0, lc, 2)\n",
+    "kernel.addPoint(waveguide_width/2, waveguide_height/2, 0, lc, 3)\n",
+    "kernel.addPoint(-waveguide_width/2, waveguide_height/2, 0, lc, 4)\n",
+    "\n",
+    "kernel.addLine(1, 2, 1)\n",
+    "kernel.addLine(2, 3, 2)\n",
+    "kernel.addLine(3, 4, 3)\n",
+    "kernel.addLine(4, 1, 4)\n",
+    "\n",
+    "kernel.addCurveLoop([4, 1, 2, 3], 1)\n",
+    "kernel.addPlaneSurface([1], 1)\n",
+    "\n",
+    "# Flare faces. We only generate the four sides. \n",
+    "kernel.addPoint(-flare_width/2, -flare_height/2, flare_length, lc, 5)\n",
+    "kernel.addPoint(flare_width/2, -flare_height/2, flare_length, lc, 6)\n",
+    "kernel.addPoint(flare_width/2,  flare_height/2, flare_length, lc, 7)\n",
+    "kernel.addPoint(-flare_width/2, flare_height/2, flare_length, lc, 8)\n",
+    "\n",
+    "kernel.addLine(5, 6, 5)\n",
+    "kernel.addLine(6, 7, 6)\n",
+    "kernel.addLine(7, 8, 7)\n",
+    "kernel.addLine(8, 5, 8)\n",
+    "\n",
+    "# Connect faces\n",
+    "kernel.addLine(1, 5, 9)  \n",
+    "kernel.addLine(2, 6, 10) \n",
+    "kernel.addLine(3, 7, 11) \n",
+    "kernel.addLine(4, 8, 12)\n",
+    "\n",
+    "kernel.addCurveLoop([1, 10, -5, -9], 3)\n",
+    "kernel.addPlaneSurface([3], 3)\n",
+    "kernel.addCurveLoop([2, 11, -6, -10], 4)\n",
+    "kernel.addPlaneSurface([4], 4)\n",
+    "kernel.addCurveLoop([3, 12, -7, -11], 5)\n",
+    "kernel.addPlaneSurface([5], 5)\n",
+    "kernel.addCurveLoop([4, 9, -8, -12], 6)\n",
+    "kernel.addPlaneSurface([6], 6)\n",
+    "\n",
+    "# Surfaces\n",
+    "flare = [3, 4, 5, 6]\n",
+    "waveguide = kernel.extrude([(2, 1)], 0, 0, -waveguide_length)\n",
+    "\n",
+    "# Only the 2d surfaces\n",
+    "waveguide = [(d, t) for (d, t) in waveguide if d == 2]\n",
+    "\n",
+    "# Air domain\n",
+    "outer_radius = max(1.8 * wavelength, 1.1 * flare_length)\n",
+    "air_sphere = kernel.addSphere(0, 0, flare_length/2, outer_radius)\n",
+    "\n",
+    "# Now, we want the external face of the waveguide to be the waveport, and also we do not want \n",
+    "# the 'interior' face. \n",
+    "\n",
+    "# Finds the face between the waveguide and the flare.\n",
+    "def is_internal_face(dimtag):\n",
+    "    return math.isclose(zmin(dimtag), 0, abs_tol=1e-6) and math.isclose(zmax(dimtag), 0, abs_tol=1e-6)\n",
+    "\n",
+    "# Finds the external face.\n",
+    "def is_external_face(dimtag):\n",
+    "    return math.isclose(zmin(dimtag), -waveguide_length, abs_tol=1e-6) and math.isclose(zmax(dimtag), -waveguide_length, abs_tol=1e-6)\n",
+    "\n",
+    "# Filter and waveport\n",
+    "waveport = [t for (d, t) in waveguide if is_external_face((d, t))]\n",
+    "waveguide = [t for (d, t) in waveguide if not (is_internal_face((d, t)) or is_external_face((d, t)))] \n",
+    "\n",
+    "print(\"waveguide:\", waveguide)\n",
+    "print(\"flare:\", flare)  \n",
+    "print(\"waveport:\", waveport)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "e92ac464",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Entities and mesh.\n",
+    "\n",
+    "Here we generate the entities that later will become the physical groups, generate and \n",
+    "refine the mesh if necessary."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9d7aa513",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Entity definition\n",
+    "entities = [\n",
+    "    Entity('air_sphere', dim=3, btype='dielectric', mesh_order=2, tags=[air_sphere], loss_tan=0.0, eps_r=1.0, mu_r=1.0),\n",
+    "    Entity('waveguide', dim=2, btype='pec', mesh_order=1, tags=waveguide),\n",
+    "    Entity('flare', dim=2, btype='pec', mesh_order=1, tags=flare),\n",
+    "    Entity('waveport', dim=2, btype='waveport', mesh_order=1, tags=waveport),\n",
+    "]\n",
+    "\n",
+    "# Boolean operations to guarantee a nice mesh, algo it returns the\n",
+    "# physical group map.\n",
+    "pg_map = run_entity_pipeline(entities)\n",
+    "\n",
+    "print(entities)\n",
+    "\n",
+    "# Refine near the port\n",
+    "create_graded_mesh(  wavelength, \n",
+    "                     ppw_near=25, \n",
+    "                     ppw_far=5, \n",
+    "                     set_as_background=True)\n",
+    "\n",
+    "# Mesh sizes\n",
+    "mesh_sizes = {}\n",
+    "\n",
+    "generate_3d_mesh(entities, mesh_sizes, filename, optimize=True, verbose=False)\n",
+    "gmsh.finalize()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "de910aac",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Visualize the mesh in the notebook.\n",
+    "view_mesh(filename, transparent_groups=[\"air_sphere__None\"])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "b16df631",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Output configuration for Palace JSON input file"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a84b90f0",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "freq_min = 1.8\n",
+    "freq_max = 1.8\n",
+    "freq_step = 0.1\n",
+    "\n",
+    "# absorbing boundary condition order (1 for first-order ABC, 2 for second-order ABC, etc.)\n",
+    "abc_order = 2\n",
+    "solver_order = 2\n",
+    "\n",
+    "output_file = \"horn_antenna.json\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "bc380eee",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "### Generating the Palace Configuration File\n",
+    "Finally, we assemble the simulation parameters into a JSON configuration file. This dictionary defines the electromagnetic problem type, assigns material properties to our physical volumes, sets boundary conditions (such as the WavePort excitation and absorbing boundaries), and configures the solver's convergence criteria. This file serves as the definitive input for Palace to execute the full-wave analysis of the horn antenna."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6550c6f6",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "output_stem = Path(filename).stem\n",
+    "\n",
+    "config = {\n",
+    "    \"Problem\": {\"Type\": \"Driven\", \"Verbose\": 2, \"Output\": f\"postpro/{output_stem}\"},\n",
+    "    \"Model\": {\"Mesh\": filename, \"L0\": 1.0},\n",
+    "    \"Domains\": {\n",
+    "        \"Materials\": [{\n",
+    "            \"Attributes\": [pg_map[\"air_sphere\"]],\n",
+    "            \"Permeability\": 1.0, \"Permittivity\": 1.0, \"LossTan\": 0.0\n",
+    "        }]\n",
+    "    },\n",
+    "    \"Boundaries\": {\n",
+    "        \"Absorbing\": {\"Attributes\": [pg_map[\"air_sphere__None\"]], \"Order\": abc_order},\n",
+    "        \"PEC\": {\"Attributes\": [pg_map[\"waveguide\"], pg_map[\"flare\"]]},\n",
+    "        \"Postprocessing\": {\n",
+    "            \"FarField\": {\n",
+    "                \"Attributes\": [pg_map[\"air_sphere__None\"]],\n",
+    "                \"NSample\": 64000 \n",
+    "            }\n",
+    "        },\n",
+    "        \"WavePort\": [{\n",
+    "            \"Index\": 1, \"Attributes\": [pg_map[\"waveport\"]],\n",
+    "            \"Mode\": 1, \"Offset\": 0.0, \"Excitation\": True\n",
+    "        }]\n",
+    "    },\n",
+    "    \"Solver\": {\n",
+    "        \"Order\": solver_order, \"Device\": \"CPU\",\n",
+    "        \"Driven\": {\"MinFreq\": freq_min, \"MaxFreq\": freq_max, \"FreqStep\": freq_step, \"SaveStep\": 1, \"AdaptiveTol\": 0.0001},\n",
+    "        \"Linear\": {\"Type\": \"Default\", \"KSPType\": \"GMRES\", \"Tol\": 1e-7, \"MaxIts\": 3000, \"MaxSize\": 1000, \"ComplexCoarseSolve\": True}\n",
+    "    }\n",
+    "}\n",
+    "\n",
+    "script_dir = os.getcwd()\n",
+    "config_path = os.path.join(script_dir, output_file)\n",
+    "with open(config_path, \"w\") as f: json.dump(config, f, indent=2)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv (3.12.3.final.0)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": null,
+   "end_time": null,
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "docs/examples/horn_antenna.ipynb",
+   "output_path": "docs/examples/horn_antenna.ipynb",
+   "parameters": {},
+   "start_time": "2026-08-04T05:48:35.389874+00:00",
+   "version": "2.7.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

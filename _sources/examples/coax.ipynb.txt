@@ -1,0 +1,372 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "64b3392e",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "# Coaxial Cable\n",
+    "\n",
+    "A coaxial waveguide: an annular dielectric region (outer cylinder with inner cylinder removed). The cylinder walls (inner and outer conductors) are PEC, and the top and bottom annular faces are waveports.\n",
+    "\n",
+    "We build the geometry with a boolean cut, use **selectors** to pick the two end faces, define entities for the dielectric volume and the two waveport surfaces, then generate the mesh, write the Palace config, run the simulation, and plot the S parameters."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6e0056ab",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import gmsh\n",
+    "\n",
+    "from palacetoolkit.geometry import Selector\n",
+    "from palacetoolkit.mesh import (\n",
+    "    Entity,\n",
+    "    run_entity_pipeline,\n",
+    "    create_graded_mesh,\n",
+    "    generate_3d_mesh,\n",
+    ")\n",
+    "from palacetoolkit.simulation import (\n",
+    "    generate_palace_config_from_entities,\n",
+    "    run_palace,\n",
+    ")\n",
+    "from palacetoolkit.postpro import s_params\n",
+    "from palacetoolkit.viz import view_mesh"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f1e8f011",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Geometry parameters\n",
+    "\n",
+    "A short coaxial cable segment. The inner conductor radius `r_inner`, outer conductor radius `r_outer`, and length `length` define the annular dielectric region."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "88f3a33d",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "r_inner = 0.5e-3   # inner conductor radius  [m]\n",
+    "r_outer = 1.5e-3   # outer conductor radius  [m]\n",
+    "length  = 20.0e-3  # coax length along z     [m]\n",
+    "\n",
+    "# Frequency sweep\n",
+    "freq_min  = 0.1e9   # 0.1 GHz\n",
+    "freq_max  = 5.0e9   # 5 GHz\n",
+    "freq_step = 0.1e9   # 100 MHz steps"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "74ea6cc0",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Build the annular geometry\n",
+    "\n",
+    "Create the outer cylinder and cut the inner cylinder from it to produce the annular dielectric region."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f1f466d5",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "gmsh.initialize()\n",
+    "gmsh.option.setNumber(\"General.Terminal\", 1)\n",
+    "gmsh.model.add(\"coax\")\n",
+    "\n",
+    "# Outer and inner cylinders\n",
+    "outer = gmsh.model.occ.addCylinder(0, 0, 0, 0, 0, length, r_outer)\n",
+    "inner = gmsh.model.occ.addCylinder(0, 0, 0, 0, 0, length, r_inner)\n",
+    "\n",
+    "# Cut: outer minus inner → annular volume\n",
+    "annular, _ = gmsh.model.occ.cut([(3, outer)], [(3, inner)], removeObject=True, removeTool=True)\n",
+    "gmsh.model.occ.synchronize()\n",
+    "\n",
+    "annular_tags = [t for d, t in annular if d == 3]\n",
+    "print(f\"Annular volume tags: {annular_tags}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "406b0c2f",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Select the two waveport faces\n",
+    "\n",
+    "Using the `Selector` API bound to the annular volume — pick the faces at `z=0` and `z=length`. Each end face is an annulus (a ring-shaped surface)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3bf5f9fe",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Bind the selector to the annular volume — only its boundary faces are considered.\n",
+    "# This mirrors build123d/cadquery where selectors operate on a specific shape.\n",
+    "sel = Selector((3, annular_tags[0]))\n",
+    "\n",
+    "# cadquery-style: faces at a given coordinate\n",
+    "# The seam split may fragment the end faces into multiple pieces, so we\n",
+    "# collect all faces at each z and combine their tags.\n",
+    "port1_faces = sel.faces_at_z(0.0)\n",
+    "port2_faces = sel.faces_at_z(length)\n",
+    "\n",
+    "assert len(port1_faces) >= 1, f\"Expected faces at z=0, got {len(port1_faces)}\"\n",
+    "assert len(port2_faces) >= 1, f\"Expected faces at z=length, got {len(port2_faces)}\"\n",
+    "\n",
+    "port1_tags = [f.tag for f in port1_faces]\n",
+    "port2_tags = [f.tag for f in port2_faces]\n",
+    "\n",
+    "print(f\"Port 1 (z=0):      tags={port1_tags}\")\n",
+    "print(f\"Port 2 (z=length): tags={port2_tags}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f5c72ae7",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Define entities\n",
+    "\n",
+    "The annular volume is a **dielectric** (vacuum, εᵣ=1). The two end faces are waveports. The remaining exterior surfaces (inner and outer cylinder walls) are PEC — they appear as `dielectric__None` in the physical group map and must be explicitly claimed."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "11022e99",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "entities = [\n",
+    "    Entity(\n",
+    "        name=\"dielectric\",\n",
+    "        dim=3,\n",
+    "        btype=\"dielectric\",\n",
+    "        mesh_order=0,\n",
+    "        tags=annular_tags,\n",
+    "        eps_r=1.0,\n",
+    "        mu_r=1.0,\n",
+    "        loss_tan=0.0,\n",
+    "    ),\n",
+    "    Entity(\n",
+    "        name=\"waveport_1\",\n",
+    "        dim=2,\n",
+    "        btype=\"waveport\",\n",
+    "        mesh_order=1,\n",
+    "        tags=port1_tags,\n",
+    "        mode=1,\n",
+    "        excitation=True,\n",
+    "    ),\n",
+    "    Entity(\n",
+    "        name=\"waveport_2\",\n",
+    "        dim=2,\n",
+    "        btype=\"waveport\",\n",
+    "        mesh_order=2,\n",
+    "        tags=port2_tags,\n",
+    "        mode=1,\n",
+    "        excitation=False,\n",
+    "    ),\n",
+    "    # PEC walls — the exterior surfaces of the dielectric (inner & outer conductors)\n",
+    "    Entity(\n",
+    "        name=\"dielectric__None\",\n",
+    "        dim=2,\n",
+    "        btype=\"pec\",\n",
+    "        mesh_order=3,\n",
+    "        tags=[],\n",
+    "    ),\n",
+    "]\n",
+    "\n",
+    "pg_map = run_entity_pipeline(entities)\n",
+    "print(\"Physical group map:\", pg_map)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3363ea1d",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Mesh generation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8f7c9081",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "mesh_file = \"coax.msh\"\n",
+    "\n",
+    "# Operating wavelength at the highest frequency (5 GHz)\n",
+    "c = 3e8\n",
+    "wavelength = c / freq_max\n",
+    "\n",
+    "# Graded mesh: refine near geometric curves\n",
+    "create_graded_mesh(\n",
+    "    wavelength=wavelength,\n",
+    "    ppw_near=6,\n",
+    "    ppw_far=3,\n",
+    ")\n",
+    "\n",
+    "# OCC cylinders have a seam at theta=0 that produces duplicated facets.\n",
+    "# Override the background-mesh options to use boundary-extended sizing\n",
+    "# and Delaunay 3D (no reconstruction) to avoid the \"overlapping facets\" error.\n",
+    "gmsh.option.setNumber(\"Mesh.MeshSizeExtendFromBoundary\", 1)\n",
+    "gmsh.option.setNumber(\"Mesh.MeshSizeFromPoints\", 1)\n",
+    "gmsh.option.setNumber(\"Mesh.MeshSizeFromCurvature\", 1)\n",
+    "gmsh.option.setNumber(\"Mesh.Algorithm3D\", 7)\n",
+    "\n",
+    "generate_3d_mesh(entities, output_file=mesh_file)\n",
+    "gmsh.finalize()\n",
+    "print(f\"Mesh written to {mesh_file}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "62000e17",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "view_mesh(mesh_file)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "79879482",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Palace configuration & simulation\n",
+    "\n",
+    "Build the Palace JSON config from the entity definitions and run the driven simulation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d57df280",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "config_path = \"coax.json\"\n",
+    "\n",
+    "config = generate_palace_config_from_entities(\n",
+    "    entity_defs=[e.to_dict() for e in entities],\n",
+    "    pg_map=pg_map,\n",
+    "    mesh_file=mesh_file,\n",
+    "    output_file=config_path,\n",
+    "    sim_type=\"driven\",\n",
+    "    freq_min=freq_min,\n",
+    "    freq_max=freq_max,\n",
+    "    freq_step=freq_step,\n",
+    "    L0=1e-3,\n",
+    "    solver_order=2,\n",
+    ")\n",
+    "\n",
+    "run_palace(config_path)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "587441fd",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## S parameters"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d4d8c594",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from pathlib import Path\n",
+    "\n",
+    "notebook_dir = Path().resolve()\n",
+    "csv_file = str(notebook_dir / \"postpro\" / \"coax\" / \"port-S.csv\")\n",
+    "\n",
+    "fig, ax = s_params(csv_file)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv (3.12.3.final.0)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 17.457887,
+   "end_time": "2026-08-04T05:38:40.038266+00:00",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "docs/examples/coax.ipynb",
+   "output_path": "docs/examples/coax.ipynb",
+   "parameters": {},
+   "start_time": "2026-08-04T05:38:22.580379+00:00",
+   "version": "2.7.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

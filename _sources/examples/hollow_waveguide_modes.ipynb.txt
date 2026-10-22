@@ -1,0 +1,226 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "3e4d4e4c",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Hollow Rectangular Waveguide Modes\n",
+    "\n",
+    "This notebook solves a PEC rectangular waveguide with `WaveguideModeSolver`, compares against analytic TE/TM modes, and plots the first fields."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bfef1c6d",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import palacetoolkit as ptk\n",
+    "\n",
+    "import gmsh\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "from palacetoolkit.mode_solver import WaveguideModeSolver\n",
+    "from palacetoolkit.utils import write_and_finalize_gmsh\n",
+    "from palacetoolkit.viz import view_mesh\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "902f3519",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def _set_transfinite_rect(surf_tag, nx, ny):\n",
+    "    bnd = gmsh.model.getBoundary([(2, surf_tag)], oriented=True)\n",
+    "    lines = [abs(t) for _, t in bnd]\n",
+    "    for line in lines:\n",
+    "        pts = gmsh.model.getBoundary([(1, line)], oriented=False)\n",
+    "        c0 = gmsh.model.getValue(0, pts[0][1], [])\n",
+    "        c1 = gmsh.model.getValue(0, pts[1][1], [])\n",
+    "        dx = abs(c1[0] - c0[0])\n",
+    "        dy = abs(c1[1] - c0[1])\n",
+    "        n = (nx + 1) if dx > dy else (ny + 1)\n",
+    "        gmsh.model.mesh.setTransfiniteCurve(line, n)\n",
+    "    gmsh.model.mesh.setTransfiniteSurface(surf_tag)\n",
+    "\n",
+    "\n",
+    "def make_rectangular_mesh(a, b, nx, ny, structured=True, lc=None, filename=None):\n",
+    "    gmsh.initialize()\n",
+    "    gmsh.option.setNumber(\"General.Verbosity\", 0)\n",
+    "    gmsh.model.add(\"hollow_waveguide\")\n",
+    "\n",
+    "    gmsh.model.occ.addRectangle(0, 0, 0, a, b, tag=1)\n",
+    "    gmsh.model.occ.synchronize()\n",
+    "\n",
+    "    gmsh.model.addPhysicalGroup(2, [1], tag=1, name=\"domain\")\n",
+    "    bnd = gmsh.model.getBoundary([(2, 1)], oriented=False)\n",
+    "    bnd_tags = [abs(t) for _, t in bnd]\n",
+    "    gmsh.model.addPhysicalGroup(1, bnd_tags, tag=1, name=\"PEC\")\n",
+    "\n",
+    "    if structured:\n",
+    "        _set_transfinite_rect(1, nx, ny)\n",
+    "        gmsh.model.mesh.setRecombine(2, 1)\n",
+    "    else:\n",
+    "        _lc = lc if lc is not None else max(a / nx, b / ny)\n",
+    "        gmsh.option.setNumber(\"Mesh.CharacteristicLengthMin\", 0.8 * _lc)\n",
+    "        gmsh.option.setNumber(\"Mesh.CharacteristicLengthMax\", 1.2 * _lc)\n",
+    "\n",
+    "    gmsh.model.mesh.generate(2)\n",
+    "    return write_and_finalize_gmsh(filename, prefix=\"wg_rect_\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ae6533ee",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def analytic_kn(a, b, omega, m_max=5, n_max=5, mu=1.0, eps=1.0):\n",
+    "    modes = []\n",
+    "    k0_sq = omega**2 * mu * eps\n",
+    "\n",
+    "    for m in range(0, m_max + 1):\n",
+    "        for n in range(0, n_max + 1):\n",
+    "            if m == 0 and n == 0:\n",
+    "                continue\n",
+    "            kc_sq = (m * np.pi / a) ** 2 + (n * np.pi / b) ** 2\n",
+    "            kn = np.sqrt((k0_sq - kc_sq) + 0j)\n",
+    "            modes.append((f\"TE{m}{n}\", np.sqrt(kc_sq), kn))\n",
+    "\n",
+    "    for m in range(1, m_max + 1):\n",
+    "        for n in range(1, n_max + 1):\n",
+    "            kc_sq = (m * np.pi / a) ** 2 + (n * np.pi / b) ** 2\n",
+    "            kn = np.sqrt((k0_sq - kc_sq) + 0j)\n",
+    "            modes.append((f\"TM{m}{n}\", np.sqrt(kc_sq), kn))\n",
+    "\n",
+    "    modes.sort(key=lambda x: -x[2].real)\n",
+    "    return modes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3be79dcc",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "a, b = 2.0, 1.0\n",
+    "mu, eps = 1.0, 1.0\n",
+    "c0 = 1.0 / np.sqrt(mu * eps)\n",
+    "\n",
+    "fc_te10 = c0 * np.pi / a / (2 * np.pi)\n",
+    "f_op = 3.5 * fc_te10\n",
+    "omega = 2 * np.pi * f_op\n",
+    "\n",
+    "analytic = analytic_kn(a, b, omega, m_max=4, n_max=4, mu=mu, eps=eps)\n",
+    "print(\"Top 8 analytic modes:\")\n",
+    "for name, kc, kn in analytic[:8]:\n",
+    "    print(f\"  {name:6s}: kc={kc:8.4f}, kn={kn.real:+10.6f}{kn.imag:+10.6f}j\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3b2cd9cd",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from palacetoolkit.mode_solver import ModeMetrics\n",
+    "\n",
+    "mesh_file = make_rectangular_mesh(\n",
+    "    a,\n",
+    "    b,\n",
+    "    nx=32,\n",
+    "    ny=16,\n",
+    "    structured=True,\n",
+    ")\n",
+    "view_mesh(mesh_file)\n",
+    "solver = WaveguideModeSolver(\n",
+    "    mesh_file=mesh_file,\n",
+    "    order=2,\n",
+    "    pec_bdr=[1],\n",
+    "    materials=[{\"attrs\": [1], \"eps_r\": eps, \"mu_r\": mu}],\n",
+    "    omega=omega,\n",
+    ")\n",
+    "results = solver.solve(num_modes=8, mode_idx=1, target=0.0, save=0, num_procs=4)\n",
+    "\n",
+    "print(\"\\nNumerical modes:\")\n",
+    "for i in sorted(results):\n",
+    "    mode = results[i]\n",
+    "    print(f\"  Mode {i}: kn={mode.k_n.real:+10.6f}{mode.k_n.imag:+10.6f}j\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "eb43ec99",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Field visualization is no longer available through the solver.\n",
+    "# Palace writes VTU field output files when save > 0 in solver.solve().\n",
+    "# Load the VTU files with pyvista for field visualization:\n",
+    "#   import pyvista as pv\n",
+    "#   mesh = pv.read(\"mode_1.vtu\")\n",
+    "#   mesh.plot(scalars=\"Ez\", cmap=\"hot\")\n",
+    "#\n",
+    "# For more details, see palacetoolkit.postpro_vtu utilities.\n",
+    "print(\"Field visualization moved to pyvista-based VTU post-processing.\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 2.562357,
+   "end_time": "2026-08-04T05:48:34.537072+00:00",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "docs/examples/hollow_waveguide_modes.ipynb",
+   "output_path": "docs/examples/hollow_waveguide_modes.ipynb",
+   "parameters": {},
+   "start_time": "2026-08-04T05:48:31.974715+00:00",
+   "version": "2.7.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

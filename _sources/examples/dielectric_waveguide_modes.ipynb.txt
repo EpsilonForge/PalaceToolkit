@@ -1,0 +1,195 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "bd45434d",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "# Rectangular Dielectric Waveguide Modes\n",
+    "\n",
+    "This notebook solves a dielectric core inside cladding, classifies guided modes, and plots transverse and longitudinal fields."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c33a4d96",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from palacetoolkit.mode_solver import WaveguideModeSolver, ModeMetrics\n",
+    "from palacetoolkit.utils import write_and_finalize_gmsh\n",
+    "from palacetoolkit.viz import view_mesh\n",
+    "\n",
+    "import gmsh\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "216a1ceb",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def _set_lc_for_dielectric(a_core, b_core, lc_core, lc_clad):\n",
+    "    pts = gmsh.model.getEntities(0)\n",
+    "    for _, ptag in pts:\n",
+    "        coord = gmsh.model.getValue(0, ptag, [])\n",
+    "        in_core = (abs(coord[0]) <= a_core / 2 + 1e-10 and abs(coord[1]) <= b_core / 2 + 1e-10)\n",
+    "        gmsh.model.mesh.setSize([(0, ptag)], lc_core if in_core else lc_clad)\n",
+    "\n",
+    "\n",
+    "def make_dielectric_waveguide_mesh(a_core, b_core, a_clad, b_clad, nx_core=16, ny_core=8, nx_clad=8, ny_clad=8, filename=None):\n",
+    "    gmsh.initialize()\n",
+    "    gmsh.option.setNumber(\"General.Verbosity\", 0)\n",
+    "    gmsh.model.add(\"dielectric_waveguide\")\n",
+    "\n",
+    "    clad = gmsh.model.occ.addRectangle(-a_clad / 2, -b_clad / 2, 0, a_clad, b_clad)\n",
+    "    core = gmsh.model.occ.addRectangle(-a_core / 2, -b_core / 2, 0, a_core, b_core)\n",
+    "    _, outmap = gmsh.model.occ.fragment([(2, clad)], [(2, core)])\n",
+    "    gmsh.model.occ.synchronize()\n",
+    "\n",
+    "    core_surfs = [tag for _, tag in outmap[1]]\n",
+    "    clad_surfs = [tag for _, tag in outmap[0] if tag not in core_surfs]\n",
+    "\n",
+    "    gmsh.model.addPhysicalGroup(2, core_surfs, tag=1, name=\"core\")\n",
+    "    gmsh.model.addPhysicalGroup(2, clad_surfs, tag=2, name=\"cladding\")\n",
+    "\n",
+    "    all_surfs = [(2, t) for t in core_surfs + clad_surfs]\n",
+    "    outer_bnd = gmsh.model.getBoundary(all_surfs, oriented=False, combined=True)\n",
+    "    pec_tags = [abs(tag) for _, tag in outer_bnd]\n",
+    "    gmsh.model.addPhysicalGroup(1, pec_tags, tag=1, name=\"PEC\")\n",
+    "\n",
+    "    lc_core = min(a_core / nx_core, b_core / ny_core)\n",
+    "    lc_clad = max(lc_core * max(nx_core / nx_clad, ny_core / ny_clad), 1.5 * lc_core)\n",
+    "    _set_lc_for_dielectric(a_core, b_core, lc_core, lc_clad)\n",
+    "\n",
+    "    gmsh.model.mesh.generate(2)\n",
+    "    return write_and_finalize_gmsh(filename, prefix=\"wg_diel_\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b05177fc",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "a_core, b_core = 1.0, 0.5\n",
+    "a_clad, b_clad = 4.0, 3.0\n",
+    "eps_core, eps_clad = 4.0, 1.0\n",
+    "mu = 1.0\n",
+    "\n",
+    "k0_cutoff_approx = np.pi / a_core / np.sqrt(eps_core - eps_clad)\n",
+    "omega = 3.0 * k0_cutoff_approx\n",
+    "\n",
+    "kn_min = omega * np.sqrt(mu * eps_clad)\n",
+    "kn_max = omega * np.sqrt(mu * eps_core)\n",
+    "print(f\"Guided-mode window: {kn_min:.4f} < kn < {kn_max:.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ce38bb09",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "mesh_file = make_dielectric_waveguide_mesh(\n",
+    "    a_core,\n",
+    "    b_core,\n",
+    "    a_clad,\n",
+    "    b_clad,\n",
+    "    nx_core=16,\n",
+    "    ny_core=8,\n",
+    "    nx_clad=8,\n",
+    "    ny_clad=8,\n",
+    ")\n",
+    "view_mesh(mesh_file)\n",
+    "\n",
+    "solver = WaveguideModeSolver(\n",
+    "    mesh_file=mesh_file,\n",
+    "    order=2,\n",
+    "    pec_bdr=[1],\n",
+    "    materials=[\n",
+    "        {\"attrs\": [1], \"eps_r\": eps_core, \"mu_r\": mu},\n",
+    "        {\"attrs\": [2], \"eps_r\": eps_clad, \"mu_r\": mu},\n",
+    "    ],\n",
+    "    omega=omega,\n",
+    ")\n",
+    "results = solver.solve(num_modes=10, mode_idx=1, target=0.0, save=0, num_procs=4)\n",
+    "\n",
+    "print(\"Computed modes:\")\n",
+    "for i in sorted(results):\n",
+    "    kn = results[i].k_n\n",
+    "    if kn_min < kn.real < kn_max:\n",
+    "        mode_type = \"guided\"\n",
+    "    elif abs(kn.imag) > 0.1 * abs(kn.real):\n",
+    "        mode_type = \"evanescent\"\n",
+    "    else:\n",
+    "        mode_type = \"radiation/substrate\"\n",
+    "    print(f\"  Mode {i:2d}: kn={kn.real:+10.6f}{kn.imag:+10.6f}j  [{mode_type}]\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f3f8e9c8",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Field visualization is no longer available through the solver.\n",
+    "# Palace writes VTU field output files when save > 0 in solver.solve().\n",
+    "# Load the VTU files with pyvista for field visualization.\n",
+    "# For more details, see palacetoolkit.postpro_vtu utilities.\n",
+    "print(\"Field visualization moved to pyvista-based VTU post-processing.\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv (3.12.3.final.0)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 4.766324,
+   "end_time": "2026-08-04T05:38:49.757001+00:00",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "docs/examples/dielectric_waveguide_modes.ipynb",
+   "output_path": "docs/examples/dielectric_waveguide_modes.ipynb",
+   "parameters": {},
+   "start_time": "2026-08-04T05:38:44.990677+00:00",
+   "version": "2.7.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

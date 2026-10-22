@@ -1,0 +1,248 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "5424200f",
+   "metadata": {
+    "tags": [
+     "papermill-error-cell-tag"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "<span style=\"color:red; font-family:Helvetica Neue, Helvetica, Arial, sans-serif; font-size:2em;\">An Exception was encountered at '<a href=\"#papermill-error-cell\">In [4]</a>'.</span>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "b819d6fb",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Slotline Modes\n",
+    "\n",
+    "This notebook builds a boxed slotline cross-section (substrate + air + two PEC slot conductors), solves eigenmodes with `WaveguideModeSolver`, and plots mode fields."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "760fab3d",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from palacetoolkit.mode_solver import WaveguideModeSolver, ModeMetrics\n",
+    "from palacetoolkit.utils import write_and_finalize_gmsh\n",
+    "from palacetoolkit.viz import view_mesh\n",
+    "\n",
+    "import gmsh\n",
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c5217c2e",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def make_slotline_mesh(\n",
+    "    box_w=8.0,\n",
+    "    h_sub=1.0,\n",
+    "    h_air=3.0,\n",
+    "    slot_gap=0.5,\n",
+    "    metal_t=0.06,\n",
+    "    lc_bulk=0.18,\n",
+    "    lc_slot=0.04,\n",
+    "    filename=None,\n",
+    "):\n",
+    "    gmsh.initialize()\n",
+    "    gmsh.option.setNumber(\"General.Verbosity\", 0)\n",
+    "    gmsh.model.add(\"slotline_modes\")\n",
+    "\n",
+    "    sub = gmsh.model.occ.addRectangle(-box_w / 2, -h_sub, 0, box_w, h_sub)\n",
+    "    air = gmsh.model.occ.addRectangle(-box_w / 2, 0.0, 0, box_w, h_air)\n",
+    "\n",
+    "    left_w = (box_w - slot_gap) / 2\n",
+    "    right_w = left_w\n",
+    "    left_metal = gmsh.model.occ.addRectangle(-box_w / 2, 0.0, 0, left_w, metal_t)\n",
+    "    right_metal = gmsh.model.occ.addRectangle(slot_gap / 2, 0.0, 0, right_w, metal_t)\n",
+    "\n",
+    "    _, outmap = gmsh.model.occ.fragment([(2, sub), (2, air), (2, left_metal), (2, right_metal)], [])\n",
+    "    gmsh.model.occ.remove(list(outmap[2]) + list(outmap[3]), recursive=True)\n",
+    "    gmsh.model.occ.synchronize()\n",
+    "\n",
+    "    all_surfs = [t for _, t in gmsh.model.getEntities(2)]\n",
+    "    substrate_surfs = []\n",
+    "    air_surfs = []\n",
+    "    for tag in all_surfs:\n",
+    "        _, cy, _ = gmsh.model.occ.getCenterOfMass(2, tag)\n",
+    "        if cy < -1e-9:\n",
+    "            substrate_surfs.append(tag)\n",
+    "        else:\n",
+    "            air_surfs.append(tag)\n",
+    "\n",
+    "    gmsh.model.addPhysicalGroup(2, substrate_surfs, tag=1, name=\"substrate\")\n",
+    "    gmsh.model.addPhysicalGroup(2, air_surfs, tag=2, name=\"air\")\n",
+    "\n",
+    "    bnd = gmsh.model.getBoundary([(2, t) for t in substrate_surfs + air_surfs], oriented=False, combined=False)\n",
+    "    edge_tags = sorted({abs(t) for _, t in bnd})\n",
+    "\n",
+    "    left_slot_pec = []\n",
+    "    right_slot_pec = []\n",
+    "    open_edges = []\n",
+    "\n",
+    "    for et in edge_tags:\n",
+    "        ex, ey, _ = gmsh.model.occ.getCenterOfMass(1, et)\n",
+    "        on_metal_y = (-1e-6 <= ey <= metal_t + 1e-6)\n",
+    "        if on_metal_y and ex < -slot_gap / 2 + 1e-6:\n",
+    "            left_slot_pec.append(et)\n",
+    "        elif on_metal_y and ex > slot_gap / 2 - 1e-6:\n",
+    "            right_slot_pec.append(et)\n",
+    "        else:\n",
+    "            open_edges.append(et)\n",
+    "\n",
+    "    if left_slot_pec:\n",
+    "        gmsh.model.addPhysicalGroup(1, left_slot_pec, tag=1, name=\"slot_pec_left\")\n",
+    "    if right_slot_pec:\n",
+    "        gmsh.model.addPhysicalGroup(1, right_slot_pec, tag=2, name=\"slot_pec_right\")\n",
+    "    if open_edges:\n",
+    "        gmsh.model.addPhysicalGroup(1, open_edges, tag=3, name=\"open_boundary\")\n",
+    "\n",
+    "    for _, ptag in gmsh.model.getEntities(0):\n",
+    "        x, y, _ = gmsh.model.getValue(0, ptag, [])\n",
+    "        near_slot = abs(x) <= (slot_gap + 1.0) and -0.2 <= y <= (metal_t + 0.4)\n",
+    "        gmsh.model.mesh.setSize([(0, ptag)], lc_slot if near_slot else lc_bulk)\n",
+    "\n",
+    "    gmsh.model.mesh.generate(2)\n",
+    "    return write_and_finalize_gmsh(filename, prefix=\"wg_slotline_\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fb5efc7b",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "eps_sub = 4.1\n",
+    "eps_air = 1.0\n",
+    "mu_r = 1.0\n",
+    "omega = 1.0"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "af5166ec",
+   "metadata": {
+    "tags": [
+     "papermill-error-cell-tag"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "<span id=\"papermill-error-cell\" style=\"color:red; font-family:Helvetica Neue, Helvetica, Arial, sans-serif; font-size:2em;\">Execution using papermill encountered an exception here and stopped:</span>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3f988b03",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "mesh_file = make_slotline_mesh(\n",
+    "    box_w=8.0,\n",
+    "    h_sub=1.0,\n",
+    "    h_air=3.0,\n",
+    "    slot_gap=0.5,\n",
+    "    metal_t=0.06,\n",
+    ")\n",
+    "view_mesh(mesh_file)\n",
+    "\n",
+    "# Only slot metal boundaries are PEC. Open boundaries stay non-PEC.\n",
+    "pec_bdr = [1, 2]\n",
+    "\n",
+    "solver = WaveguideModeSolver(\n",
+    "    mesh_file=mesh_file,\n",
+    "    order=2,\n",
+    "    pec_bdr=pec_bdr,\n",
+    "    materials=[\n",
+    "        {\"attrs\": [1], \"eps_r\": eps_sub, \"mu_r\": mu_r},\n",
+    "        {\"attrs\": [2], \"eps_r\": eps_air, \"mu_r\": mu_r},\n",
+    "    ],\n",
+    "    omega=omega,\n",
+    ")\n",
+    "results = solver.solve(num_modes=8, mode_idx=1, target=0.0, save=0, num_procs=4)\n",
+    "\n",
+    "print(\"Computed slotline modes:\")\n",
+    "for i in sorted(results):\n",
+    "    kn = results[i].k_n\n",
+    "    print(f\"  Mode {i:2d}: kn={kn.real:+10.6f}{kn.imag:+10.6f}j\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c7d0795a",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Mesh visualization moved to pyvista-based VTU post-processing.\n",
+    "# For more details, see palacetoolkit.postpro_vtu utilities.\n",
+    "print(\"Mesh visualization moved to pyvista-based VTU post-processing.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6991688d",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Field visualization is no longer available through the solver.\n",
+    "# Palace writes VTU field output files when save > 0 in solver.solve().\n",
+    "# Load the VTU files with pyvista for field visualization.\n",
+    "# For more details, see palacetoolkit.postpro_vtu utilities.\n",
+    "print(\"Field visualization moved to pyvista-based VTU post-processing.\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

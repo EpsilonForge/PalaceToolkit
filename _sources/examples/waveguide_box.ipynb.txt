@@ -1,0 +1,361 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "e216b98f",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Waveguide Box\n",
+    "\n",
+    "A simple hollow rectangular waveguide with two waveports.\n",
+    "\n",
+    "We build a single box, use **selectors** (build123d / cadquery-style) to pick the two end faces, define entities for the PEC volume and the two waveport surfaces, then generate the mesh, write the Palace config, run the simulation, and plot the S parameters."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a2184d13",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import gmsh\n",
+    "\n",
+    "from palacetoolkit.geometry import Selector\n",
+    "from palacetoolkit.mesh import (\n",
+    "    Entity,\n",
+    "    run_entity_pipeline,\n",
+    "    create_graded_mesh,\n",
+    "    generate_3d_mesh,\n",
+    ")\n",
+    "from palacetoolkit.simulation import (\n",
+    "    generate_palace_config_from_entities,\n",
+    "    run_palace,\n",
+    ")\n",
+    "from palacetoolkit.postpro import s_params, resonant_frequency\n",
+    "from palacetoolkit.viz import view_mesh       "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "9805464a",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## Geometry parameters\n",
+    "\n",
+    "Standard WR-90 waveguide dimensions (X-band) as an example."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c27265c6",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "width  = 22.86e-3   # a (broad wall)\n",
+    "height = 10.16e-3   # b (narrow wall)\n",
+    "length = 150.0e-3   # waveguide length along x\n",
+    "\n",
+    "# Frequency sweep\n",
+    "freq_min  = 8    # 8 GHz\n",
+    "freq_max  = 12   # 12 GHz\n",
+    "freq_step = 0.1  # 100 MHz steps"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "2fc8f9cf",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## Build the box"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0f9278fa",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "gmsh.initialize()\n",
+    "gmsh.option.setNumber(\"General.Terminal\", 1)\n",
+    "gmsh.model.add(\"waveguide_box\")\n",
+    "\n",
+    "# Box from x=0 to x=length, y=0 to y=width, z=0 to z=height\n",
+    "box_dimtag = gmsh.model.occ.addBox(0, 0, 0, length, width, height)\n",
+    "gmsh.model.occ.synchronize()\n",
+    "print(f\"Box volume tag: {box_dimtag}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "0a892f96",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## Select the two waveport faces\n",
+    "\n",
+    "Using the `Selector` API bound to the box volume — pick the faces at `x=0` and `x=length`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fa41cbdd",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Bind the selector to the box volume — only its boundary faces are considered.\n",
+    "sel = Selector((3, box_dimtag))\n",
+    "\n",
+    "# cadquery-style: faces at a given coordinate\n",
+    "port1_faces = sel.faces_at_x(0.0)\n",
+    "port2_faces = sel.faces_at_x(length)\n",
+    "\n",
+    "assert len(port1_faces) == 1, f\"Expected 1 face at x=0, got {len(port1_faces)}\"\n",
+    "assert len(port2_faces) == 1, f\"Expected 1 face at x=length, got {len(port2_faces)}\"\n",
+    "\n",
+    "port1 = port1_faces[0]\n",
+    "port2 = port2_faces[0]\n",
+    "\n",
+    "print(f\"Port 1 (x=0):     dim={port1.dim}, tag={port1.tag}\")\n",
+    "print(f\"Port 2 (x=length): dim={port2.dim}, tag={port2.tag}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "c4e6aa04",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## Define entities\n",
+    "\n",
+    "The box volume is a **dielectric** (vacuum, εᵣ=1). The two end faces are waveports. The exterior walls (`box__None`) will be treated as PEC automatically — any physical group not matching an entity definition and not containing \"substrate\" defaults to absorbing, so we need to explicitly mark the exterior as PEC."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5df9a4aa",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "entities = [\n",
+    "    Entity(\n",
+    "        name=\"box\",\n",
+    "        dim=3,\n",
+    "        btype=\"dielectric\",\n",
+    "        mesh_order=0,\n",
+    "        tags=[box_dimtag],\n",
+    "        eps_r=1.0,\n",
+    "        mu_r=1.0,\n",
+    "        loss_tan=0.0,\n",
+    "    ),\n",
+    "    Entity(\n",
+    "        name=\"waveport_1\",\n",
+    "        dim=2,\n",
+    "        btype=\"waveport\",\n",
+    "        mesh_order=1,\n",
+    "        tags=[port1.tag],\n",
+    "        mode=1,\n",
+    "        excitation=True,\n",
+    "    ),\n",
+    "    Entity(\n",
+    "        name=\"waveport_2\",\n",
+    "        dim=2,\n",
+    "        btype=\"waveport\",\n",
+    "        mesh_order=2,\n",
+    "        tags=[port2.tag],\n",
+    "        mode=1,\n",
+    "        excitation=False,\n",
+    "    ),\n",
+    "    # PEC walls — the exterior surface of the box\n",
+    "    Entity(\n",
+    "        name=\"box__None\",\n",
+    "        dim=2,\n",
+    "        btype=\"pec\",\n",
+    "        mesh_order=3,\n",
+    "        tags=[],\n",
+    "    ),\n",
+    "]\n",
+    "\n",
+    "pg_map = run_entity_pipeline(entities)\n",
+    "print(\"Physical group map:\", pg_map)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "04bc34a5",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## Mesh generation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cdc7ab2c",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "mesh_file = \"waveguide_box.msh\"\n",
+    "\n",
+    "# Operating wavelength at the highest frequency (12 GHz)\n",
+    "c = 3e8\n",
+    "wavelength = c / freq_max\n",
+    "\n",
+    "# Graded mesh: refine near geometric curves, ignore the box exterior\n",
+    "create_graded_mesh(\n",
+    "    wavelength=wavelength,\n",
+    "    ppw_near=6,\n",
+    "    ppw_far=3,\n",
+    "    ignore_entities=[\"box\"],\n",
+    ")\n",
+    "\n",
+    "generate_3d_mesh(entities, output_file=mesh_file)\n",
+    "gmsh.finalize()\n",
+    "print(f\"Mesh written to {mesh_file}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "2816b6c5",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "view_mesh(mesh_file, transparent_groups= \"air_sphere__None\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "0f2368d3",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## Palace configuration & simulation\n",
+    "\n",
+    "Build the Palace JSON config from the entity definitions and run the driven simulation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "66e29ac7",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "config_path = \"waveguide_box.json\"\n",
+    "\n",
+    "config = generate_palace_config_from_entities(\n",
+    "    entity_defs=[e.to_dict() for e in entities],\n",
+    "    pg_map=pg_map,\n",
+    "    mesh_file=mesh_file,\n",
+    "    output_file=config_path,\n",
+    "    sim_type=\"driven\",\n",
+    "    freq_min=freq_min,\n",
+    "    freq_max=freq_max,\n",
+    "    freq_step=freq_step,\n",
+    "    L0=1e-3,\n",
+    "    solver_order=2,\n",
+    ")\n",
+    "\n",
+    "run_palace(config_path)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "execution_count": null,
+   "id": "f33aab9d",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "## S parameters"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8ad8d012",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from pathlib import Path\n",
+    "\n",
+    "notebook_dir = Path().resolve()\n",
+    "csv_file = str(notebook_dir / \"postpro\" / \"waveguide_box\" / \"port-S.csv\")\n",
+    "\n",
+    "fig, ax = s_params(csv_file)\n",
+    "f = resonant_frequency(csv_file)\n",
+    "print(f\"Resonant frequency (min |S11|): {f:.3f} GHz\")\n",
+    "fig"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv (3.12.3.final.0)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
