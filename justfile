@@ -8,12 +8,15 @@ ipykernel:
 
 # Step 0: Ensure Palace runtime is cached
 ensure-palace:
-    {{python}} -m palacetoolkit.cli palace_toolkit_install_binary
+    {{python}} -c "import sys; from palacetoolkit.cli import palace_toolkit_install_binary; sys.exit(palace_toolkit_install_binary())"
 
 # Step 1: Execute docs examples notebooks in-place with papermill
 nbrun: ipykernel ensure-palace
-    export DOCS_BUILD=1 && find {{examples}} -maxdepth 1 -name "*.ipynb" \
-        -not -path "*/.ipynb_checkpoints/*" | sort | while read nb; do \
+    set -euo pipefail; \
+    export DOCS_BUILD=1; \
+    export DOCS_FAIL_ON_SIMULATION_ERROR=1; \
+    find {{examples}} -maxdepth 1 -name "*.ipynb" \
+        -not -path "*/.ipynb_checkpoints/*" | sort | while IFS= read -r nb; do \
         echo "Running: $nb"; \
         {{python}} -m papermill "$nb" "$nb" -k palacetoolkit --cwd {{examples}}; \
     done
@@ -30,11 +33,15 @@ docs:
 # Alias used by contributors coming from MkDocs-style workflows
 build: docs
 
-# Explicit docs build alias for CI/local parity
+# Explicit docs build alias for local parity
 docs-build: docs
 
 # All three steps in sequence
 docs-full: nbrun nbdocs docs
+
+# Execute every notebook, build the site, and publish it to gh-pages
+deploy-docs:
+    ./scripts/deploy-docs.sh
 
 # Run documentation doctests (executes notebooks via papermill)
 doctest: ipykernel
