@@ -5,6 +5,13 @@
    "execution_count": null,
    "id": "e216b98f",
    "metadata": {
+    "papermill": {
+     "duration": 0.002134,
+     "end_time": "2026-10-23T12:04:57.741723+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:57.739589+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -18,9 +25,22 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 1,
    "id": "a2184d13",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:57.783838Z",
+     "iopub.status.busy": "2026-10-23T12:04:57.783710Z",
+     "iopub.status.idle": "2026-10-23T12:04:58.167073Z",
+     "shell.execute_reply": "2026-10-23T12:04:58.166563Z"
+    },
+    "papermill": {
+     "duration": 0.386662,
+     "end_time": "2026-10-23T12:04:58.167666+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:57.781004+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -47,6 +67,13 @@
    "execution_count": null,
    "id": "9805464a",
    "metadata": {
+    "papermill": {
+     "duration": 0.001288,
+     "end_time": "2026-10-23T12:04:58.170612+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.169324+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -58,9 +85,22 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 2,
    "id": "c27265c6",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:58.174008Z",
+     "iopub.status.busy": "2026-10-23T12:04:58.173832Z",
+     "iopub.status.idle": "2026-10-23T12:04:58.175931Z",
+     "shell.execute_reply": "2026-10-23T12:04:58.175603Z"
+    },
+    "papermill": {
+     "duration": 0.004363,
+     "end_time": "2026-10-23T12:04:58.176341+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.171978+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -80,6 +120,13 @@
    "execution_count": null,
    "id": "2fc8f9cf",
    "metadata": {
+    "papermill": {
+     "duration": 0.00126,
+     "end_time": "2026-10-23T12:04:58.178942+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.177682+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -89,12 +136,33 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 3,
    "id": "0f9278fa",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:58.182103Z",
+     "iopub.status.busy": "2026-10-23T12:04:58.182001Z",
+     "iopub.status.idle": "2026-10-23T12:04:58.185722Z",
+     "shell.execute_reply": "2026-10-23T12:04:58.185371Z"
+    },
+    "papermill": {
+     "duration": 0.005786,
+     "end_time": "2026-10-23T12:04:58.186083+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.180297+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Box volume tag: 1\n"
+     ]
+    }
+   ],
    "source": [
     "gmsh.initialize()\n",
     "gmsh.option.setNumber(\"General.Terminal\", 1)\n",
@@ -111,6 +179,13 @@
    "execution_count": null,
    "id": "0a892f96",
    "metadata": {
+    "papermill": {
+     "duration": 0.002168,
+     "end_time": "2026-10-23T12:04:58.189680+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.187512+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -122,12 +197,34 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 4,
    "id": "fa41cbdd",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:58.193094Z",
+     "iopub.status.busy": "2026-10-23T12:04:58.192933Z",
+     "iopub.status.idle": "2026-10-23T12:04:58.195903Z",
+     "shell.execute_reply": "2026-10-23T12:04:58.195536Z"
+    },
+    "papermill": {
+     "duration": 0.005145,
+     "end_time": "2026-10-23T12:04:58.196229+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.191084+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Port 1 (x=0):     dim=2, tag=1\n",
+      "Port 2 (x=length): dim=2, tag=2\n"
+     ]
+    }
+   ],
    "source": [
     "# Bind the selector to the box volume — only its boundary faces are considered.\n",
     "sel = Selector((3, box_dimtag))\n",
@@ -151,6 +248,13 @@
    "execution_count": null,
    "id": "c4e6aa04",
    "metadata": {
+    "papermill": {
+     "duration": 0.001325,
+     "end_time": "2026-10-23T12:04:58.198959+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.197634+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -162,12 +266,37 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 5,
    "id": "5df9a4aa",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:58.202321Z",
+     "iopub.status.busy": "2026-10-23T12:04:58.202181Z",
+     "iopub.status.idle": "2026-10-23T12:04:58.206487Z",
+     "shell.execute_reply": "2026-10-23T12:04:58.206094Z"
+    },
+    "papermill": {
+     "duration": 0.00647,
+     "end_time": "2026-10-23T12:04:58.206833+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.200363+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Physical group 'box' (dim=3): pg=1, tags=[1]\n",
+      "  Physical group 'waveport_1' (dim=2): pg=2, tags=[1]\n",
+      "  Physical group 'waveport_2' (dim=2): pg=3, tags=[2]\n",
+      "  Physical group 'box__None' (dim=2): pg=4, tags=[3, 4, 5, 6]\n",
+      "Physical group map: {'waveport_1': 2, 'waveport_2': 3, 'box__None': 4, 'box': 1}\n"
+     ]
+    }
+   ],
    "source": [
     "entities = [\n",
     "    Entity(\n",
@@ -217,6 +346,13 @@
    "execution_count": null,
    "id": "04bc34a5",
    "metadata": {
+    "papermill": {
+     "duration": 0.001328,
+     "end_time": "2026-10-23T12:04:58.209619+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.208291+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -226,12 +362,40 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 6,
    "id": "cdc7ab2c",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:58.212989Z",
+     "iopub.status.busy": "2026-10-23T12:04:58.212852Z",
+     "iopub.status.idle": "2026-10-23T12:04:58.219740Z",
+     "shell.execute_reply": "2026-10-23T12:04:58.219331Z"
+    },
+    "papermill": {
+     "duration": 0.008965,
+     "end_time": "2026-10-23T12:04:58.219993+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.211028+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  ignoring 4 curves from {'box__None'}\n",
+      "  global: 8 curves, SizeMin=4166666.6667\n",
+      "  ppw_near=6  ppw_far=3\n",
+      "  SizeMax=8333333.3333  transition=6250000.0000\n",
+      "Mesh saved to waveguide_box.msh\n",
+      "  Nodes: 9\n",
+      "  Elements: 44\n",
+      "Mesh written to waveguide_box.msh\n"
+     ]
+    }
+   ],
    "source": [
     "mesh_file = \"waveguide_box.msh\"\n",
     "\n",
@@ -254,12 +418,48 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 7,
    "id": "2816b6c5",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:58.223554Z",
+     "iopub.status.busy": "2026-10-23T12:04:58.223418Z",
+     "iopub.status.idle": "2026-10-23T12:04:58.626092Z",
+     "shell.execute_reply": "2026-10-23T12:04:58.625623Z"
+    },
+    "papermill": {
+     "duration": 0.405241,
+     "end_time": "2026-10-23T12:04:58.626772+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.221531+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Loading mesh file: waveguide_box.msh\n",
+      "Groups to render transparent: air_sphere__None\n",
+      "\n",
+      "Mesh loaded successfully with 2 cell blocks\n",
+      "Found 12 triangles total\n",
+      "Physical group tags in mesh: {2: 'waveport_1', 3: 'waveport_2', 4: 'box__None'}\n"
+     ]
+    },
+    {
+     "data": {
+      "image/png": "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",
+      "text/plain": [
+       "<IPython.core.display.Image object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
    "source": [
     "view_mesh(mesh_file, transparent_groups= \"air_sphere__None\")"
    ]
@@ -269,6 +469,13 @@
    "execution_count": null,
    "id": "0f2368d3",
    "metadata": {
+    "papermill": {
+     "duration": 0.001711,
+     "end_time": "2026-10-23T12:04:58.630495+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.628784+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -280,12 +487,3450 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 8,
    "id": "66e29ac7",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:04:58.634834Z",
+     "iopub.status.busy": "2026-10-23T12:04:58.634730Z",
+     "iopub.status.idle": "2026-10-23T12:05:00.035976Z",
+     "shell.execute_reply": "2026-10-23T12:05:00.035593Z"
+    },
+    "papermill": {
+     "duration": 1.404369,
+     "end_time": "2026-10-23T12:05:00.036586+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:04:58.632217+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Palace config written to waveguide_box.json\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Running: /home/martin/.cache/palacetoolkit/runtime/palace-cpu-v0.17.0/bin/palace --serial /tmp/palacetoolkit-docs.dabfYK/docs/examples/waveguide_box.json\n",
+      ">> /home/martin/.cache/palacetoolkit/runtime/palace-cpu-v0.17.0/bin/palace-x86_64.bin /tmp/palacetoolkit-docs.dabfYK/docs/examples/waveguide_box.json\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "_____________     _______\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "_____   __   \\____ __   /____ ____________\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "____   /_/  /  __ ` /  /  __ ` /  ___/  _ \\\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "___   _____/  /_/  /  /  /_/  /  /__/  ___/\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  /__/     \\___,__/__/\\___,__/\\_____\\_____/\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[38;2;255;255;000m--> Warning!\u001b[0m\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Output folder is not empty; program will overwrite content! (postpro/waveguide_box)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Git changeset ID: v0.17.0-194-g01f5d9bd1\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Running with 1 MPI process, 1 OpenMP thread\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Device configuration: omp,cpu\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Memory configuration: host-std\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "libCEED backend: /cpu/self/xsmm/blocked\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Characteristic length and time scales:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Lc = 1.500e-04 m, tc = 5.003e-04 ns\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Finished partitioning mesh into 1 subdomain\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Mesh curvature order: 1\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Mesh bounding box:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " (Xmin, Ymin, Zmin) = (+0.000e+00, +0.000e+00, +0.000e+00) m\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " (Xmax, Ymax, Zmax) = (+1.500e-04, +2.286e-05, +1.016e-05) m\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Parallel Mesh Stats:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                minimum     average     maximum       total\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " vertices             9           9           9           9\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " edges               26          26          26          26\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " faces               30          30          30          30\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " elements            12          12          12          12\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " neighbors            0           0           0\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "            minimum     maximum\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " h          0.19398     0.19398\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " kappa       9.3178     30.1488\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Estimated current per-rank memory usage is: Min. 52.1M, Max. 52.1M, Avg. 52.1M, Total 52.1M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Estimated current per-node memory usage is: Min. 52.1M, Max. 52.1M, Avg. 52.1M, Total 52.1M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Configuring Robin impedance BC for wave ports at attributes:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " 2: Index = 1, mode = 1, d = 0.000e+00 m,  n = (-1.0,+0.0,+0.0)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " 3: Index = 2, mode = 1, d = 0.000e+00 m,  n = (+1.0,+0.0,+0.0)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Configuring wave port excitation source term at attributes:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " 2: Index = 1\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Configuring Dirichlet PEC BC at attributes:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " 4\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Computing adaptive fast frequency response for:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Excitation with index 1 has contributions from:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wave port  1\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Beginning PROM construction offline phase:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " 41 points for frequency sweep over [8.000e+00, 1.200e+01] GHz\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Assembling system matrices, number of global unknowns:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " H1 (p = 2): 35, ND (p = 2): 112, RT (p = 2): 126\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Operator assembly level: Partial\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Mesh geometries:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Tetrahedron: P = 20, Q = 14 (quadrature order = 4)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Assembling multigrid hierarchy:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Level 0 (p = 1): 26 unknowns\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Level 1 (p = 2): 112 unknowns\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Level 0 (auxiliary) (p = 1): 9 unknowns\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Level 1 (auxiliary) (p = 2): 35 unknowns\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Residual norms for GMRES solve\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  0 (restart 0) KSP residual norm 3.999141e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  1 (restart 0) KSP residual norm 1.249657e+02\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  2 (restart 0) KSP residual norm 3.999505e-01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  3 (restart 0) KSP residual norm 6.613399e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  4 (restart 0) KSP residual norm 3.386004e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  5 (restart 0) KSP residual norm 1.497671e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  6 (restart 0) KSP residual norm 3.555880e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "GMRES solver converged in 6 iterations (avg. reduction factor: 4.552e-02)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.347e-05 J) + H (9.736e-12 J) = 1.347e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Residual norms for GMRES solve\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  0 (restart 0) KSP residual norm 2.177040e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  1 (restart 0) KSP residual norm 6.802889e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  2 (restart 0) KSP residual norm 2.177248e-01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  3 (restart 0) KSP residual norm 5.660582e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  4 (restart 0) KSP residual norm 4.061582e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  5 (restart 0) KSP residual norm 1.834917e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  6 (restart 0) KSP residual norm 4.331531e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  7 (restart 0) KSP residual norm 3.793051e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  8 (restart 0) KSP residual norm 1.445930e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "GMRES solver converged in 8 iterations (avg. reduction factor: 9.501e-02)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (3.992e-06 J) + H (6.558e-12 J) = 3.992e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Residual norms for GMRES solve\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  0 (restart 0) KSP residual norm 2.996136e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  1 (restart 0) KSP residual norm 9.362388e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  2 (restart 0) KSP residual norm 2.996332e-01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  3 (restart 0) KSP residual norm 5.908447e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  4 (restart 0) KSP residual norm 3.704220e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  5 (restart 0) KSP residual norm 1.649510e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  6 (restart 0) KSP residual norm 3.870528e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  7 (restart 0) KSP residual norm 3.553837e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  8 (restart 0) KSP residual norm 1.304686e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "GMRES solver converged in 8 iterations (avg. reduction factor: 9.013e-02)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Greedy iteration 1 (n = 2): ω* = 9.698e+00 GHz (3.049e-02), error = 4.513e-08, memory = 1/2\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (7.560e-06 J) + H (8.114e-12 J) = 7.560e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Residual norms for GMRES solve\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  0 (restart 0) KSP residual norm 2.487384e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  1 (restart 0) KSP residual norm 7.772647e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  2 (restart 0) KSP residual norm 2.487558e-01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  3 (restart 0) KSP residual norm 5.706664e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  4 (restart 0) KSP residual norm 3.913222e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  5 (restart 0) KSP residual norm 1.755273e-03\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  6 (restart 0) KSP residual norm 4.128011e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  7 (restart 0) KSP residual norm 3.716558e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  8 (restart 0) KSP residual norm 1.384913e-04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "GMRES solver converged in 8 iterations (avg. reduction factor: 9.294e-02)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Greedy iteration 2 (n = 3): ω* = 1.098e+01 GHz (3.452e-02), error = 2.388e-08, memory = 2/2\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.211e-06 J) + H (7.167e-12 J) = 5.211e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Adaptive sampling converged with 4 frequency samples:\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " n = 4, error = 2.388e-08, tol = 1.000e-03, memory = 2/2\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sampled frequencies (GHz): 8.000e+00, 1.200e+01, 9.698e+00, 1.098e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sample errors: inf, inf, 4.513e-08, 2.388e-08\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Total offline phase elapsed time: 7.07e-02 s\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Beginning fast frequency sweep online phase\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 1/41: ω/2π = 8.000e+00 GHz (total elapsed time = 7.08e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 4.009160e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.347e-05 J) + H (9.837e-12 J) = 1.347e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-6.771e+05i, |S[1][1]| = +1.166e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+7.624e+02i, |S[2][1]| = +5.764e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 1\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 2/41: ω/2π = 8.100e+00 GHz (total elapsed time = 7.79e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.935289e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.298e-05 J) + H (9.716e-12 J) = 1.298e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-6.605e+05i, |S[1][1]| = +1.164e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+7.437e+02i, |S[2][1]| = +5.743e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 3/41: ω/2π = 8.200e+00 GHz (total elapsed time = 8.01e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.863482e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.251e-05 J) + H (9.598e-12 J) = 1.251e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-6.445e+05i, |S[1][1]| = +1.162e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+7.257e+02i, |S[2][1]| = +5.721e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 4/41: ω/2π = 8.300e+00 GHz (total elapsed time = 8.14e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.793853e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.206e-05 J) + H (9.482e-12 J) = 1.206e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-6.290e+05i, |S[1][1]| = +1.160e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+7.083e+02i, |S[2][1]| = +5.700e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 5/41: ω/2π = 8.400e+00 GHz (total elapsed time = 8.27e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.726261e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.164e-05 J) + H (9.369e-12 J) = 1.164e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-6.141e+05i, |S[1][1]| = +1.158e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+6.915e+02i, |S[2][1]| = +5.680e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 6/41: ω/2π = 8.500e+00 GHz (total elapsed time = 8.39e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.660696e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.123e-05 J) + H (9.258e-12 J) = 1.123e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.998e+05i, |S[1][1]| = +1.156e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+6.753e+02i, |S[2][1]| = +5.659e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 6\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 7/41: ω/2π = 8.600e+00 GHz (total elapsed time = 8.87e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.597074e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.084e-05 J) + H (9.151e-12 J) = 1.084e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.859e+05i, |S[1][1]| = +1.154e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+6.597e+02i, |S[2][1]| = +5.639e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 8/41: ω/2π = 8.700e+00 GHz (total elapsed time = 9.00e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.536244e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.048e-05 J) + H (9.051e-12 J) = 1.048e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.728e+05i, |S[1][1]| = +1.152e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+6.448e+02i, |S[2][1]| = +5.619e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 9/41: ω/2π = 8.800e+00 GHz (total elapsed time = 9.12e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.474977e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (1.012e-05 J) + H (8.942e-12 J) = 1.012e-05 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.595e+05i, |S[1][1]| = +1.150e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+6.300e+02i, |S[2][1]| = +5.599e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 10/41: ω/2π = 8.900e+00 GHz (total elapsed time = 9.24e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.416767e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (9.783e-06 J) + H (8.843e-12 J) = 9.783e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.471e+05i, |S[1][1]| = +1.148e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+6.160e+02i, |S[2][1]| = +5.579e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 11/41: ω/2π = 9.000e+00 GHz (total elapsed time = 9.36e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.359847e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (9.460e-06 J) + H (8.744e-12 J) = 9.460e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.349e+05i, |S[1][1]| = +1.146e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+6.024e+02i, |S[2][1]| = +5.560e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 11\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 12/41: ω/2π = 9.100e+00 GHz (total elapsed time = 9.83e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.304728e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (9.152e-06 J) + H (8.648e-12 J) = 9.152e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.233e+05i, |S[1][1]| = +1.144e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.892e+02i, |S[2][1]| = +5.541e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 13/41: ω/2π = 9.200e+00 GHz (total elapsed time = 9.96e-02 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.251466e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (8.859e-06 J) + H (8.557e-12 J) = 8.859e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.121e+05i, |S[1][1]| = +1.142e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.766e+02i, |S[2][1]| = +5.522e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 14/41: ω/2π = 9.300e+00 GHz (total elapsed time = 1.01e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.198682e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (8.574e-06 J) + H (8.462e-12 J) = 8.574e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-5.010e+05i, |S[1][1]| = +1.140e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.642e+02i, |S[2][1]| = +5.503e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 15/41: ω/2π = 9.400e+00 GHz (total elapsed time = 1.02e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.147822e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (8.304e-06 J) + H (8.372e-12 J) = 8.304e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.904e+05i, |S[1][1]| = +1.138e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.522e+02i, |S[2][1]| = +5.484e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 16/41: ω/2π = 9.500e+00 GHz (total elapsed time = 1.03e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.098299e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (8.044e-06 J) + H (8.285e-12 J) = 8.044e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.802e+05i, |S[1][1]| = +1.136e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.407e+02i, |S[2][1]| = +5.466e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 16\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 17/41: ω/2π = 9.600e+00 GHz (total elapsed time = 1.08e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.049963e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (7.795e-06 J) + H (8.198e-12 J) = 7.795e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.702e+05i, |S[1][1]| = +1.134e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.295e+02i, |S[2][1]| = +5.448e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 18/41: ω/2π = 9.700e+00 GHz (total elapsed time = 1.09e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 3.002927e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (7.557e-06 J) + H (8.114e-12 J) = 7.557e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.606e+05i, |S[1][1]| = +1.133e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.186e+02i, |S[2][1]| = +5.430e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 19/41: ω/2π = 9.800e+00 GHz (total elapsed time = 1.11e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.957231e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (7.329e-06 J) + H (8.032e-12 J) = 7.329e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.513e+05i, |S[1][1]| = +1.131e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+5.081e+02i, |S[2][1]| = +5.412e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 20/41: ω/2π = 9.900e+00 GHz (total elapsed time = 1.12e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.912383e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (7.108e-06 J) + H (7.950e-12 J) = 7.108e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.421e+05i, |S[1][1]| = +1.129e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.979e+02i, |S[2][1]| = +5.394e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 21/41: ω/2π = 1.000e+01 GHz (total elapsed time = 1.13e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.868729e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (6.896e-06 J) + H (7.870e-12 J) = 6.896e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.333e+05i, |S[1][1]| = +1.127e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.879e+02i, |S[2][1]| = +5.377e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 21\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 22/41: ω/2π = 1.010e+01 GHz (total elapsed time = 1.18e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.826516e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (6.695e-06 J) + H (7.793e-12 J) = 6.695e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.249e+05i, |S[1][1]| = +1.126e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.784e+02i, |S[2][1]| = +5.360e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 23/41: ω/2π = 1.020e+01 GHz (total elapsed time = 1.19e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.784771e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (6.499e-06 J) + H (7.715e-12 J) = 6.499e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.165e+05i, |S[1][1]| = +1.124e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.690e+02i, |S[2][1]| = +5.342e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 24/41: ω/2π = 1.030e+01 GHz (total elapsed time = 1.20e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.744416e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (6.312e-06 J) + H (7.641e-12 J) = 6.312e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.085e+05i, |S[1][1]| = +1.122e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.599e+02i, |S[2][1]| = +5.325e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 25/41: ω/2π = 1.040e+01 GHz (total elapsed time = 1.22e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.704857e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (6.131e-06 J) + H (7.567e-12 J) = 6.131e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-4.006e+05i, |S[1][1]| = +1.121e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.511e+02i, |S[2][1]| = +5.309e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 26/41: ω/2π = 1.050e+01 GHz (total elapsed time = 1.23e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.666312e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.958e-06 J) + H (7.495e-12 J) = 5.958e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.930e+05i, |S[1][1]| = +1.119e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.426e+02i, |S[2][1]| = +5.292e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 26\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 27/41: ω/2π = 1.060e+01 GHz (total elapsed time = 1.28e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.628667e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.791e-06 J) + H (7.424e-12 J) = 5.791e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.857e+05i, |S[1][1]| = +1.117e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.343e+02i, |S[2][1]| = +5.276e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 28/41: ω/2π = 1.070e+01 GHz (total elapsed time = 1.29e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.591890e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.630e-06 J) + H (7.355e-12 J) = 5.630e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.785e+05i, |S[1][1]| = +1.116e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.262e+02i, |S[2][1]| = +5.259e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 29/41: ω/2π = 1.080e+01 GHz (total elapsed time = 1.30e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.556005e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.475e-06 J) + H (7.287e-12 J) = 5.475e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.715e+05i, |S[1][1]| = +1.114e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.183e+02i, |S[2][1]| = +5.243e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 30/41: ω/2π = 1.090e+01 GHz (total elapsed time = 1.31e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.520882e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.325e-06 J) + H (7.220e-12 J) = 5.325e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.647e+05i, |S[1][1]| = +1.112e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.107e+02i, |S[2][1]| = +5.227e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 31/41: ω/2π = 1.100e+01 GHz (total elapsed time = 1.33e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.486556e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.181e-06 J) + H (7.154e-12 J) = 5.181e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.581e+05i, |S[1][1]| = +1.111e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+4.032e+02i, |S[2][1]| = +5.211e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 31\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 32/41: ω/2π = 1.110e+01 GHz (total elapsed time = 1.38e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.453076e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (5.043e-06 J) + H (7.090e-12 J) = 5.043e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.517e+05i, |S[1][1]| = +1.109e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.960e+02i, |S[2][1]| = +5.195e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 33/41: ω/2π = 1.120e+01 GHz (total elapsed time = 1.39e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.420257e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.909e-06 J) + H (7.026e-12 J) = 4.909e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.454e+05i, |S[1][1]| = +1.108e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.890e+02i, |S[2][1]| = +5.180e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 34/41: ω/2π = 1.130e+01 GHz (total elapsed time = 1.40e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.388212e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.780e-06 J) + H (6.964e-12 J) = 4.780e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.394e+05i, |S[1][1]| = +1.106e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.821e+02i, |S[2][1]| = +5.164e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 35/41: ω/2π = 1.140e+01 GHz (total elapsed time = 1.41e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.356840e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.655e-06 J) + H (6.903e-12 J) = 4.655e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.334e+05i, |S[1][1]| = +1.105e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.754e+02i, |S[2][1]| = +5.149e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 36/41: ω/2π = 1.150e+01 GHz (total elapsed time = 1.43e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.326229e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.535e-06 J) + H (6.843e-12 J) = 4.535e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.277e+05i, |S[1][1]| = +1.103e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.690e+02i, |S[2][1]| = +5.134e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 36\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 37/41: ω/2π = 1.160e+01 GHz (total elapsed time = 1.48e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.296185e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.418e-06 J) + H (6.784e-12 J) = 4.418e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.220e+05i, |S[1][1]| = +1.102e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.626e+02i, |S[2][1]| = +5.119e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 38/41: ω/2π = 1.170e+01 GHz (total elapsed time = 1.49e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.266771e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.306e-06 J) + H (6.726e-12 J) = 4.306e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.165e+05i, |S[1][1]| = +1.100e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.564e+02i, |S[2][1]| = +5.104e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 39/41: ω/2π = 1.180e+01 GHz (total elapsed time = 1.51e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.238032e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.197e-06 J) + H (6.669e-12 J) = 4.197e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.112e+05i, |S[1][1]| = +1.099e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.504e+02i, |S[2][1]| = +5.089e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 40/41: ω/2π = 1.190e+01 GHz (total elapsed time = 1.53e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.210057e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (4.093e-06 J) + H (6.614e-12 J) = 4.093e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.060e+05i, |S[1][1]| = +1.097e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.446e+02i, |S[2][1]| = +5.075e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "It 41/41: ω/2π = 1.200e+01 GHz (total elapsed time = 1.55e-01 s)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Sol. ||E|| = 2.182493e+04\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Field energy E (3.992e-06 J) + H (6.559e-12 J) = 3.992e-06 J\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[1][1] = -1.000e+00-3.010e+05i, |S[1][1]| = +1.096e+02, arg(S[1][1]) = -9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " S[2][1] = -0.000e+00+3.389e+02i, |S[2][1]| = +5.060e+01, arg(S[2][1]) = +9.000e+01\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Wrote fields to disk (Paraview) at step 41\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Completed 0 iterations of adaptive mesh refinement (AMR):\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Indicator norm = 8.816e-01, global unknowns = 112\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      " Max. iterations = 0, tol. = 1.000e-02\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Estimated peak per-rank memory usage is: Min. 64.5M, Max. 64.5M, Avg. 64.5M, Total 64.5M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Estimated peak per-node memory usage is: Min. 64.5M, Max. 64.5M, Avg. 64.5M, Total 64.5M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Elapsed Time Report (s)           Min.        Max.        Avg.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "==============================================================\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Initialization                   0.001       0.001       0.001\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Mesh Preprocessing             0.000       0.000       0.000\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Operator Construction            0.052       0.052       0.052\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Wave Ports                     0.013       0.013       0.013\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Linear Solve                     0.001       0.001       0.001\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Setup                          0.011       0.011       0.011\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Preconditioner                 0.024       0.024       0.024\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Coarse Solve                   0.001       0.001       0.001\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "PROM Construction                0.008       0.008       0.008\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "PROM Solve                       0.000       0.000       0.000\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Estimation                       0.000       0.000       0.000\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Construction                   0.001       0.001       0.001\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Solve                          0.015       0.015       0.015\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Postprocessing                   0.011       0.011       0.011\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Paraview                       0.036       0.036       0.036\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Disk IO                          0.005       0.005       0.005\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "--------------------------------------------------------------\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Total                            0.708       0.708       0.708\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Peak Memory                   Per-Node       Total   Total HWM\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "==============================================================\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Initialization                    2.8M        2.8M        2.8M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Mesh Preprocessing            860.0K      860.0K        3.6M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Operator Construction             5.5M        5.5M        9.1M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Wave Ports                      1.3M        1.3M       10.4M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Linear Solve                      0.0K        0.0K       10.4M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Setup                         512.0K      512.0K       10.9M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Preconditioner                  2.3M        2.3M       13.2M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Coarse Solve                    1.0M        1.0M       14.2M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "PROM Construction                 0.0K        0.0K       14.2M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "PROM Solve                      256.0K      256.0K       14.5M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Estimation                        0.0K        0.0K       14.5M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Construction                    2.5M        2.5M       16.9M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Solve                           0.0K        0.0K       16.9M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Postprocessing                    0.0K        0.0K       16.9M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "  Paraview                        0.0K        0.0K       16.9M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Disk IO                           2.4M        2.4M       19.4M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "--------------------------------------------------------------\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Total                            40.4M       40.4M       40.4M\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    }
+   ],
    "source": [
     "config_path = \"waveguide_box.json\"\n",
     "\n",
@@ -310,6 +3955,13 @@
    "execution_count": null,
    "id": "f33aab9d",
    "metadata": {
+    "papermill": {
+     "duration": 0.005951,
+     "end_time": "2026-10-23T12:05:00.049176+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:05:00.043225+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
    "outputs": [],
@@ -319,12 +3971,43 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 9,
    "id": "8ad8d012",
    "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-10-23T12:05:00.061751Z",
+     "iopub.status.busy": "2026-10-23T12:05:00.061577Z",
+     "iopub.status.idle": "2026-10-23T12:05:00.077494Z",
+     "shell.execute_reply": "2026-10-23T12:05:00.077083Z"
+    },
+    "papermill": {
+     "duration": 0.02272,
+     "end_time": "2026-10-23T12:05:00.077780+00:00",
+     "exception": false,
+     "start_time": "2026-10-23T12:05:00.055060+00:00",
+     "status": "completed"
+    },
     "tags": []
    },
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Resonant frequency (min |S11|): 12.000 GHz\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<Figure size 1000x600 with 1 Axes>"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
    "source": [
     "from pathlib import Path\n",
     "\n",
@@ -353,7 +4036,20 @@
    "mimetype": "text/x-python",
    "name": "python",
    "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3"
+   "pygments_lexer": "ipython3",
+   "version": "3.12.3"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 3.373622,
+   "end_time": "2026-10-23T12:05:00.498462+00:00",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "/tmp/palacetoolkit-docs.dabfYK/docs/examples/waveguide_box.ipynb",
+   "output_path": "/tmp/palacetoolkit-docs.dabfYK/docs/examples/waveguide_box.ipynb",
+   "parameters": {},
+   "start_time": "2026-10-23T12:04:57.124840+00:00",
+   "version": "2.7.0"
   }
  },
  "nbformat": 4,
